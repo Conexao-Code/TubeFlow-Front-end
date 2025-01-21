@@ -357,8 +357,33 @@ function Videos() {
 
 
     const handleCreateVideo = async () => {
-        if (!newVideoTitle || !newVideoChannel) {
-            toast.error('Todos os campos obrigatórios devem ser preenchidos.', { position: 'top-right' });
+        if (!newVideoTitle) {
+            toast.error('O título do vídeo é obrigatório.', { position: 'top-right' });
+            return;
+        }
+
+        if (!newVideoChannel) {
+            toast.error('O canal do vídeo é obrigatório.', { position: 'top-right' });
+            return;
+        }
+
+        if (!newVideoFreelancer) {
+            toast.error('O roteirista do vídeo é obrigatório.', { position: 'top-right' });
+            return;
+        }
+
+        if (!newVideoNarrator) {
+            toast.error('O narrador do vídeo é obrigatório.', { position: 'top-right' });
+            return;
+        }
+
+        if (!newVideoEditor) {
+            toast.error('O editor do vídeo é obrigatório.', { position: 'top-right' });
+            return;
+        }
+
+        if (!newVideoThumbMaker) {
+            toast.error('O thumb maker do vídeo é obrigatório.', { position: 'top-right' });
             return;
         }
 
@@ -370,7 +395,7 @@ function Videos() {
             editorId: newVideoEditor,
             thumbMakerId: newVideoThumbMaker,
             status: 'Pendente',
-            observations: newVideoObservations,
+            observations: newVideoObservations || null,
             youtubeUrl: null,
         };
 
@@ -380,6 +405,7 @@ function Videos() {
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(data),
             });
+
             if (response.ok) {
                 fetchVideos();
                 setIsCreateModalOpen(false);
@@ -394,6 +420,7 @@ function Videos() {
             toast.error('Erro ao criar vídeo.', { position: 'top-right' });
         }
     };
+
 
 
     const handleEditVideo = async () => {
