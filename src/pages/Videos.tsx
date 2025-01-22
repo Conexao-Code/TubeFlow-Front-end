@@ -12,11 +12,21 @@ interface Video {
     channelName: string;
     freelancerId: string;
     freelancerName: string;
+    scriptWriterId?: string; // Adicionada
+    narratorId?: string; // Adicionada
+    editorId?: string; // Adicionada
+    thumbMakerId?: string; // Adicionada
+    scriptWriterName?: string; // Já existente
+    narratorName?: string; // Já existente
+    editorName?: string; // Já existente
+    thumbMakerName?: string; // Já existente
     status: VideoStatus;
     observations?: string;
     youtubeUrl?: string;
     createdAt: string;
 }
+
+
 
 interface Comment {
     text: string;
@@ -249,19 +259,25 @@ function Videos() {
             const response = await fetch(`http://localhost:1100/api/videos?${params.toString()}`);
             const data = await response.json();
 
-
             const mappedVideos = data.map((video: any) => ({
                 id: video.id,
                 title: video.title,
                 channelId: video.channel_id,
                 channelName: video.channel_name || '',
-                freelancerId: video.freelancer_id,
-                freelancerName: video.freelancer_name || '',
+                scriptWriterId: video.script_writer_id || '', // ID do roteirista
+                narratorId: video.narrator_id || '', // ID do narrador
+                editorId: video.editor_id || '', // ID do editor
+                thumbMakerId: video.thumb_maker_id || '', // ID do thumb maker
+                scriptWriterName: video.script_writer_name || '', // Nome do roteirista
+                narratorName: video.narrator_name || '', // Nome do narrador
+                editorName: video.editor_name || '', // Nome do editor
+                thumbMakerName: video.thumb_maker_name || '', // Nome do thumb maker
                 status: video.status,
-                observations: video.observations,
-                youtubeUrl: video.youtube_url,
+                observations: video.observations || '',
+                youtubeUrl: video.youtube_url || null,
                 createdAt: video.created_at,
             }));
+
 
             setVideos(mappedVideos);
         } catch (error) {
@@ -271,39 +287,49 @@ function Videos() {
     };
 
     const filteredVideos = videos.filter((video) => {
-        const availableStatuses = selectedRole
-            ? statusesByRole[selectedRole as keyof typeof statusesByRole] || []
-            : getAvailableStatuses();
-
-        // Sempre manter vídeos publicados e cancelados visíveis
+        // Admins veem todos os vídeos
+        if (role === 'admin') return true;
+    
+        // Sempre manter vídeos publicados e cancelados visíveis para todos
         const isAlwaysVisible = video.status === 'Publicado' || video.status === 'Cancelado';
-
-        // Verificar se o vídeo é visível com base na role selecionada ou na role do usuário
-        const isVisibleBasedOnRole = availableStatuses.includes(video.status);
-
-        const isVisible = isAlwaysVisible || isVisibleBasedOnRole;
-
-        if (!isVisible) return false;
-
-        // Filtrar com base na aba ativa
-        if (activeTab === 'production') {
-            return video.status !== 'Publicado' && video.status !== 'Cancelado';
+    
+        if (isAlwaysVisible) return true;
+    
+        // Verificar se o vídeo está relacionado ao freelancer atual
+        if (isFreelancer) {
+            const userId = localStorage.getItem('userId');
+            if (!userId) return false;
+    
+            switch (video.status) {
+                case 'Roteiro_Solicitado':
+                case 'Roteiro_Em_Andamento':
+                case 'Roteiro_Concluído':
+                    return video.scriptWriterId === userId;
+    
+                case 'Narração_Solicitada':
+                case 'Narração_Em_Andamento':
+                case 'Narração_Concluída':
+                    return video.narratorId === userId;
+    
+                case 'Edição_Solicitada':
+                case 'Edição_Em_Andamento':
+                case 'Edição_Concluída':
+                    return video.editorId === userId;
+    
+                case 'Thumbnail_Solicitada':
+                case 'Thumbnail_Em_Andamento':
+                case 'Thumbnail_Concluída':
+                    return video.thumbMakerId === userId;
+    
+                default:
+                    return false;
+            }
         }
-
-        if (activeTab === 'published') {
-            return video.status === 'Publicado';
-        }
-
-        if (activeTab === 'cancelled') {
-            return video.status === 'Cancelado';
-        }
-
-        return true;
+    
+        // Caso não seja admin ou freelancer, nenhum vídeo será exibido
+        return false;
     });
-
-
-
-
+    
     const fetchChannels = async () => {
         try {
             const response = await fetch('http://localhost:1100/api/channels');
@@ -340,7 +366,10 @@ function Videos() {
         if (isEditModalOpen && selectedVideo) {
             setNewVideoTitle(selectedVideo.title);
             setNewVideoChannel(selectedVideo.channelId);
-            setNewVideoFreelancer(selectedVideo.freelancerId);
+            setNewVideoFreelancer(selectedVideo.scriptWriterId || ''); // Certifique-se de usar o scriptWriterId
+            setNewVideoNarrator(selectedVideo.narratorId || ''); // Certifique-se de usar o narratorId
+            setNewVideoEditor(selectedVideo.editorId || ''); // Certifique-se de usar o editorId
+            setNewVideoThumbMaker(selectedVideo.thumbMakerId || ''); // Certifique-se de usar o thumbMakerId
             setNewVideoObservations(selectedVideo.observations || '');
         }
     }, [isEditModalOpen, selectedVideo]);
@@ -390,7 +419,7 @@ function Videos() {
         const data = {
             title: newVideoTitle,
             channelId: newVideoChannel,
-            freelancerId: newVideoFreelancer,
+            scriptWriterId: newVideoFreelancer, // Altere freelancerId para scriptWriterId
             narratorId: newVideoNarrator,
             editorId: newVideoEditor,
             thumbMakerId: newVideoThumbMaker,
@@ -398,6 +427,7 @@ function Videos() {
             observations: newVideoObservations || null,
             youtubeUrl: null,
         };
+
 
         try {
             const response = await fetch('http://localhost:1100/api/videos', {
@@ -421,16 +451,24 @@ function Videos() {
         }
     };
 
-
-
     const handleEditVideo = async () => {
         if (!selectedVideo) return;
+
+        if (!newVideoTitle || !newVideoChannel || !newVideoFreelancer || !newVideoNarrator || !newVideoEditor || !newVideoThumbMaker) {
+            toast.error('Todos os campos obrigatórios devem ser preenchidos.', { position: 'top-right' });
+            return;
+        }
 
         const updatedData = {
             title: newVideoTitle,
             channelId: newVideoChannel,
-            freelancerId: newVideoFreelancer,
-            observations: newVideoObservations,
+            status: selectedVideo.status, // Mantém o status atual
+            observations: newVideoObservations || null,
+            youtubeUrl: selectedVideo.youtubeUrl || null, // Mantém a URL do YouTube se já existir
+            scriptWriterId: newVideoFreelancer,
+            narratorId: newVideoNarrator,
+            editorId: newVideoEditor,
+            thumbMakerId: newVideoThumbMaker,
         };
 
         try {
@@ -439,6 +477,7 @@ function Videos() {
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(updatedData),
             });
+
             if (response.ok) {
                 fetchVideos();
                 setIsEditModalOpen(false);
@@ -452,6 +491,7 @@ function Videos() {
             toast.error('Erro ao editar vídeo.', { position: 'top-right' });
         }
     };
+
 
     const handleDeleteVideo = async () => {
         if (!selectedVideo) return;
@@ -627,35 +667,40 @@ function Videos() {
 
                         {/* Desktop Table View */}
                         <div className="hidden lg:block">
-                            <div className="bg-white rounded-lg shadow-sm border border-gray-100 overflow-hidden">
-                                <table className="w-full">
-                                    <thead className="bg-blue-50">
-                                        <tr>
-                                            <th className="px-6 py-3 text-left text-sm font-semibold text-blue-900">Título</th>
-                                            <th className="px-6 py-3 text-left text-sm font-semibold text-blue-900">Canal</th>
-                                            <th className="px-6 py-3 text-left text-sm font-semibold text-blue-900">Status</th>
-                                            <th className="px-6 py-3 text-left text-sm font-semibold text-blue-900">Ações</th>
+                            <div className="bg-white rounded-lg shadow-lg border border-gray-200 overflow-x-auto">
+                                <table className="w-full whitespace-normal">
+                                    <thead>
+                                        <tr className="bg-gradient-to-r from-blue-50 to-blue-100">
+                                            <th className="px-6 py-4 text-left text-sm font-semibold text-blue-900 border-b">Título</th>
+                                            <th className="px-6 py-4 text-left text-sm font-semibold text-blue-900 border-b">Canal</th>
+                                            <th className="px-6 py-4 text-left text-sm font-semibold text-blue-900 border-b">Status</th>
+                                            <th className="px-6 py-4 text-left text-sm font-semibold text-blue-900 border-b w-[300px]">Observações</th>
+                                            <th className="px-6 py-4 text-left text-sm font-semibold text-blue-900 border-b">Roteirista</th>
+                                            <th className="px-6 py-4 text-left text-sm font-semibold text-blue-900 border-b">Narrador</th>
+                                            <th className="px-6 py-4 text-left text-sm font-semibold text-blue-900 border-b">Editor</th>
+                                            <th className="px-6 py-4 text-left text-sm font-semibold text-blue-900 border-b">Thumb Maker</th>
+                                            <th className="px-6 py-4 text-left text-sm font-semibold text-blue-900 border-b">Ações</th>
                                         </tr>
                                     </thead>
                                     <tbody className="divide-y divide-gray-100">
                                         {filteredVideos.map((video) => (
-                                            <tr key={video.id} className="hover:bg-gray-50">
+                                            <tr key={video.id} className="hover:bg-gray-50 transition-colors duration-150">
                                                 <td className="px-6 py-4">
                                                     <div className="flex items-center">
-                                                        <span className="font-medium text-gray-900">{video.title}</span>
+                                                        <span className="font-medium text-gray-900 break-words">{video.title}</span>
                                                     </div>
                                                 </td>
                                                 <td className="px-6 py-4">
                                                     <div className="flex items-center">
-                                                        <Youtube className="w-4 h-4 text-red-600 mr-2" />
-                                                        <span className="text-gray-600">{video.channelName}</span>
+                                                        <Youtube className="w-4 h-4 text-red-600 mr-2 flex-shrink-0" />
+                                                        <span className="text-gray-600 break-words">{video.channelName}</span>
                                                     </div>
                                                 </td>
                                                 <td className="px-6 py-4">
                                                     <select
                                                         value={video.status}
                                                         onChange={(e) => handleStatusChange(video.id, e.target.value, video.freelancerId)}
-                                                        className={`inline-flex items-center px-3 py-1 rounded-full text-sm border focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${statusColors[video.status]?.bg || 'bg-gray-100'} ${statusColors[video.status]?.text || 'text-gray-600'}`}
+                                                        className={`inline-flex items-center px-3 py-2 rounded-full text-sm border focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors duration-150 ${statusColors[video.status]?.bg || 'bg-gray-100'} ${statusColors[video.status]?.text || 'text-gray-600'}`}
                                                         disabled={role !== 'admin' && !getAvailableStatuses().includes(video.status)}
                                                     >
                                                         {getAvailableStatuses().map((status) => (
@@ -666,6 +711,57 @@ function Videos() {
                                                     </select>
                                                 </td>
                                                 <td className="px-6 py-4">
+                                                    <div className="relative group">
+                                                        <div className="max-h-24 overflow-hidden text-gray-600">
+                                                            {video.observations || 'N/A'}
+                                                        </div>
+                                                        {video.observations && video.observations.length > 100 && (
+                                                            <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-white to-transparent h-12 pointer-events-none group-hover:hidden" />
+                                                        )}
+                                                        {video.observations && video.observations.length > 100 && (
+                                                            <button
+                                                                onClick={() => {
+                                                                    const dialog = document.createElement('dialog');
+                                                                    dialog.className = 'p-6 rounded-lg shadow-xl max-w-2xl w-full';
+                                                                    dialog.innerHTML = `
+                        <div class="flex flex-col">
+                          <div class="flex justify-between items-center mb-4">
+                            <h3 class="text-lg font-semibold text-gray-900">Observações</h3>
+                            <button class="text-gray-500 hover:text-gray-700" onclick="this.closest('dialog').close()">
+                              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                              </svg>
+                            </button>
+                          </div>
+                          <div class="text-gray-600 whitespace-pre-wrap">${video.observations}</div>
+                        </div>
+                      `;
+                                                                    document.body.appendChild(dialog);
+                                                                    dialog.showModal();
+                                                                    dialog.addEventListener('close', () => {
+                                                                        dialog.remove();
+                                                                    });
+                                                                }}
+                                                                className="text-blue-600 hover:text-blue-800 text-sm mt-2 focus:outline-none group-hover:block hidden"
+                                                            >
+                                                                Ver mais
+                                                            </button>
+                                                        )}
+                                                    </div>
+                                                </td>
+                                                <td className="px-6 py-4">
+                                                    <span className="text-gray-600 break-words">{video.scriptWriterName || 'N/A'}</span>
+                                                </td>
+                                                <td className="px-6 py-4">
+                                                    <span className="text-gray-600 break-words">{video.narratorName || 'N/A'}</span>
+                                                </td>
+                                                <td className="px-6 py-4">
+                                                    <span className="text-gray-600 break-words">{video.editorName || 'N/A'}</span>
+                                                </td>
+                                                <td className="px-6 py-4">
+                                                    <span className="text-gray-600 break-words">{video.thumbMakerName || 'N/A'}</span>
+                                                </td>
+                                                <td className="px-6 py-4">
                                                     <div className="flex items-center gap-2">
                                                         {canEditVideo(video) && (
                                                             <button
@@ -673,7 +769,7 @@ function Videos() {
                                                                     setSelectedVideo(video);
                                                                     setIsEditModalOpen(true);
                                                                 }}
-                                                                className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg"
+                                                                className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors duration-150"
                                                                 title="Editar"
                                                             >
                                                                 <Edit2 className="w-5 h-5" />
@@ -685,7 +781,7 @@ function Videos() {
                                                                     setSelectedVideo(video);
                                                                     setIsDeleteModalOpen(true);
                                                                 }}
-                                                                className="p-2 text-red-600 hover:bg-red-50 rounded-lg"
+                                                                className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors duration-150"
                                                                 title="Excluir"
                                                             >
                                                                 <Trash2 className="w-5 h-5" />
@@ -696,7 +792,7 @@ function Videos() {
                                                                 href={video.youtubeUrl}
                                                                 target="_blank"
                                                                 rel="noopener noreferrer"
-                                                                className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg"
+                                                                className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors duration-150"
                                                                 title="Ver no YouTube"
                                                             >
                                                                 <ExternalLink className="w-5 h-5" />
@@ -704,12 +800,11 @@ function Videos() {
                                                         )}
                                                         <button
                                                             onClick={() => openCommentsModal(video)}
-                                                            className="p-2 text-green-600 hover:bg-green-50 rounded-lg"
+                                                            className="p-2 text-green-600 hover:bg-green-50 rounded-lg transition-colors duration-150"
                                                             title="Visualizar Comentários"
                                                         >
                                                             <MessageSquare className="w-5 h-5" />
                                                         </button>
-
                                                     </div>
                                                 </td>
                                             </tr>
@@ -977,7 +1072,6 @@ function Videos() {
                                         <div>
                                             <label className="block text-sm font-medium text-gray-700 mb-1.5 flex items-center">
                                                 <span className="mr-2">Roteirista</span>
-                                                <div className="px-2 py-0.5 bg-blue-100 text-blue-700 text-xs rounded-full">Principal</div>
                                             </label>
                                             <select
                                                 value={newVideoFreelancer}
@@ -993,6 +1087,7 @@ function Videos() {
                                                         </option>
                                                     ))}
                                             </select>
+
                                         </div>
 
                                         <div>

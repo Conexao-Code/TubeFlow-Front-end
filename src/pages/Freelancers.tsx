@@ -86,7 +86,7 @@ function App() {
     const [freelancers, setFreelancers] = useState<Freelancer[]>([]);
 
 
-    const roles = ['Roteirista', 'Editor', 'Narrador', 'Designer', 'Motion Designer'];
+    const roles = ['Roteirista', 'Editor', 'Narrador', 'Thumb Maker'];
 
     const showNotification = (type: 'success' | 'error', message: string) => {
         setNotification({ type, message });
