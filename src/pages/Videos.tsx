@@ -92,7 +92,7 @@ function Videos() {
 
     const fetchComments = async (videoId: string) => {
         try {
-            const response = await fetch(`http://localhost:1100/api/videos/${videoId}/comments`);
+            const response = await fetch(`http://77.37.43.248:1100/api/videos/${videoId}/comments`);
             const data = await response.json();
 
             if (data.comments) {
@@ -122,7 +122,7 @@ function Videos() {
         const userType = isFreelancer ? 'freelancer' : 'user';
 
         try {
-            const response = await fetch(`http://localhost:1100/api/videos/${selectedVideoForComments.id}/comments`, {
+            const response = await fetch(`http://77.37.43.248:1100/api/videos/${selectedVideoForComments.id}/comments`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ text: newComment, userId, userType }),
@@ -256,7 +256,7 @@ function Videos() {
             if (selectedStatus) params.append('status', selectedStatus);
             if (searchTerm) params.append('searchTerm', searchTerm);
 
-            const response = await fetch(`http://localhost:1100/api/videos?${params.toString()}`);
+            const response = await fetch(`http://77.37.43.248:1100/api/videos?${params.toString()}`);
             const data = await response.json();
 
             const mappedVideos = data.map((video: any) => ({
@@ -264,20 +264,19 @@ function Videos() {
                 title: video.title,
                 channelId: video.channel_id,
                 channelName: video.channel_name || '',
-                scriptWriterId: video.script_writer_id || '', // ID do roteirista
-                narratorId: video.narrator_id || '', // ID do narrador
-                editorId: video.editor_id || '', // ID do editor
-                thumbMakerId: video.thumb_maker_id || '', // ID do thumb maker
-                scriptWriterName: video.script_writer_name || '', // Nome do roteirista
-                narratorName: video.narrator_name || '', // Nome do narrador
-                editorName: video.editor_name || '', // Nome do editor
-                thumbMakerName: video.thumb_maker_name || '', // Nome do thumb maker
+                scriptWriterId: video.script_writer_id || '',
+                narratorId: video.narrator_id || '',
+                editorId: video.editor_id || '',
+                thumbMakerId: video.thumb_maker_id || '',
+                scriptWriterName: video.script_writer_name || '',
+                narratorName: video.narrator_name || '',
+                editorName: video.editor_name || '',
+                thumbMakerName: video.thumb_maker_name || '',
                 status: video.status,
                 observations: video.observations || '',
                 youtubeUrl: video.youtube_url || null,
                 createdAt: video.created_at,
             }));
-
 
             setVideos(mappedVideos);
         } catch (error) {
@@ -288,51 +287,64 @@ function Videos() {
 
     const filteredVideos = videos.filter((video) => {
         // Admins veem todos os vídeos
-        if (role === 'admin') return true;
+        if (role === 'admin') {
+            return true;
+        }
     
-        // Sempre manter vídeos publicados e cancelados visíveis para todos
+        // Vídeos publicados ou cancelados são sempre visíveis
         const isAlwaysVisible = video.status === 'Publicado' || video.status === 'Cancelado';
+        if (isAlwaysVisible) {
+            return true;
+        }
     
-        if (isAlwaysVisible) return true;
-    
-        // Verificar se o vídeo está relacionado ao freelancer atual
+        // Verificar se é freelancer
         if (isFreelancer) {
             const userId = localStorage.getItem('userId');
-            if (!userId) return false;
+    
+            if (!userId) {
+                return false;
+            }
+    
+            // Normalizar o tipo de userId para número
+            const normalizedUserId = parseInt(userId, 10);
     
             switch (video.status) {
                 case 'Roteiro_Solicitado':
                 case 'Roteiro_Em_Andamento':
                 case 'Roteiro_Concluído':
-                    return video.scriptWriterId === userId;
+                    return video.scriptWriterId !== undefined && parseInt(video.scriptWriterId, 10) === normalizedUserId;
     
                 case 'Narração_Solicitada':
                 case 'Narração_Em_Andamento':
                 case 'Narração_Concluída':
-                    return video.narratorId === userId;
+                    return video.narratorId !== undefined && parseInt(video.narratorId, 10) === normalizedUserId;
     
                 case 'Edição_Solicitada':
                 case 'Edição_Em_Andamento':
                 case 'Edição_Concluída':
-                    return video.editorId === userId;
+                    return video.editorId !== undefined && parseInt(video.editorId, 10) === normalizedUserId;
     
                 case 'Thumbnail_Solicitada':
                 case 'Thumbnail_Em_Andamento':
                 case 'Thumbnail_Concluída':
-                    return video.thumbMakerId === userId;
+                    return video.thumbMakerId !== undefined && parseInt(video.thumbMakerId, 10) === normalizedUserId;
     
                 default:
                     return false;
             }
         }
     
-        // Caso não seja admin ou freelancer, nenhum vídeo será exibido
         return false;
     });
     
+    
+    
+    
+
+
     const fetchChannels = async () => {
         try {
-            const response = await fetch('http://localhost:1100/api/channels');
+            const response = await fetch('http://77.37.43.248:1100/api/channels');
             const json = await response.json();
 
             if (Array.isArray(json.channels)) {
@@ -348,7 +360,7 @@ function Videos() {
 
     const fetchFreelancers = async () => {
         try {
-            const response = await fetch('http://localhost:1100/api/freelancers');
+            const response = await fetch('http://77.37.43.248:1100/api/freelancers');
             const json = await response.json();
 
             if (Array.isArray(json.data)) {
@@ -430,7 +442,7 @@ function Videos() {
 
 
         try {
-            const response = await fetch('http://localhost:1100/api/videos', {
+            const response = await fetch('http://77.37.43.248:1100/api/videos', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(data),
@@ -472,7 +484,7 @@ function Videos() {
         };
 
         try {
-            const response = await fetch(`http://localhost:1100/api/videos/${selectedVideo.id}`, {
+            const response = await fetch(`http://77.37.43.248:1100/api/videos/${selectedVideo.id}`, {
                 method: 'PUT',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(updatedData),
@@ -496,7 +508,7 @@ function Videos() {
     const handleDeleteVideo = async () => {
         if (!selectedVideo) return;
         try {
-            const response = await fetch(`http://localhost:1100/api/videos/${selectedVideo.id}`, {
+            const response = await fetch(`http://77.37.43.248:1100/api/videos/${selectedVideo.id}`, {
                 method: 'DELETE',
             });
             if (response.ok) {
@@ -523,7 +535,7 @@ function Videos() {
         }
 
         try {
-            const response = await fetch(`http://localhost:1100/api/videos/${videoId}/status`, {
+            const response = await fetch(`http://77.37.43.248:1100/api/videos/${videoId}/status`, {
                 method: 'PUT',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ status: newStatus, userId: freelancerId }),

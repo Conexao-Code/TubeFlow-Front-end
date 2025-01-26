@@ -23,7 +23,7 @@ function Dashboard() {
     useEffect(() => {
         const fetchDashboardData = async () => {
             try {
-                const response = await fetch('http://localhost:1100/api/dashboard');
+                const response = await fetch('http://77.37.43.248:1100/api/dashboard');
                 const data = await response.json();
 
                 setStats(data.stats);

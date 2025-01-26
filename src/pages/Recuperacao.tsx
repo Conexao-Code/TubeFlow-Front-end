@@ -29,7 +29,7 @@ function Recuperacao() {
     setIsLoading(true);
 
     try {
-      const response = await fetch('http://localhost:1100/api/forgot-password', {
+      const response = await fetch('http://77.37.43.248:1100/api/forgot-password', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email }),
