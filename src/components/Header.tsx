@@ -4,9 +4,10 @@ import DefaultUserImage from '../imagens/dark.png';
 
 interface HeaderProps {
   activeSection: string;
+  children?: React.ReactNode;
 }
 
-const Header: React.FC<HeaderProps> = ({ activeSection }) => {
+const Header: React.FC<HeaderProps> = ({ activeSection, children }) => {
   const [isProfileDropdownOpen, setIsProfileDropdownOpen] = useState(false);
 
   const handleLogout = () => {
@@ -17,9 +18,12 @@ const Header: React.FC<HeaderProps> = ({ activeSection }) => {
   return (
     <header className="bg-white border-b border-gray-200 sticky top-0 z-30">
       <div className="px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
-        <h1 className="text-2xl font-semibold text-gray-800 capitalize">
-          {activeSection}
-        </h1>
+        <div className="flex items-center gap-4">
+          {children}
+          <h1 className="text-2xl font-semibold text-gray-800 capitalize">
+            {activeSection}
+          </h1>
+        </div>
 
         <div className="flex items-center gap-4">
           <div className="relative">

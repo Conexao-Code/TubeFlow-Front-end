@@ -89,7 +89,7 @@ function LogsAndStats() {
 
     const fetchChannels = async () => {
         try {
-            const response = await fetch('http://77.37.43.248:1100/api/channels');
+            const response = await fetch('http://localhost:1100/api/channels');
             const json = await response.json();
             setChannels(json.channels);
         } catch (error) {
@@ -100,7 +100,7 @@ function LogsAndStats() {
 
     const fetchFreelancers = async () => {
         try {
-            const response = await fetch('http://77.37.43.248:1100/api/freelancers');
+            const response = await fetch('http://localhost:1100/api/freelancers');
             const json = await response.json();
             setFreelancers(json.data);
         } catch (error) {
@@ -120,7 +120,7 @@ function LogsAndStats() {
                 ...(selectedFreelancer && { freelancerId: selectedFreelancer }),
             });
 
-            const response = await fetch(`http://77.37.43.248:1100/api/logs?${params}`);
+            const response = await fetch(`http://localhost:1100/api/logs?${params}`);
             const data = await response.json();
             setLogs(data.logs);
             setTotalPages(Math.ceil(data.total / ITEMS_PER_PAGE));
@@ -139,13 +139,13 @@ function LogsAndStats() {
                 ...(selectedFreelancer && { freelancerId: selectedFreelancer }),
             });
 
-            const response = await fetch(`http://77.37.43.248:1100/api/stats?${params}`);
+            const response = await fetch(`http://localhost:1100/api/stats?${params}`);
             const data = await response.json();
 
             const formattedStats = data.stats.map((stat: FreelancerStats) => ({
                 ...stat,
-                averageTime: Number(stat.averageTime), 
-                averageTimeFormatted: formatTime(Number(stat.averageTime)), 
+                averageTime: Number(stat.averageTime),
+                averageTimeFormatted: formatTime(Number(stat.averageTime)),
             }));
 
             setStats(formattedStats);
@@ -175,7 +175,7 @@ function LogsAndStats() {
                 type,
             });
 
-            const response = await fetch(`http://77.37.43.248:1100/api/export?${params}`);
+            const response = await fetch(`http://localhost:1100/api/export?${params}`);
             const blob = await response.blob();
             const url = window.URL.createObjectURL(blob);
             const a = document.createElement('a');
@@ -196,21 +196,22 @@ function LogsAndStats() {
     return (
         <div className="min-h-screen bg-gray-50 flex">
             <ToastContainer />
-
-            <button
-                onClick={() => setIsSidebarOpen(!isSidebarOpen)}
-                className="lg:hidden fixed bottom-4 left-4 z-50 p-2 bg-blue-600 text-white rounded-lg"
-            >
-                {isSidebarOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
-            </button>
-
-            {isSidebarOpen && (
-                <Sidebar activeSection={activeSection} setActiveSection={setActiveSection} />
-            )}
+            <Sidebar
+                activeSection={activeSection}
+                setActiveSection={setActiveSection}
+                isSidebarOpen={isSidebarOpen}
+                onCloseSidebar={() => setIsSidebarOpen(false)}
+            />
 
             <main className="flex-1 min-h-screen flex flex-col">
-                <Header activeSection={activeSection} />
-
+                <Header activeSection={activeSection}>
+                    <button
+                        onClick={() => setIsSidebarOpen((prevState) => !prevState)}
+                        className="lg:hidden p-2 -ml-2 text-gray-600 hover:text-gray-900"
+                    >
+                        <Menu className="w-6 h-6" />
+                    </button>
+                </Header>
                 <div className="flex-1 p-4 sm:p-6 lg:p-8">
 
                     {/* Filters */}

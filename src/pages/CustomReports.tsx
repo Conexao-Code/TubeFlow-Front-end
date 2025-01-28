@@ -55,7 +55,7 @@ interface StatusCount {
 }
 
 function CustomReports() {
-    const [activeSection, setActiveSection] = useState('Relatórios Personalizados');
+    const [activeSection, setActiveSection] = useState('Relatórios');
     const [isSidebarOpen, setIsSidebarOpen] = useState(true);
     const [startDate, setStartDate] = useState('');
     const [endDate, setEndDate] = useState('');
@@ -80,8 +80,8 @@ function CustomReports() {
             return '0m 0s';
         }
 
-        const days = Math.floor(totalSeconds / 86400); 
-        const hours = Math.floor((totalSeconds % 86400) / 3600); 
+        const days = Math.floor(totalSeconds / 86400);
+        const hours = Math.floor((totalSeconds % 86400) / 3600);
         const minutes = Math.floor((totalSeconds % 3600) / 60);
         const seconds = totalSeconds % 60;
 
@@ -121,7 +121,7 @@ function CustomReports() {
 
     const fetchChannels = async () => {
         try {
-            const response = await fetch('http://77.37.43.248:1100/api/channels');
+            const response = await fetch('http://localhost:1100/api/channels');
             const json = await response.json();
             setChannels(json.channels);
         } catch (error) {
@@ -132,7 +132,7 @@ function CustomReports() {
 
     const fetchFreelancers = async () => {
         try {
-            const response = await fetch('http://77.37.43.248:1100/api/freelancers2');
+            const response = await fetch('http://localhost:1100/api/freelancers2');
             const json = await response.json();
             setFreelancers(json.data);
         } catch (error) {
@@ -154,9 +154,9 @@ function CustomReports() {
             });
 
             const [reportResponse, statsResponse, statusResponse] = await Promise.all([
-                fetch(`http://77.37.43.248:1100/api/reports/data?${params}`),
-                fetch(`http://77.37.43.248:1100/api/reports/stats?${params}`),
-                fetch(`http://77.37.43.248:1100/api/reports/status?${params}`),
+                fetch(`http://localhost:1100/api/reports/data?${params}`),
+                fetch(`http://localhost:1100/api/reports/stats?${params}`),
+                fetch(`http://localhost:1100/api/reports/status?${params}`),
             ]);
 
             const reportData = await reportResponse.json();
@@ -165,15 +165,15 @@ function CustomReports() {
 
             const formattedReportData = reportData.map((item: ReportData) => ({
                 ...item,
-                timeSpentInSeconds: Number(item.timeSpentInSeconds) || 0, 
-                timeSpent: item.timeSpent || formatTimeSpent(Number(item.timeSpentInSeconds) || 0), 
+                timeSpentInSeconds: Number(item.timeSpentInSeconds) || 0,
+                timeSpent: item.timeSpent || formatTimeSpent(Number(item.timeSpentInSeconds) || 0),
             }));
 
 
             setReportData(formattedReportData);
             setGlobalStats({
                 ...statsData,
-                averageTime: statsData.averageTime ? Number(statsData.averageTime) : 0, 
+                averageTime: statsData.averageTime ? Number(statsData.averageTime) : 0,
             });
             console.log('Average Time Received:', statsData.averageTime);
 
@@ -208,7 +208,7 @@ function CustomReports() {
                 ...(selectedStatus && { status: selectedStatus })
             });
 
-            const response = await fetch(`http://77.37.43.248:1100/api/reports/export?${params}`);
+            const response = await fetch(`http://localhost:1100/api/reports/export?${params}`);
             const blob = await response.blob();
             const url = window.URL.createObjectURL(blob);
             const a = document.createElement('a');
@@ -230,21 +230,22 @@ function CustomReports() {
     return (
         <div className="min-h-screen bg-gray-50 flex">
             <ToastContainer />
+            <Sidebar
+                activeSection={activeSection}
+                setActiveSection={setActiveSection}
+                isSidebarOpen={isSidebarOpen}
+                onCloseSidebar={() => setIsSidebarOpen(false)}
+            />
 
-            <button
-                onClick={() => setIsSidebarOpen(!isSidebarOpen)}
-                className="lg:hidden fixed bottom-4 left-4 z-50 p-2 bg-blue-600 text-white rounded-lg"
-            >
-                {isSidebarOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
-            </button>
-
-            {isSidebarOpen && (
-                <Sidebar activeSection={activeSection} setActiveSection={setActiveSection} />
-            )}
-
-            <main className="flex-1 min-h-screen flex flex-col">
-                <Header activeSection={activeSection} />
-
+            <main className="flex-1 min-h-screen flex flex-col relative w-full max-w-full">
+                <Header activeSection={activeSection}>
+                    <button
+                        onClick={() => setIsSidebarOpen((prevState) => !prevState)}
+                        className="lg:hidden p-2 -ml-2 text-gray-600 hover:text-gray-900"
+                    >
+                        <Menu className="w-6 h-6" />
+                    </button>
+                </Header>
                 <div className="flex-1 p-4 sm:p-6 lg:p-8">
                     <div className="flex justify-end mb-6">
                         <div className="flex gap-2">
@@ -429,7 +430,7 @@ function CustomReports() {
                                         <XAxis dataKey="createdAt" />
                                         <YAxis />
                                         <Tooltip
-                                            formatter={(value: number) => formatTimeSpent(Number(value))} 
+                                            formatter={(value: number) => formatTimeSpent(Number(value))}
                                         />
                                         <Legend />
                                         <Line

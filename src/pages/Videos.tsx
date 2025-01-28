@@ -64,7 +64,7 @@ type VideoStatus =
     | 'Cancelado';
 
 function Videos() {
-    const [activeSection, setActiveSection] = useState('Gerenciamento de Vídeos');
+    const [activeSection, setActiveSection] = useState('Vídeos');
     const [activeTab, setActiveTab] = useState<'production' | 'published' | 'cancelled'>('production');
     const [isSidebarOpen, setIsSidebarOpen] = useState(true);
     const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
@@ -92,7 +92,7 @@ function Videos() {
 
     const fetchComments = async (videoId: string) => {
         try {
-            const response = await fetch(`http://77.37.43.248:1100/api/videos/${videoId}/comments`);
+            const response = await fetch(`http://localhost:1100/api/videos/${videoId}/comments`);
             const data = await response.json();
 
             if (data.comments) {
@@ -122,7 +122,7 @@ function Videos() {
         const userType = isFreelancer ? 'freelancer' : 'user';
 
         try {
-            const response = await fetch(`http://77.37.43.248:1100/api/videos/${selectedVideoForComments.id}/comments`, {
+            const response = await fetch(`http://localhost:1100/api/videos/${selectedVideoForComments.id}/comments`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ text: newComment, userId, userType }),
@@ -220,8 +220,12 @@ function Videos() {
 
     const getAvailableStatuses = () => {
         if (role === 'admin') return statusesByRole.admin;
+        if (activeTab === 'published' || activeTab === 'cancelled') {
+            return ['Publicado', 'Cancelado'];
+        }
         return statusesByRole[role as keyof typeof statusesByRole] || [];
     };
+    
 
     const canDeleteVideo = () => {
         return role === 'admin';
@@ -232,9 +236,7 @@ function Videos() {
     };
 
     const canEditVideo = (video: Video) => {
-        if (role === 'admin') return true;
-        const availableStatuses = getAvailableStatuses();
-        return availableStatuses.includes(video.status);
+        return role === 'admin';
     };
 
     useEffect(() => {
@@ -256,7 +258,7 @@ function Videos() {
             if (selectedStatus) params.append('status', selectedStatus);
             if (searchTerm) params.append('searchTerm', searchTerm);
 
-            const response = await fetch(`http://77.37.43.248:1100/api/videos?${params.toString()}`);
+            const response = await fetch(`http://localhost:1100/api/videos?${params.toString()}`);
             const data = await response.json();
 
             const mappedVideos = data.map((video: any) => ({
@@ -286,65 +288,109 @@ function Videos() {
     };
 
     const filteredVideos = videos.filter((video) => {
-        // Admins veem todos os vídeos
-        if (role === 'admin') {
-            return true;
+        if (activeTab === 'cancelled') {
+            if (role === 'admin') {
+                return video.status === 'Cancelado';
+            }
+    
+            if (isFreelancer) {
+                const userId = localStorage.getItem('userId');
+                if (!userId) return false;
+    
+                const normalizedUserId = parseInt(userId, 10);
+    
+                return (
+                    video.status === 'Cancelado' &&
+                    (parseInt(video.scriptWriterId || '', 10) === normalizedUserId ||
+                        parseInt(video.narratorId || '', 10) === normalizedUserId ||
+                        parseInt(video.editorId || '', 10) === normalizedUserId ||
+                        parseInt(video.thumbMakerId || '', 10) === normalizedUserId)
+                );
+            }
+    
+            return false;
         }
     
-        // Vídeos publicados ou cancelados são sempre visíveis
-        const isAlwaysVisible = video.status === 'Publicado' || video.status === 'Cancelado';
-        if (isAlwaysVisible) {
-            return true;
+        if (activeTab === 'published') {
+            if (role === 'admin') {
+                return video.status === 'Publicado';
+            }
+    
+            if (isFreelancer) {
+                const userId = localStorage.getItem('userId');
+                if (!userId) return false;
+    
+                const normalizedUserId = parseInt(userId, 10);
+    
+                return (
+                    video.status === 'Publicado' &&
+                    (parseInt(video.scriptWriterId || '', 10) === normalizedUserId ||
+                        parseInt(video.narratorId || '', 10) === normalizedUserId ||
+                        parseInt(video.editorId || '', 10) === normalizedUserId ||
+                        parseInt(video.thumbMakerId || '', 10) === normalizedUserId)
+                );
+            }
+    
+            return false;
         }
     
-        // Verificar se é freelancer
-        if (isFreelancer) {
-            const userId = localStorage.getItem('userId');
-    
-            if (!userId) {
+        if (activeTab === 'production') {
+            if (video.status === 'Publicado' || video.status === 'Cancelado') {
                 return false;
             }
     
-            // Normalizar o tipo de userId para número
-            const normalizedUserId = parseInt(userId, 10);
-    
-            switch (video.status) {
-                case 'Roteiro_Solicitado':
-                case 'Roteiro_Em_Andamento':
-                case 'Roteiro_Concluído':
-                    return video.scriptWriterId !== undefined && parseInt(video.scriptWriterId, 10) === normalizedUserId;
-    
-                case 'Narração_Solicitada':
-                case 'Narração_Em_Andamento':
-                case 'Narração_Concluída':
-                    return video.narratorId !== undefined && parseInt(video.narratorId, 10) === normalizedUserId;
-    
-                case 'Edição_Solicitada':
-                case 'Edição_Em_Andamento':
-                case 'Edição_Concluída':
-                    return video.editorId !== undefined && parseInt(video.editorId, 10) === normalizedUserId;
-    
-                case 'Thumbnail_Solicitada':
-                case 'Thumbnail_Em_Andamento':
-                case 'Thumbnail_Concluída':
-                    return video.thumbMakerId !== undefined && parseInt(video.thumbMakerId, 10) === normalizedUserId;
-    
-                default:
-                    return false;
+            if (role === 'admin') {
+                return true;
             }
+    
+            if (isFreelancer) {
+                const userId = localStorage.getItem('userId');
+    
+                if (!userId) {
+                    return false;
+                }
+    
+                const normalizedUserId = parseInt(userId, 10);
+    
+                switch (video.status) {
+                    case 'Roteiro_Solicitado':
+                    case 'Roteiro_Em_Andamento':
+                    case 'Roteiro_Concluído':
+                        return video.scriptWriterId !== undefined && parseInt(video.scriptWriterId, 10) === normalizedUserId;
+    
+                    case 'Narração_Solicitada':
+                    case 'Narração_Em_Andamento':
+                    case 'Narração_Concluída':
+                        return video.narratorId !== undefined && parseInt(video.narratorId, 10) === normalizedUserId;
+    
+                    case 'Edição_Solicitada':
+                    case 'Edição_Em_Andamento':
+                    case 'Edição_Concluída':
+                        return video.editorId !== undefined && parseInt(video.editorId, 10) === normalizedUserId;
+    
+                    case 'Thumbnail_Solicitada':
+                    case 'Thumbnail_Em_Andamento':
+                    case 'Thumbnail_Concluída':
+                        return video.thumbMakerId !== undefined && parseInt(video.thumbMakerId, 10) === normalizedUserId;
+    
+                    default:
+                        return false;
+                }
+            }
+    
+            return false;
         }
     
         return false;
     });
     
-    
-    
-    
+
+
 
 
     const fetchChannels = async () => {
         try {
-            const response = await fetch('http://77.37.43.248:1100/api/channels');
+            const response = await fetch('http://localhost:1100/api/channels');
             const json = await response.json();
 
             if (Array.isArray(json.channels)) {
@@ -360,7 +406,7 @@ function Videos() {
 
     const fetchFreelancers = async () => {
         try {
-            const response = await fetch('http://77.37.43.248:1100/api/freelancers');
+            const response = await fetch('http://localhost:1100/api/freelancers');
             const json = await response.json();
 
             if (Array.isArray(json.data)) {
@@ -442,7 +488,7 @@ function Videos() {
 
 
         try {
-            const response = await fetch('http://77.37.43.248:1100/api/videos', {
+            const response = await fetch('http://localhost:1100/api/videos', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(data),
@@ -465,12 +511,23 @@ function Videos() {
 
     const handleEditVideo = async () => {
         if (!selectedVideo) return;
-
+    
         if (!newVideoTitle || !newVideoChannel || !newVideoFreelancer || !newVideoNarrator || !newVideoEditor || !newVideoThumbMaker) {
             toast.error('Todos os campos obrigatórios devem ser preenchidos.', { position: 'top-right' });
             return;
         }
-
+    
+        // Identificar userId ou userIdA
+        const isFreelancer = localStorage.getItem('isFreelancer') === 'true';
+        const userId = isFreelancer
+            ? localStorage.getItem('userId')
+            : localStorage.getItem('userIdA');
+    
+        if (!userId) {
+            toast.error('Usuário não identificado.', { position: 'top-right' });
+            return;
+        }
+    
         const updatedData = {
             title: newVideoTitle,
             channelId: newVideoChannel,
@@ -481,15 +538,16 @@ function Videos() {
             narratorId: newVideoNarrator,
             editorId: newVideoEditor,
             thumbMakerId: newVideoThumbMaker,
+            userId, // Envia o identificador do usuário
         };
-
+    
         try {
-            const response = await fetch(`http://77.37.43.248:1100/api/videos/${selectedVideo.id}`, {
+            const response = await fetch(`http://localhost:1100/api/videos/${selectedVideo.id}`, {
                 method: 'PUT',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(updatedData),
             });
-
+    
             if (response.ok) {
                 fetchVideos();
                 setIsEditModalOpen(false);
@@ -503,12 +561,13 @@ function Videos() {
             toast.error('Erro ao editar vídeo.', { position: 'top-right' });
         }
     };
+    
 
 
     const handleDeleteVideo = async () => {
         if (!selectedVideo) return;
         try {
-            const response = await fetch(`http://77.37.43.248:1100/api/videos/${selectedVideo.id}`, {
+            const response = await fetch(`http://localhost:1100/api/videos/${selectedVideo.id}`, {
                 method: 'DELETE',
             });
             if (response.ok) {
@@ -525,22 +584,36 @@ function Videos() {
             toast.error('Erro ao excluir vídeo.', { position: 'top-right' });
         }
     };
-
-    const handleStatusChange = async (videoId: string, newStatus: string, freelancerId: string) => {
+    const handleStatusChange = async (videoId: string, newStatus: string) => {
         const availableStatuses = getAvailableStatuses();
-
+    
         if (!availableStatuses.includes(newStatus) && role !== 'admin') {
             toast.error('Você não tem permissão para definir este status.', { position: 'top-right' });
             return;
         }
-
+    
+        // Identificar se é freelancer ou user
+        const isFreelancer = localStorage.getItem('isFreelancer') === 'true';
+        const userId = isFreelancer
+            ? localStorage.getItem('userId') // ID do freelancer
+            : localStorage.getItem('userIdA'); // ID do usuário
+    
+        if (!userId) {
+            toast.error('Usuário não identificado.', { position: 'top-right' });
+            return;
+        }
+    
         try {
-            const response = await fetch(`http://77.37.43.248:1100/api/videos/${videoId}/status`, {
+            const response = await fetch(`http://localhost:1100/api/videos/${videoId}/status`, {
                 method: 'PUT',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ status: newStatus, userId: freelancerId }),
+                body: JSON.stringify({
+                    status: newStatus,
+                    userId,
+                    isUser: !isFreelancer, // Envia true se for um usuário (não freelancer)
+                }),
             });
-
+    
             if (response.ok) {
                 fetchVideos();
                 toast.success('Status atualizado com sucesso!', { position: 'top-right' });
@@ -553,6 +626,8 @@ function Videos() {
             toast.error('Erro ao atualizar status.', { position: 'top-right' });
         }
     };
+    
+    
 
     const clearFilters = () => {
         setSelectedChannel('');
@@ -564,20 +639,23 @@ function Videos() {
     return (
         <div className="min-h-screen bg-gray-50 flex">
             <ToastContainer />
-            <button
-                onClick={() => setIsSidebarOpen(!isSidebarOpen)}
-                className="lg:hidden fixed bottom-4 left-4 z-50 p-2 bg-blue-600 text-white rounded-lg"
-            >
-                {isSidebarOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
-            </button>
+            <Sidebar
+                activeSection={activeSection}
+                setActiveSection={setActiveSection}
+                isSidebarOpen={isSidebarOpen}
+                onCloseSidebar={() => setIsSidebarOpen(false)}
+            />
 
-            {isSidebarOpen && (
-                <Sidebar activeSection={activeSection} setActiveSection={setActiveSection} />
-            )}
+            <main className="flex-1 min-h-screen flex flex-col relative w-full max-w-full">
+                <Header activeSection={activeSection}>
+                    <button
+                        onClick={() => setIsSidebarOpen((prevState) => !prevState)}
+                        className="lg:hidden p-2 -ml-2 text-gray-600 hover:text-gray-900"
+                    >
+                        <Menu className="w-6 h-6" />
+                    </button>
 
-            <main className="flex-1 min-h-screen flex flex-col">
-                <Header activeSection={activeSection} />
-
+                </Header>
                 <div className="flex-1 p-4 sm:p-6 lg:p-8">
                     <div className="mb-8">
                         {role === 'admin' && (
@@ -920,74 +998,137 @@ function Videos() {
                         )}
 
                         {/* Mobile Card View */}
-                        <div className="lg:hidden grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div className="lg:hidden space-y-4 w-full">
                             {filteredVideos.map((video) => (
                                 <div
                                     key={video.id}
-                                    className="bg-white rounded-xl shadow-sm border border-gray-100 hover:shadow-md transition-shadow p-4"
+                                    className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden hover:shadow-md transition-all duration-200"
                                 >
-                                    <div className="flex items-start justify-between mb-3">
-                                        <h3 className="text-lg font-semibold text-gray-900">{video.title}</h3>
-                                    </div>
-
-                                    <div className="space-y-2 mb-4">
-                                        <div className="flex items-center text-gray-600">
-                                            <Youtube className="w-4 h-4 text-red-600 mr-2" />
-                                            {video.channelName}
-                                        </div>
-                                        <div className="text-gray-600">
-                                            Freelancer: <span className="font-medium">{video.freelancerName}</span>
-                                        </div>
-                                        <select
-                                            value={video.status}
-                                            onChange={(e) => handleStatusChange(video.id, e.target.value, video.freelancerId)}
-                                            className={`w-full inline-flex items-center px-3 py-1 rounded-full text-sm border focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${statusColors[video.status]?.bg || 'bg-gray-100'} ${statusColors[video.status]?.text || 'text-gray-600'}`}
-                                            disabled={role !== 'admin' && !getAvailableStatuses().includes(video.status)}
-                                        >
-                                            {getAvailableStatuses().map((status) => (
-                                                <option key={status} value={status}>
-                                                    {status.replace(/_/g, ' ')}
-                                                </option>
-                                            ))}
-                                        </select>
-                                    </div>
-
-                                    <div className="flex items-center justify-between">
-                                        <div className="flex gap-2">
-                                            {canEditVideo(video) && (
-                                                <button
-                                                    onClick={() => {
-                                                        setSelectedVideo(video);
-                                                        setIsEditModalOpen(true);
-                                                    }}
-                                                    className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg"
+                                    <div className="p-4 space-y-4">
+                                        <div className="flex items-start justify-between gap-4">
+                                            <div className="flex-1">
+                                                <h3 className="text-lg font-semibold text-gray-900 line-clamp-2">{video.title}</h3>
+                                                <div className="flex items-center mt-2 text-gray-600">
+                                                    <Youtube className="w-4 h-4 text-red-600 mr-2 flex-shrink-0" />
+                                                    <span className="text-sm">{video.channelName}</span>
+                                                </div>
+                                            </div>
+                                            {video.youtubeUrl && (
+                                                <a
+                                                    href={video.youtubeUrl}
+                                                    target="_blank"
+                                                    rel="noopener noreferrer"
+                                                    className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors flex-shrink-0"
                                                 >
-                                                    <Edit2 className="w-5 h-5" />
-                                                </button>
-                                            )}
-                                            {canDeleteVideo() && (
-                                                <button
-                                                    onClick={() => {
-                                                        setSelectedVideo(video);
-                                                        setIsDeleteModalOpen(true);
-                                                    }}
-                                                    className="p-2 text-red-600 hover:bg-red-50 rounded-lg"
-                                                >
-                                                    <Trash2 className="w-5 h-5" />
-                                                </button>
+                                                    <ExternalLink className="w-5 h-5" />
+                                                </a>
                                             )}
                                         </div>
-                                        {video.youtubeUrl && (
-                                            <a
-                                                href={video.youtubeUrl}
-                                                target="_blank"
-                                                rel="noopener noreferrer"
-                                                className="flex items-center px-3 py-1 text-sm text-blue-600 hover:bg-blue-50 rounded-lg"
+
+                                        <div className="w-full">
+                                            <select
+                                                value={video.status}
+                                                onChange={(e) => handleStatusChange(video.id, e.target.value, video.freelancerId)}
+                                                className={`w-full px-3 py-2 rounded-lg text-sm border focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${statusColors[video.status]?.bg || 'bg-gray-100'
+                                                    } ${statusColors[video.status]?.text || 'text-gray-600'}`}
+                                                disabled={role !== 'admin' && !getAvailableStatuses().includes(video.status)}
                                             >
-                                                <ExternalLink className="w-4 h-4 mr-1" />
-                                                Ver no YouTube
-                                            </a>
+                                                {getAvailableStatuses().map((status) => (
+                                                    <option key={status} value={status}>
+                                                        {status.replace(/_/g, ' ')}
+                                                    </option>
+                                                ))}
+                                            </select>
+                                        </div>
+
+                                        <div className="grid grid-cols-2 gap-3">
+                                            <div className="space-y-1">
+                                                <label className="text-xs font-medium text-gray-500">Roteirista</label>
+                                                <p className="text-sm text-gray-900">{video.scriptWriterName || 'N/A'}</p>
+                                            </div>
+                                            <div className="space-y-1">
+                                                <label className="text-xs font-medium text-gray-500">Narrador</label>
+                                                <p className="text-sm text-gray-900">{video.narratorName || 'N/A'}</p>
+                                            </div>
+                                            <div className="space-y-1">
+                                                <label className="text-xs font-medium text-gray-500">Editor</label>
+                                                <p className="text-sm text-gray-900">{video.editorName || 'N/A'}</p>
+                                            </div>
+                                            <div className="space-y-1">
+                                                <label className="text-xs font-medium text-gray-500">Thumb Maker</label>
+                                                <p className="text-sm text-gray-900">{video.thumbMakerName || 'N/A'}</p>
+                                            </div>
+                                        </div>
+
+                                        {video.observations && (
+                                            <div className="pt-3 border-t border-gray-100">
+                                                <label className="text-xs font-medium text-gray-500 mb-1 block">Observações</label>
+                                                <p className="text-sm text-gray-700 line-clamp-3">{video.observations}</p>
+                                                {video.observations.length > 150 && (
+                                                    <button
+                                                        onClick={() => {
+                                                            const dialog = document.createElement('dialog');
+                                                            dialog.className = 'p-6 rounded-lg shadow-xl max-w-2xl w-full';
+                                                            dialog.innerHTML = `
+                              <div class="flex flex-col">
+                                <div class="flex justify-between items-center mb-4">
+                                  <h3 class="text-lg font-semibold text-gray-900">Observações</h3>
+                                  <button class="text-gray-500 hover:text-gray-700" onclick="this.closest('dialog').close()">
+                                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                                    </svg>
+                                  </button>
+                                </div>
+                                <div class="text-gray-600 whitespace-pre-wrap">${video.observations}</div>
+                              </div>
+                            `;
+                                                            document.body.appendChild(dialog);
+                                                            dialog.showModal();
+                                                            dialog.addEventListener('close', () => {
+                                                                dialog.remove();
+                                                            });
+                                                        }}
+                                                        className="text-blue-600 hover:text-blue-800 text-sm mt-1 focus:outline-none"
+                                                    >
+                                                        Ver mais
+                                                    </button>
+                                                )}
+                                            </div>
                                         )}
+
+                                        <div className="flex items-center justify-between pt-3 border-t border-gray-100">
+                                            <div className="flex gap-2">
+                                                {canEditVideo(video) && (
+                                                    <button
+                                                        onClick={() => {
+                                                            setSelectedVideo(video);
+                                                            setIsEditModalOpen(true);
+                                                        }}
+                                                        className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
+                                                    >
+                                                        <Edit2 className="w-5 h-5" />
+                                                    </button>
+                                                )}
+                                                {canDeleteVideo() && (
+                                                    <button
+                                                        onClick={() => {
+                                                            setSelectedVideo(video);
+                                                            setIsDeleteModalOpen(true);
+                                                        }}
+                                                        className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                                                    >
+                                                        <Trash2 className="w-5 h-5" />
+                                                    </button>
+                                                )}
+                                            </div>
+                                            <button
+                                                onClick={() => openCommentsModal(video)}
+                                                className="flex items-center px-4 py-2 text-sm text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
+                                            >
+                                                <MessageSquare className="w-4 h-4 mr-2" />
+                                                Comentários
+                                            </button>
+                                        </div>
                                     </div>
                                 </div>
                             ))}

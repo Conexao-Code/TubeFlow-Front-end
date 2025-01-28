@@ -19,29 +19,50 @@ interface Channel {
 function Channels() {
     const [activeSection, setActiveSection] = useState('Canais');
     const [isSidebarOpen, setIsSidebarOpen] = useState(true);
-    const [channels, setChannels] = useState<Channel[]>([
-        {
-            id: '1',
-            name: 'Canal Exemplo',
-            description: 'Um canal de exemplo para demonstração',
-            totalVideos: 150,
-            monthlyVideos: 8,
-            youtubeUrl: 'https://youtube.com/channel/example',
-        },
-    ]);
-
+    const [channels, setChannels] = useState<Channel[]>([]);
     const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
     const [isEditModalOpen, setIsEditModalOpen] = useState(false);
     const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
     const [selectedChannel, setSelectedChannel] = useState<Channel | null>(null);
-
-    const totalChannels = channels.length;
     const [totalMonthlyVideos, setTotalMonthlyVideos] = useState(0);
 
+    const totalChannels = channels.length;
+
+    // Lidar com resize para exibir o Sidebar no desktop
+    useEffect(() => {
+        const handleResize = () => {
+            if (window.innerWidth >= 1024) {
+                setIsSidebarOpen(true);
+            }
+        };
+
+        handleResize();
+        window.addEventListener('resize', handleResize);
+
+        return () => window.removeEventListener('resize', handleResize);
+    }, []);
+
+    // Buscar dados dos canais
+    useEffect(() => {
+        const fetchChannels = async () => {
+            try {
+                const response = await fetch('http://localhost:1100/api/channels');
+                const data = await response.json();
+
+                setChannels(data.channels);
+                setTotalMonthlyVideos(data.totalMonthlyVideos);
+            } catch (error) {
+                console.error('Erro ao buscar canais:', error);
+                toast.error('Erro ao buscar canais.', { position: 'top-right' });
+            }
+        };
+
+        fetchChannels();
+    }, []);
 
     const handleCreateChannel = async (data: any) => {
         try {
-            const response = await fetch('http://77.37.43.248:1100/api/channels', {
+            const response = await fetch('http://localhost:1100/api/channels', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(data),
@@ -66,7 +87,7 @@ function Channels() {
         if (!selectedChannel) return;
 
         try {
-            const response = await fetch(`http://77.37.43.248:1100/api/channels/${selectedChannel.id}`, {
+            const response = await fetch(`http://localhost:1100/api/channels/${selectedChannel.id}`, {
                 method: 'PUT',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(data),
@@ -94,7 +115,7 @@ function Channels() {
         if (!selectedChannel) return;
 
         try {
-            const response = await fetch(`http://77.37.43.248:1100/api/channels/${selectedChannel.id}`, {
+            const response = await fetch(`http://localhost:1100/api/channels/${selectedChannel.id}`, {
                 method: 'DELETE',
             });
 
@@ -113,66 +134,45 @@ function Channels() {
         }
     };
 
-
-    useEffect(() => {
-        const fetchChannels = async () => {
-            try {
-                const response = await fetch('http://77.37.43.248:1100/api/channels');
-                const data = await response.json();
-    
-                setChannels(data.channels);
-                setTotalMonthlyVideos(data.totalMonthlyVideos); // Atualize o estado corretamente
-            } catch (error) {
-                console.error('Erro ao buscar canais:', error);
-                toast.error('Erro ao buscar canais.', { position: 'top-right' });
-            }
-        };
-    
-        fetchChannels();
-    }, []);
-    
-
-
     return (
         <div className="min-h-screen bg-gray-50 flex">
-            <ToastContainer />
-            <button
-                onClick={() => setIsSidebarOpen(!isSidebarOpen)}
-                className="lg:hidden fixed bottom-4 left-4 z-50 p-2 bg-blue-600 text-white rounded-lg"
-            >
-                {isSidebarOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
-            </button>
+            <Sidebar
+                activeSection={activeSection}
+                setActiveSection={setActiveSection}
+                isSidebarOpen={isSidebarOpen}
+                onCloseSidebar={() => setIsSidebarOpen(false)}
+            />
 
-            {isSidebarOpen && (
-                <Sidebar activeSection={activeSection} setActiveSection={setActiveSection} />
-            )}
+            <div className="flex-1 flex flex-col min-h-screen">
+                <Header activeSection={activeSection}>
+                    <button
+                        onClick={() => setIsSidebarOpen((prevState) => !prevState)}
+                        className="lg:hidden p-2 -ml-2 text-gray-600 hover:text-gray-900"
+                    >
+                        <Menu className="w-6 h-6" />
+                    </button>
+                </Header>
 
-            <main className="flex-1 min-h-screen flex flex-col">
-                <Header activeSection={activeSection} />
+                <main className="flex-1 p-4 sm:p-6 lg:p-8">
+                    <div className="flex items-center justify-between mb-6">
+                        <h1 className="text-2xl font-semibold text-gray-900">Gerenciamento de Canais</h1>
+                        <button
+                            onClick={() => setIsCreateModalOpen(true)}
+                            className="flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+                        >
+                            <Plus className="w-5 h-5 mr-2" />
+                            Novo Canal
+                        </button>
+                    </div>
 
-                <div className="flex-1 p-4 sm:p-6 lg:p-8">
-                    <div className="mb-8">
-                        <div className="flex items-center justify-between mb-6">
-                            <h1 className="text-2xl font-semibold text-gray-900">Gerenciamento de Canais</h1>
-                            <button
-                                onClick={() => setIsCreateModalOpen(true)}
-                                className="flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
-                            >
-                                <Plus className="w-5 h-5 mr-2" />
-                                Novo Canal
-                            </button>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8">
+                        <div className="bg-white rounded-xl shadow-sm p-6 border border-gray-100">
+                            <p className="text-gray-600 text-sm">Total de Canais</p>
+                            <p className="text-3xl font-semibold text-gray-900 mt-2">{totalChannels}</p>
                         </div>
-
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8">
-                            <div className="bg-white rounded-xl shadow-sm p-6 border border-gray-100">
-                                <p className="text-gray-600 text-sm">Total de Canais</p>
-                                <p className="text-3xl font-semibold text-gray-900 mt-2">{totalChannels}</p>
-                            </div>
-                            <div className="bg-white rounded-xl shadow-sm p-6 border border-gray-100">
-                                <p className="text-gray-600 text-sm">Vídeos Publicados este Mês</p>
-                                <p className="text-3xl font-semibold text-gray-900 mt-2">{totalMonthlyVideos}</p>
-
-                            </div>
+                        <div className="bg-white rounded-xl shadow-sm p-6 border border-gray-100">
+                            <p className="text-gray-600 text-sm">Vídeos Publicados este Mês</p>
+                            <p className="text-3xl font-semibold text-gray-900 mt-2">{totalMonthlyVideos}</p>
                         </div>
                     </div>
 
@@ -192,102 +192,8 @@ function Channels() {
                             />
                         ))}
                     </div>
-                </div>
-
-                {/* Create Modal */}
-                {isCreateModalOpen && (
-                    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-                        <div className="bg-white rounded-xl shadow-xl w-full max-w-md">
-                            <div className="p-6 border-b border-gray-100">
-                                <div className="flex items-center justify-between">
-                                    <h2 className="text-xl font-semibold text-gray-800">Cadastrar Novo Canal</h2>
-                                    <button
-                                        onClick={() => setIsCreateModalOpen(false)}
-                                        className="text-gray-400 hover:text-gray-600"
-                                    >
-                                        <X className="w-6 h-6" />
-                                    </button>
-                                </div>
-                            </div>
-                            <div className="p-6">
-                                <ChannelForm onSubmit={handleCreateChannel} />
-                            </div>
-                        </div>
-                    </div>
-                )}
-
-                {/* Edit Modal */}
-                {isEditModalOpen && selectedChannel && (
-                    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-                        <div className="bg-white rounded-xl shadow-xl w-full max-w-md">
-                            <div className="p-6 border-b border-gray-100">
-                                <div className="flex items-center justify-between">
-                                    <h2 className="text-xl font-semibold text-gray-800">Editar Canal</h2>
-                                    <button
-                                        onClick={() => setIsEditModalOpen(false)}
-                                        className="text-gray-400 hover:text-gray-600"
-                                    >
-                                        <X className="w-6 h-6" />
-                                    </button>
-                                </div>
-                            </div>
-                            <div className="p-6">
-                                <ChannelForm
-                                    onSubmit={handleEditChannel}
-                                    initialData={{
-                                        name: selectedChannel.name,
-                                        description: selectedChannel.description,
-                                        youtubeUrl: selectedChannel.youtubeUrl,
-                                    }}
-                                />
-                            </div>
-                        </div>
-                    </div>
-                )}
-
-                {/* Delete Modal */}
-                {isDeleteModalOpen && selectedChannel && (
-                    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-                        <div className="bg-white rounded-xl shadow-xl w-full max-w-md">
-                            <div className="p-6 border-b border-gray-100">
-                                <div className="flex items-center justify-between">
-                                    <h2 className="text-xl font-semibold text-gray-800">Excluir Canal</h2>
-                                    <button
-                                        onClick={() => setIsDeleteModalOpen(false)}
-                                        className="text-gray-400 hover:text-gray-600"
-                                    >
-                                        <X className="w-6 h-6" />
-                                    </button>
-                                </div>
-                            </div>
-                            <div className="p-6">
-                                <div className="flex items-center gap-4 mb-6">
-                                    <div className="w-12 h-12 rounded-full bg-red-100 flex items-center justify-center flex-shrink-0">
-                                        <AlertTriangle className="w-6 h-6 text-red-600" />
-                                    </div>
-                                    <p className="text-gray-600">
-                                        Tem certeza que deseja excluir o canal <span className="font-semibold">{selectedChannel.name}</span>? Essa ação não pode ser desfeita.
-                                    </p>
-                                </div>
-                                <div className="flex gap-3 justify-end">
-                                    <button
-                                        onClick={() => setIsDeleteModalOpen(false)}
-                                        className="px-4 py-2 text-gray-700 border border-gray-300 rounded-lg hover:bg-gray-50"
-                                    >
-                                        Cancelar
-                                    </button>
-                                    <button
-                                        onClick={handleDeleteChannel}
-                                        className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700"
-                                    >
-                                        Confirmar
-                                    </button>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                )}
-            </main>
+                </main>
+            </div>
         </div>
     );
 }
