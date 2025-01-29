@@ -155,7 +155,7 @@ function Videos() {
         setComments([]);
     };
 
-    const role = localStorage.getItem('role');
+    const role = localStorage.getItem('role')?.replace(/\s+/g, '_') || '';
     const isFreelancer = localStorage.getItem('isFreelancer') === 'true';
     const userId = localStorage.getItem('userId');
 
@@ -178,45 +178,20 @@ function Videos() {
     };
 
     const statusesByRole = {
-        roteirista: [
-            'Pendente',
-            'Roteiro_Solicitado',
-            'Roteiro_Em_Andamento',
-            'Roteiro_Concluído'
-        ],
-        narrador: [
-            'Narração_Solicitada',
-            'Narração_Em_Andamento',
-            'Narração_Concluída'
-        ],
-        editor: [
-            'Edição_Solicitada',
-            'Edição_Em_Andamento',
-            'Edição_Concluída'
-        ],
-        thumbnail: [
-            'Thumbnail_Solicitada',
-            'Thumbnail_Em_Andamento',
-            'Thumbnail_Concluída'
-        ],
+        roteirista: ['Pendente', 'Roteiro_Solicitado', 'Roteiro_Em_Andamento', 'Roteiro_Concluído'],
+        narrador: ['Narração_Solicitada', 'Narração_Em_Andamento', 'Narração_Concluída'],
+        editor: ['Edição_Solicitada', 'Edição_Em_Andamento', 'Edição_Concluída'],
+        thumb_maker: ['Thumbnail_Solicitada', 'Thumbnail_Em_Andamento', 'Thumbnail_Concluída'], // ✅ Confirme que está correto
         admin: [
-            'Pendente',
-            'Roteiro_Solicitado',
-            'Roteiro_Em_Andamento',
-            'Roteiro_Concluído',
-            'Narração_Solicitada',
-            'Narração_Em_Andamento',
-            'Narração_Concluída',
-            'Edição_Solicitada',
-            'Edição_Em_Andamento',
-            'Edição_Concluída',
-            'Thumbnail_Solicitada',
-            'Thumbnail_Em_Andamento',
-            'Thumbnail_Concluída',
-            'Publicado',
-            'Cancelado'
+            'Pendente', 'Roteiro_Solicitado', 'Roteiro_Em_Andamento', 'Roteiro_Concluído',
+            'Narração_Solicitada', 'Narração_Em_Andamento', 'Narração_Concluída',
+            'Edição_Solicitada', 'Edição_Em_Andamento', 'Edição_Concluída',
+            'Thumbnail_Solicitada', 'Thumbnail_Em_Andamento', 'Thumbnail_Concluída',
+            'Publicado', 'Cancelado'
         ]
     };
+    
+
 
     const getAvailableStatuses = () => {
         if (role === 'admin') return statusesByRole.admin;
@@ -225,7 +200,7 @@ function Videos() {
         }
         return statusesByRole[role as keyof typeof statusesByRole] || [];
     };
-    
+
 
     const canDeleteVideo = () => {
         return role === 'admin';
@@ -287,18 +262,20 @@ function Videos() {
         }
     };
 
+
     const filteredVideos = videos.filter((video) => {
+
         if (activeTab === 'cancelled') {
             if (role === 'admin') {
                 return video.status === 'Cancelado';
             }
-    
+
             if (isFreelancer) {
                 const userId = localStorage.getItem('userId');
                 if (!userId) return false;
-    
+
                 const normalizedUserId = parseInt(userId, 10);
-    
+
                 return (
                     video.status === 'Cancelado' &&
                     (parseInt(video.scriptWriterId || '', 10) === normalizedUserId ||
@@ -307,21 +284,21 @@ function Videos() {
                         parseInt(video.thumbMakerId || '', 10) === normalizedUserId)
                 );
             }
-    
+
             return false;
         }
-    
+
         if (activeTab === 'published') {
             if (role === 'admin') {
                 return video.status === 'Publicado';
             }
-    
+
             if (isFreelancer) {
                 const userId = localStorage.getItem('userId');
                 if (!userId) return false;
-    
+
                 const normalizedUserId = parseInt(userId, 10);
-    
+
                 return (
                     video.status === 'Publicado' &&
                     (parseInt(video.scriptWriterId || '', 10) === normalizedUserId ||
@@ -330,62 +307,58 @@ function Videos() {
                         parseInt(video.thumbMakerId || '', 10) === normalizedUserId)
                 );
             }
-    
+
             return false;
         }
-    
+
         if (activeTab === 'production') {
             if (video.status === 'Publicado' || video.status === 'Cancelado') {
                 return false;
             }
-    
+
             if (role === 'admin') {
                 return true;
             }
-    
+
             if (isFreelancer) {
                 const userId = localStorage.getItem('userId');
-    
+
                 if (!userId) {
                     return false;
                 }
-    
+
                 const normalizedUserId = parseInt(userId, 10);
-    
+
                 switch (video.status) {
                     case 'Roteiro_Solicitado':
                     case 'Roteiro_Em_Andamento':
                     case 'Roteiro_Concluído':
                         return video.scriptWriterId !== undefined && parseInt(video.scriptWriterId, 10) === normalizedUserId;
-    
+
                     case 'Narração_Solicitada':
                     case 'Narração_Em_Andamento':
                     case 'Narração_Concluída':
                         return video.narratorId !== undefined && parseInt(video.narratorId, 10) === normalizedUserId;
-    
+
                     case 'Edição_Solicitada':
                     case 'Edição_Em_Andamento':
                     case 'Edição_Concluída':
                         return video.editorId !== undefined && parseInt(video.editorId, 10) === normalizedUserId;
-    
+
                     case 'Thumbnail_Solicitada':
                     case 'Thumbnail_Em_Andamento':
-                    case 'Thumbnail_Concluída':
                         return video.thumbMakerId !== undefined && parseInt(video.thumbMakerId, 10) === normalizedUserId;
-    
+
                     default:
                         return false;
                 }
             }
-    
+
             return false;
         }
-    
+
         return false;
     });
-    
-
-
 
 
     const fetchChannels = async () => {
@@ -511,23 +484,23 @@ function Videos() {
 
     const handleEditVideo = async () => {
         if (!selectedVideo) return;
-    
+
         if (!newVideoTitle || !newVideoChannel || !newVideoFreelancer || !newVideoNarrator || !newVideoEditor || !newVideoThumbMaker) {
             toast.error('Todos os campos obrigatórios devem ser preenchidos.', { position: 'top-right' });
             return;
         }
-    
+
         // Identificar userId ou userIdA
         const isFreelancer = localStorage.getItem('isFreelancer') === 'true';
         const userId = isFreelancer
             ? localStorage.getItem('userId')
             : localStorage.getItem('userIdA');
-    
+
         if (!userId) {
             toast.error('Usuário não identificado.', { position: 'top-right' });
             return;
         }
-    
+
         const updatedData = {
             title: newVideoTitle,
             channelId: newVideoChannel,
@@ -540,14 +513,14 @@ function Videos() {
             thumbMakerId: newVideoThumbMaker,
             userId, // Envia o identificador do usuário
         };
-    
+
         try {
             const response = await fetch(`http://localhost:1100/api/videos/${selectedVideo.id}`, {
                 method: 'PUT',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(updatedData),
             });
-    
+
             if (response.ok) {
                 fetchVideos();
                 setIsEditModalOpen(false);
@@ -561,7 +534,7 @@ function Videos() {
             toast.error('Erro ao editar vídeo.', { position: 'top-right' });
         }
     };
-    
+
 
 
     const handleDeleteVideo = async () => {
@@ -586,23 +559,23 @@ function Videos() {
     };
     const handleStatusChange = async (videoId: string, newStatus: string) => {
         const availableStatuses = getAvailableStatuses();
-    
+
         if (!availableStatuses.includes(newStatus) && role !== 'admin') {
             toast.error('Você não tem permissão para definir este status.', { position: 'top-right' });
             return;
         }
-    
+
         // Identificar se é freelancer ou user
         const isFreelancer = localStorage.getItem('isFreelancer') === 'true';
         const userId = isFreelancer
             ? localStorage.getItem('userId') // ID do freelancer
             : localStorage.getItem('userIdA'); // ID do usuário
-    
+
         if (!userId) {
             toast.error('Usuário não identificado.', { position: 'top-right' });
             return;
         }
-    
+
         try {
             const response = await fetch(`http://localhost:1100/api/videos/${videoId}/status`, {
                 method: 'PUT',
@@ -613,7 +586,7 @@ function Videos() {
                     isUser: !isFreelancer, // Envia true se for um usuário (não freelancer)
                 }),
             });
-    
+
             if (response.ok) {
                 fetchVideos();
                 toast.success('Status atualizado com sucesso!', { position: 'top-right' });
@@ -626,8 +599,8 @@ function Videos() {
             toast.error('Erro ao atualizar status.', { position: 'top-right' });
         }
     };
-    
-    
+
+
 
     const clearFilters = () => {
         setSelectedChannel('');
@@ -789,7 +762,7 @@ function Videos() {
                                                 <td className="px-6 py-4">
                                                     <select
                                                         value={video.status}
-                                                        onChange={(e) => handleStatusChange(video.id, e.target.value, video.freelancerId)}
+                                                        onChange={(e) => handleStatusChange(video.id, e.target.value)}
                                                         className={`inline-flex items-center px-3 py-2 rounded-full text-sm border focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors duration-150 ${statusColors[video.status]?.bg || 'bg-gray-100'} ${statusColors[video.status]?.text || 'text-gray-600'}`}
                                                         disabled={role !== 'admin' && !getAvailableStatuses().includes(video.status)}
                                                     >
@@ -1028,7 +1001,7 @@ function Videos() {
                                         <div className="w-full">
                                             <select
                                                 value={video.status}
-                                                onChange={(e) => handleStatusChange(video.id, e.target.value, video.freelancerId)}
+                                                onChange={(e) => handleStatusChange(video.id, e.target.value)}
                                                 className={`w-full px-3 py-2 rounded-lg text-sm border focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${statusColors[video.status]?.bg || 'bg-gray-100'
                                                     } ${statusColors[video.status]?.text || 'text-gray-600'}`}
                                                 disabled={role !== 'admin' && !getAvailableStatuses().includes(video.status)}

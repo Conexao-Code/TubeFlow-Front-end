@@ -1,0 +1,138 @@
+import React, { useState } from 'react';
+import { Settings as SettingsIcon, Info, Bell } from 'lucide-react';
+import Header from '../components/Header';
+import Sidebar from '../components/Sidebar';
+import { ToastContainer, toast } from 'react-toastify';
+
+function Settings() {
+    const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+    const [apiKey, setApiKey] = useState('');
+    const [autoNotify, setAutoNotify] = useState(false);
+
+    const handleSaveSettings = async (e: React.FormEvent) => {
+        e.preventDefault();
+        try {
+            // Here you would implement the API call to save settings
+            toast.success('Configurações salvas com sucesso!', { position: 'top-right' });
+        } catch (error) {
+            toast.error('Erro ao salvar configurações.', { position: 'top-right' });
+        }
+    };
+
+    return (
+        <div className="min-h-screen bg-gray-50 flex">
+            <ToastContainer />
+            
+            <Sidebar 
+                activeSection="settings"
+                setActiveSection={() => {}}
+                isSidebarOpen={isSidebarOpen}
+                onCloseSidebar={() => setIsSidebarOpen(false)}
+            />
+
+            <main className="flex-1 min-h-screen flex flex-col">
+                <Header activeSection="settings">
+                    <button
+                        onClick={() => setIsSidebarOpen((prev) => !prev)}
+                        className="lg:hidden p-2 -ml-2 text-gray-600 hover:text-gray-900"
+                    >
+                        <SettingsIcon className="w-6 h-6" />
+                    </button>
+                </Header>
+
+                <div className="flex-1 p-4 sm:p-6 lg:p-8">
+                    <div className="mb-6">
+                        <h2 className="text-xl font-semibold text-gray-800">Configurações</h2>
+                        <p className="mt-1 text-sm text-gray-600">Gerencie as configurações do sistema</p>
+                    </div>
+
+                    <div className="max-w-2xl">
+                        <form onSubmit={handleSaveSettings}>
+                            <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
+                                {/* API Key Section */}
+                                <div className="p-6 border-b border-gray-100">
+                                    <div className="flex items-start justify-between">
+                                        <div className="flex-1">
+                                            <label htmlFor="apiKey" className="block text-sm font-medium text-gray-700">
+                                                API Key do WhatsGW
+                                            </label>
+                                            <div className="mt-1">
+                                                <input
+                                                    type="text"
+                                                    id="apiKey"
+                                                    value={apiKey}
+                                                    onChange={(e) => setApiKey(e.target.value)}
+                                                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                                                    placeholder="Digite sua API Key"
+                                                />
+                                            </div>
+                                            <div className="mt-2 flex items-start gap-2 text-sm text-gray-600">
+                                                <Info className="w-4 h-4 flex-shrink-0 mt-0.5" />
+                                                <p>
+                                                    Obtenha sua API Key acessando{' '}
+                                                    <a
+                                                        href="https://app.whatsgw.com.br/w_desenvolvedor.aspx"
+                                                        target="_blank"
+                                                        rel="noopener noreferrer"
+                                                        className="text-blue-600 hover:text-blue-800"
+                                                    >
+                                                        WhatsGW Desenvolvedor
+                                                    </a>
+                                                </p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                {/* Notifications Section */}
+                                <div className="p-6">
+                                    <div className="flex items-center justify-between">
+                                        <div className="flex-1">
+                                            <div className="flex items-center gap-3">
+                                                <Bell className="w-5 h-5 text-gray-600" />
+                                                <div>
+                                                    <h3 className="text-sm font-medium text-gray-700">
+                                                        Notificações Automáticas
+                                                    </h3>
+                                                    <p className="mt-1 text-sm text-gray-600">
+                                                        Ative para enviar mensagens automáticas aos freelancers
+                                                    </p>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div className="ml-4">
+                                            <button
+                                                type="button"
+                                                onClick={() => setAutoNotify(!autoNotify)}
+                                                className={`relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 ${
+                                                    autoNotify ? 'bg-blue-600' : 'bg-gray-200'
+                                                }`}
+                                            >
+                                                <span
+                                                    className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out ${
+                                                        autoNotify ? 'translate-x-5' : 'translate-x-0'
+                                                    }`}
+                                                />
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div className="mt-6">
+                                <button
+                                    type="submit"
+                                    className="w-full sm:w-auto px-6 py-2.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-colors duration-200"
+                                >
+                                    Salvar Configurações
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </main>
+        </div>
+    );
+}
+
+export default Settings;

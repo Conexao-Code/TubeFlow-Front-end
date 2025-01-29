@@ -6,7 +6,6 @@ import {
   Users,
   Youtube,
   Clock,
-  TrendingUp,
   Bell
 } from 'lucide-react';
 import Sidebar from '../components/Sidebar';
@@ -28,6 +27,7 @@ function Dashboard() {
         managedChannels: 0,
     });
     const [recentActivities, setRecentActivities] = useState<RecentActivity[]>([]);
+    const [isUser, setIsUser] = useState(false);
 
     useEffect(() => {
         const handleResize = () => {
@@ -44,8 +44,14 @@ function Dashboard() {
     useEffect(() => {
         const fetchDashboardData = async () => {
             try {
-                const response = await fetch('http://localhost:1100/api/dashboard');
+                const isFreelancer = localStorage.getItem('isFreelancer') === 'true';
+                const userId = localStorage.getItem(isFreelancer ? 'userId' : 'userIdA');
+                const isAdmin = !isFreelancer;
+                setIsUser(isAdmin);
+
+                const response = await fetch(`http://localhost:1100/api/dashboard?userId=${userId}&isUser=${isAdmin ? 1 : 0}`);
                 const data = await response.json();
+
                 setStats(data.stats);
                 setRecentActivities(data.recentActivities);
             } catch (error) {
@@ -68,20 +74,30 @@ function Dashboard() {
             value: stats.videosCompleted,
             icon: CheckCircle,
             color: 'bg-green-50 text-green-600'
-        },
-        {
-            title: 'Freelancers Ativos',
-            value: stats.activeFreelancers,
-            icon: Users,
-            color: 'bg-purple-50 text-purple-600'
-        },
-        {
-            title: 'Canais Gerenciados',
-            value: stats.managedChannels,
-            icon: Youtube,
-            color: 'bg-red-50 text-red-600'
         }
     ];
+
+    if (isUser) {
+        statCards.push(
+            {
+                title: 'Freelancers Ativos',
+                value: stats.activeFreelancers,
+                icon: Users,
+                color: 'bg-purple-50 text-purple-600'
+            },
+            {
+                title: 'Canais Gerenciados',
+                value: stats.managedChannels,
+                icon: Youtube,
+                color: 'bg-red-50 text-red-600'
+            }
+        );
+    }
+
+    // Dynamic grid classes based on user type
+    const gridClasses = isUser
+        ? "grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8"
+        : "grid grid-cols-1 md:grid-cols-2 gap-6 mb-8";
 
     return (
         <div className="min-h-screen bg-gray-50 flex">
@@ -103,14 +119,18 @@ function Dashboard() {
                 </Header>
 
                 <main className="flex-1 p-4 sm:p-6 lg:p-8">
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+                    <div className={gridClasses}>
                         {statCards.map((card, index) => (
-                            <div key={index} className="bg-white rounded-xl shadow-sm p-6 border border-gray-100 transition-all duration-200 hover:shadow-md">
+                            <div 
+                                key={index} 
+                                className={`bg-white rounded-xl shadow-sm p-6 border border-gray-100 transition-all duration-200 hover:shadow-md ${
+                                    !isUser ? 'md:col-span-1' : ''
+                                }`}
+                            >
                                 <div className="flex items-center justify-between mb-4">
                                     <div className={`p-2 rounded-lg ${card.color}`}>
                                         <card.icon className="w-6 h-6" />
                                     </div>
-
                                 </div>
                                 <p className="text-gray-600 text-sm font-medium">{card.title}</p>
                                 <p className="text-3xl font-bold text-gray-900 mt-2">{card.value}</p>
