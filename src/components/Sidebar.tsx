@@ -1,6 +1,6 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Home, Users, Video, FileText, Clock, BarChart2, Play, Triangle, X } from 'lucide-react';
+import { Home, Users, Video, FileText, SettingsIcon, Clock, BarChart2, Play, Triangle, X } from 'lucide-react';
 
 type MenuItem = {
   id: string;
@@ -33,6 +33,7 @@ const Sidebar: React.FC<SidebarProps> = ({
     { id: 'canais', label: 'Canais', icon: <Play className="w-5 h-5" />, path: '/canais' },
     { id: 'logs', label: 'Logs', icon: <Clock className="w-5 h-5" />, path: '/logs' },
     { id: 'reports', label: 'Relatórios', icon: <BarChart2 className="w-5 h-5" />, path: '/reports' },
+    { id: 'configuracao', label: 'Configurações', icon: <SettingsIcon className="w-5 h-5" />, path: '/configuracoes' },
   ];
 
   const filteredMenuItems = isFreelancer

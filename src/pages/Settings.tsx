@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { Settings as SettingsIcon, Info, Bell } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { Settings as SettingsIcon, Menu, Info, Bell } from 'lucide-react';
 import Header from '../components/Header';
 import Sidebar from '../components/Sidebar';
 import { ToastContainer, toast } from 'react-toastify';
@@ -7,12 +7,54 @@ import { ToastContainer, toast } from 'react-toastify';
 function Settings() {
     const [isSidebarOpen, setIsSidebarOpen] = useState(false);
     const [apiKey, setApiKey] = useState('');
+    const [senderPhone, setSenderPhone] = useState('');
+    const [messageTemplate, setMessageTemplate] = useState('');
     const [autoNotify, setAutoNotify] = useState(false);
+
+    useEffect(() => {
+        const fetchSettings = async () => {
+            try {
+                const response = await fetch(`http://localhost:1100/api/settings`);
+                if (!response.ok) {
+                    throw new Error('Erro ao carregar configurações.');
+                }
+                const data = await response.json();
+
+                setApiKey(data.api_key || '');
+                setSenderPhone(data.sender_phone || '');
+                // Converter \n armazenado no banco para quebra de linha real
+                setMessageTemplate(data.message_template?.replace(/\\n/g, '\n') || 'Olá, {name}! Um novo vídeo foi atribuído a você: {titulo}');
+                setAutoNotify(data.auto_notify || false);
+            } catch (error) {
+                toast.error('Erro ao carregar configurações.', { position: 'top-right' });
+            }
+        };
+
+        fetchSettings();
+    }, []);
 
     const handleSaveSettings = async (e: React.FormEvent) => {
         e.preventDefault();
+
         try {
-            // Here you would implement the API call to save settings
+            const response = await fetch('http://localhost:1100/api/settings', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    apiKey,
+                    senderPhone,
+                    // Converter quebras de linha reais para \n antes de salvar no banco
+                    messageTemplate: messageTemplate.replace(/\n/g, '\\n'),
+                    autoNotify,
+                }),
+            });
+
+            if (!response.ok) {
+                throw new Error('Erro ao salvar configurações.');
+            }
+
             toast.success('Configurações salvas com sucesso!', { position: 'top-right' });
         } catch (error) {
             toast.error('Erro ao salvar configurações.', { position: 'top-right' });
@@ -22,10 +64,10 @@ function Settings() {
     return (
         <div className="min-h-screen bg-gray-50 flex">
             <ToastContainer />
-            
-            <Sidebar 
+
+            <Sidebar
                 activeSection="settings"
-                setActiveSection={() => {}}
+                setActiveSection={() => { }}
                 isSidebarOpen={isSidebarOpen}
                 onCloseSidebar={() => setIsSidebarOpen(false)}
             />
@@ -33,10 +75,10 @@ function Settings() {
             <main className="flex-1 min-h-screen flex flex-col">
                 <Header activeSection="settings">
                     <button
-                        onClick={() => setIsSidebarOpen((prev) => !prev)}
+                        onClick={() => setIsSidebarOpen((prevState) => !prevState)}
                         className="lg:hidden p-2 -ml-2 text-gray-600 hover:text-gray-900"
                     >
-                        <SettingsIcon className="w-6 h-6" />
+                        <Menu className="w-6 h-6" />
                     </button>
                 </Header>
 
@@ -49,42 +91,55 @@ function Settings() {
                     <div className="max-w-2xl">
                         <form onSubmit={handleSaveSettings}>
                             <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
-                                {/* API Key Section */}
+                                {/* API Key */}
                                 <div className="p-6 border-b border-gray-100">
-                                    <div className="flex items-start justify-between">
-                                        <div className="flex-1">
-                                            <label htmlFor="apiKey" className="block text-sm font-medium text-gray-700">
-                                                API Key do WhatsGW
-                                            </label>
-                                            <div className="mt-1">
-                                                <input
-                                                    type="text"
-                                                    id="apiKey"
-                                                    value={apiKey}
-                                                    onChange={(e) => setApiKey(e.target.value)}
-                                                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                                                    placeholder="Digite sua API Key"
-                                                />
-                                            </div>
-                                            <div className="mt-2 flex items-start gap-2 text-sm text-gray-600">
-                                                <Info className="w-4 h-4 flex-shrink-0 mt-0.5" />
-                                                <p>
-                                                    Obtenha sua API Key acessando{' '}
-                                                    <a
-                                                        href="https://app.whatsgw.com.br/w_desenvolvedor.aspx"
-                                                        target="_blank"
-                                                        rel="noopener noreferrer"
-                                                        className="text-blue-600 hover:text-blue-800"
-                                                    >
-                                                        WhatsGW Desenvolvedor
-                                                    </a>
-                                                </p>
-                                            </div>
-                                        </div>
-                                    </div>
+                                    <label htmlFor="apiKey" className="block text-sm font-medium text-gray-700">
+                                        API Key do WhatsGW
+                                    </label>
+                                    <input
+                                        type="text"
+                                        id="apiKey"
+                                        value={apiKey}
+                                        onChange={(e) => setApiKey(e.target.value)}
+                                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                                        placeholder="Digite sua API Key"
+                                    />
                                 </div>
 
-                                {/* Notifications Section */}
+                                {/* Sender Phone */}
+                                <div className="p-6 border-b border-gray-100">
+                                    <label htmlFor="senderPhone" className="block text-sm font-medium text-gray-700">
+                                        Número do Remetente (WhatsApp)
+                                    </label>
+                                    <input
+                                        type="text"
+                                        id="senderPhone"
+                                        value={senderPhone}
+                                        onChange={(e) => setSenderPhone(e.target.value)}
+                                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                                        placeholder="Digite o número do remetente"
+                                    />
+                                </div>
+
+                                {/* Message Template */}
+                                <div className="p-6 border-b border-gray-100">
+                                    <label htmlFor="messageTemplate" className="block text-sm font-medium text-gray-700">
+                                        Modelo de Mensagem (WhatsApp)
+                                    </label>
+                                    <textarea
+                                        id="messageTemplate"
+                                        value={messageTemplate}
+                                        onChange={(e) => setMessageTemplate(e.target.value)}
+                                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 resize-none"
+                                        rows={4}
+                                        placeholder="Use {name} para o nome do freelancer e {titulo} para o título do vídeo"
+                                    />
+
+                                    <p className="mt-1 text-sm text-gray-600">
+                                        Utilize <span className="text-blue-600">{'{name}'}</span> para o nome do freelancer e <span className="text-blue-600">{'{titulo}'}</span> para o título do vídeo.
+                                    </p>
+                                </div>
+
                                 <div className="p-6">
                                     <div className="flex items-center justify-between">
                                         <div className="flex-1">
@@ -100,21 +155,15 @@ function Settings() {
                                                 </div>
                                             </div>
                                         </div>
-                                        <div className="ml-4">
-                                            <button
-                                                type="button"
-                                                onClick={() => setAutoNotify(!autoNotify)}
-                                                className={`relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 ${
-                                                    autoNotify ? 'bg-blue-600' : 'bg-gray-200'
-                                                }`}
-                                            >
-                                                <span
-                                                    className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out ${
-                                                        autoNotify ? 'translate-x-5' : 'translate-x-0'
-                                                    }`}
-                                                />
-                                            </button>
-                                        </div>
+                                        <button
+                                            type="button"
+                                            onClick={() => setAutoNotify(!autoNotify)}
+                                            className={`relative inline-flex h-6 w-11 cursor-pointer rounded-full border-2 transition-colors duration-200 ease-in-out ${autoNotify ? 'bg-blue-600' : 'bg-gray-200'}`}
+                                        >
+                                            <span
+                                                className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow transition duration-200 ease-in-out ${autoNotify ? 'translate-x-5' : 'translate-x-0'}`}
+                                            />
+                                        </button>
                                     </div>
                                 </div>
                             </div>
@@ -122,7 +171,7 @@ function Settings() {
                             <div className="mt-6">
                                 <button
                                     type="submit"
-                                    className="w-full sm:w-auto px-6 py-2.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-colors duration-200"
+                                    className="w-full sm:w-auto px-6 py-2.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
                                 >
                                     Salvar Configurações
                                 </button>

@@ -11,6 +11,7 @@ import Channels from './pages/Channels';
 import Videos from './pages/Videos';
 import LogsAndStats from './pages/LogsAndStats';
 import CustomReports from './pages/CustomReports';
+import Settings from './pages/Settings';
 
 const isAuthenticated = () => {
   return !!localStorage.getItem('token');
@@ -56,6 +57,10 @@ function App() {
         <Route
           path="/videos"
           element={<ProtectedRoute element={<Videos />} allowedForFreelancers={true} />}
+        />
+        <Route
+          path="/configuracoes"
+          element={<ProtectedRoute element={<Settings />} allowedForFreelancers={true} />}
         />
         <Route
           path="/reports"
