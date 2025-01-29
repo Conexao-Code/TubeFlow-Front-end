@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Plus, X, Edit2, Trash2, AlertTriangle, Youtube, ExternalLink, Search, Filter, Menu, Video, MessageSquare } from 'lucide-react';
+import { Plus, X, Edit2, Trash2, AlertTriangle, Youtube, ExternalLink, Search, Filter, Menu, Video, MessageSquare,MessageCircle, Send, XCircle, BellRing, MessageSquareWarning } from 'lucide-react';
 import Sidebar from '../components/Sidebar';
 import Header from '../components/Header';
 import { ToastContainer, toast } from 'react-toastify';
@@ -25,8 +25,6 @@ interface Video {
     youtubeUrl?: string;
     createdAt: string;
 }
-
-
 
 interface Comment {
     text: string;
@@ -190,7 +188,7 @@ function Videos() {
             'Publicado', 'Cancelado'
         ]
     };
-    
+
 
 
     const getAvailableStatuses = () => {
@@ -557,6 +555,10 @@ function Videos() {
             toast.error('Erro ao excluir vídeo.', { position: 'top-right' });
         }
     };
+
+    const [isSendMessageModalOpen, setIsSendMessageModalOpen] = useState(false);
+    const [pendingStatusChange, setPendingStatusChange] = useState<{ videoId: string, newStatus: string } | null>(null);
+
     const handleStatusChange = async (videoId: string, newStatus: string) => {
         const availableStatuses = getAvailableStatuses();
 
@@ -565,11 +567,20 @@ function Videos() {
             return;
         }
 
-        // Identificar se é freelancer ou user
+        if (['Roteiro_Solicitado', 'Narração_Solicitada', 'Edição_Solicitada', 'Thumbnail_Solicitada'].includes(newStatus)) {
+            setPendingStatusChange({ videoId, newStatus });
+            setIsSendMessageModalOpen(true);
+            return;
+        }
+
+        await updateVideoStatus(videoId, newStatus, 0);
+    };
+
+    const updateVideoStatus = async (videoId: string, newStatus: string, sendMessage: number) => {
         const isFreelancer = localStorage.getItem('isFreelancer') === 'true';
         const userId = isFreelancer
-            ? localStorage.getItem('userId') // ID do freelancer
-            : localStorage.getItem('userIdA'); // ID do usuário
+            ? localStorage.getItem('userId')
+            : localStorage.getItem('userIdA');
 
         if (!userId) {
             toast.error('Usuário não identificado.', { position: 'top-right' });
@@ -583,7 +594,8 @@ function Videos() {
                 body: JSON.stringify({
                     status: newStatus,
                     userId,
-                    isUser: !isFreelancer, // Envia true se for um usuário (não freelancer)
+                    isUser: !isFreelancer,
+                    sendMessage
                 }),
             });
 
@@ -608,6 +620,7 @@ function Videos() {
         setSelectedFreelancer('');
         setSearchTerm('');
     };
+
 
     return (
         <div className="min-h-screen bg-gray-50 flex">
@@ -1108,6 +1121,81 @@ function Videos() {
                         </div>
                     </div>
                 </div>
+
+                {isSendMessageModalOpen && pendingStatusChange && (
+                    <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 z-50">
+                        <div
+                            className="bg-white rounded-2xl shadow-2xl w-full max-w-md transform transition-all duration-300 scale-100 opacity-100"
+                            style={{
+                                animation: 'modal-pop 0.3s ease-out',
+                            }}
+                        >
+                            {/* Header */}
+                            <div className="p-6 bg-gradient-to-r from-blue-50 to-blue-100/50 rounded-t-2xl border-b border-blue-100">
+                                <div className="flex items-center justify-between">
+                                    <div className="flex items-center space-x-3">
+                                        <div className="p-2 bg-blue-600 rounded-lg">
+                                            <BellRing className="w-5 h-5 text-white" />
+                                        </div>
+                                        <div>
+                                            <h2 className="text-xl font-semibold text-gray-800">Enviar Notificação</h2>
+                                            <p className="text-sm text-gray-600 mt-0.5">Via WhatsApp</p>
+                                        </div>
+                                    </div>
+                                    <button
+                                        onClick={() => {
+                                            setIsSendMessageModalOpen(false);
+                                            updateVideoStatus(pendingStatusChange.videoId, pendingStatusChange.newStatus, 0);
+                                        }}
+                                        className="p-2 hover:bg-white/80 rounded-lg transition-colors"
+                                    >
+                                        <X className="w-5 h-5 text-gray-500" />
+                                    </button>
+                                </div>
+                            </div>
+
+                            {/* Content */}
+                            <div className="p-6">
+                                <div className="flex items-start space-x-4 mb-8">
+                                    <div className="w-12 h-12 rounded-full bg-blue-100 flex items-center justify-center flex-shrink-0">
+                                        <MessageSquareWarning className="w-6 h-6 text-blue-600" />
+                                    </div>
+                                    <div className="flex-1">
+                                        <h3 className="text-lg font-medium text-gray-900 mb-1">Confirmar Envio</h3>
+                                        <p className="text-gray-600">
+                                            Você está prestes a enviar uma notificação via WhatsApp para o freelancer responsável.
+                                            Deseja prosseguir com o envio?
+                                        </p>
+                                    </div>
+                                </div>
+
+                                {/* Actions */}
+                                <div className="flex items-center justify-end gap-3 pt-4 border-t border-gray-100">
+                                    <button
+                                        onClick={() => {
+                                            setIsSendMessageModalOpen(false);
+                                            updateVideoStatus(pendingStatusChange.videoId, pendingStatusChange.newStatus, 0);
+                                        }}
+                                        className="inline-flex items-center px-4 py-2.5 text-gray-700 bg-gray-50 border border-gray-200 rounded-xl hover:bg-gray-100 transition-colors duration-200"
+                                    >
+                                        <XCircle className="w-5 h-5 mr-2 text-gray-500" />
+                                        Não Enviar
+                                    </button>
+                                    <button
+                                        onClick={() => {
+                                            setIsSendMessageModalOpen(false);
+                                            updateVideoStatus(pendingStatusChange.videoId, pendingStatusChange.newStatus, 1);
+                                        }}
+                                        className="inline-flex items-center px-6 py-2.5 bg-gradient-to-r from-blue-600 to-blue-700 text-white font-medium rounded-xl hover:from-blue-700 hover:to-blue-800 transition-all duration-200 shadow-sm"
+                                    >
+                                        <Send className="w-5 h-5 mr-2" />
+                                        Enviar Notificação
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                )}
 
                 {(isCreateModalOpen || isEditModalOpen) && (
                     <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 z-50">

@@ -91,7 +91,6 @@ function Settings() {
                     <div className="max-w-2xl">
                         <form onSubmit={handleSaveSettings}>
                             <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
-                                {/* API Key */}
                                 <div className="p-6 border-b border-gray-100">
                                     <label htmlFor="apiKey" className="block text-sm font-medium text-gray-700">
                                         API Key do WhatsGW
@@ -104,9 +103,19 @@ function Settings() {
                                         className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                                         placeholder="Digite sua API Key"
                                     />
+                                    <p className="mt-2 text-sm text-gray-600">
+                                        Para obter sua API Key, acesse{' '}
+                                        <a
+                                            href="https://app.whatsgw.com.br/w_desenvolvedor.aspx"
+                                            target="_blank"
+                                            rel="noopener noreferrer"
+                                            className="text-blue-600 hover:underline"
+                                        >
+                                            este link
+                                        </a>.
+                                    </p>
                                 </div>
 
-                                {/* Sender Phone */}
                                 <div className="p-6 border-b border-gray-100">
                                     <label htmlFor="senderPhone" className="block text-sm font-medium text-gray-700">
                                         Número do Remetente (WhatsApp)
