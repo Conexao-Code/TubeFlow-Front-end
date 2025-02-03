@@ -56,7 +56,6 @@ function App() {
         <div className="absolute -top-1/2 -right-1/2 w-full h-full bg-blue-100/30 rounded-full blur-3xl" />
         <div className="absolute -bottom-1/2 -left-1/2 w-full h-full bg-blue-200/30 rounded-full blur-3xl" />
       </div>
-
       <div className="relative min-h-screen flex flex-col items-center justify-center p-4">
         <div className="mb-8 flex items-center gap-2">
           <Play className="w-8 h-8 text-blue-600 fill-blue-600" />
