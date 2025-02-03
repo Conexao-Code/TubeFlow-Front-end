@@ -53,8 +53,8 @@ function App() {
           element={<ProtectedRoute element={<Freelancer />} allowedForFreelancers={false} />}
         /> 
         <Route
-          path="/admin"
-          element={<ProtectedRoute element={<Freelancer />} allowedForFreelancers={false} />}
+          path="/administradores"
+          element={<ProtectedRoute element={<Admin />} allowedForFreelancers={false} />}
         />       <Route
           path="/logs"
           element={<ProtectedRoute element={<LogsAndStats />} allowedForFreelancers={false} />}

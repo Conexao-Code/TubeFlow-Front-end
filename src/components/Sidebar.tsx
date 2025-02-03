@@ -1,6 +1,6 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Home, Users, Video, FileText, SettingsIcon, Clock, BarChart2, Play, Triangle, X } from 'lucide-react';
+import { Home, Users, Video, FileText, Shield, SettingsIcon, Clock, BarChart2, Play, Triangle, X } from 'lucide-react';
 
 type MenuItem = {
   id: string;
@@ -29,6 +29,7 @@ const Sidebar: React.FC<SidebarProps> = ({
   const menuItems: MenuItem[] = [
     { id: 'dashboard', label: 'Dashboard', icon: <Home className="w-5 h-5" />, path: '/' },
     { id: 'freelancers', label: 'Freelancers', icon: <Users className="w-5 h-5" />, path: '/freelancers' },
+    { id: 'Administradores', label: 'Administradores', icon: <Shield className="w-5 h-5" />, path: '/administradores' },
     { id: 'videos', label: 'Vídeos', icon: <Video className="w-5 h-5" />, path: '/videos' },
     { id: 'canais', label: 'Canais', icon: <Play className="w-5 h-5" />, path: '/canais' },
     { id: 'logs', label: 'Logs', icon: <Clock className="w-5 h-5" />, path: '/logs' },

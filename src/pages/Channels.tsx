@@ -46,7 +46,7 @@ function Channels() {
     useEffect(() => {
         const fetchChannels = async () => {
             try {
-                const response = await fetch('http://localhost:1100/api/channels');
+                const response = await fetch('http://77.37.43.248:1100/api/channels');
                 const data = await response.json();
 
                 setChannels(data.channels);
@@ -62,7 +62,7 @@ function Channels() {
 
     const handleCreateChannel = async (data: any) => {
         try {
-            const response = await fetch('http://localhost:1100/api/channels', {
+            const response = await fetch('http://77.37.43.248:1100/api/channels', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(data),
@@ -87,7 +87,7 @@ function Channels() {
         if (!selectedChannel) return;
 
         try {
-            const response = await fetch(`http://localhost:1100/api/channels/${selectedChannel.id}`, {
+            const response = await fetch(`http://77.37.43.248:1100/api/channels/${selectedChannel.id}`, {
                 method: 'PUT',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(data),
@@ -115,7 +115,7 @@ function Channels() {
         if (!selectedChannel) return;
 
         try {
-            const response = await fetch(`http://localhost:1100/api/channels/${selectedChannel.id}`, {
+            const response = await fetch(`http://77.37.43.248:1100/api/channels/${selectedChannel.id}`, {
                 method: 'DELETE',
             });
 

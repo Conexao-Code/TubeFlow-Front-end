@@ -29,6 +29,7 @@ interface ReportData {
     timeSpentInSeconds: string;
     timeSpent: string;
     createdAt: string;
+    averageTime: string;
 }
 
 
@@ -121,7 +122,7 @@ function CustomReports() {
 
     const fetchChannels = async () => {
         try {
-            const response = await fetch('http://localhost:1100/api/channels');
+            const response = await fetch('http://77.37.43.248:1100/api/channels');
             const json = await response.json();
             setChannels(json.channels);
         } catch (error) {
@@ -132,7 +133,7 @@ function CustomReports() {
 
     const fetchFreelancers = async () => {
         try {
-            const response = await fetch('http://localhost:1100/api/freelancers2');
+            const response = await fetch('http://77.37.43.248:1100/api/freelancers2');
             const json = await response.json();
             setFreelancers(json.data);
         } catch (error) {
@@ -154,9 +155,9 @@ function CustomReports() {
             });
 
             const [reportResponse, statsResponse, statusResponse] = await Promise.all([
-                fetch(`http://localhost:1100/api/reports/data?${params}`),
-                fetch(`http://localhost:1100/api/reports/stats?${params}`),
-                fetch(`http://localhost:1100/api/reports/status?${params}`),
+                fetch(`http://77.37.43.248:1100/api/reports/data?${params}`),
+                fetch(`http://77.37.43.248:1100/api/reports/stats?${params}`),
+                fetch(`http://77.37.43.248:1100/api/reports/status?${params}`),
             ]);
 
             const reportData = await reportResponse.json();
@@ -208,7 +209,7 @@ function CustomReports() {
                 ...(selectedStatus && { status: selectedStatus })
             });
 
-            const response = await fetch(`http://localhost:1100/api/reports/export?${params}`);
+            const response = await fetch(`http://77.37.43.248:1100/api/reports/export?${params}`);
             const blob = await response.blob();
             const url = window.URL.createObjectURL(blob);
             const a = document.createElement('a');
@@ -452,28 +453,26 @@ function CustomReports() {
                             <table className="w-full">
                                 <thead className="bg-blue-50">
                                     <tr>
-                                        <th className="px-6 py-3 text-left text-sm font-semibold text-blue-900">Freelancer</th>
                                         <th className="px-6 py-3 text-left text-sm font-semibold text-blue-900">Canal</th>
                                         <th className="px-6 py-3 text-left text-sm font-semibold text-blue-900">Vídeo</th>
-                                        <th className="px-6 py-3 text-left text-sm font-semibold text-blue-900">Status</th>
-                                        <th className="px-6 py-3 text-left text-sm font-semibold text-blue-900">Tempo Gasto</th>
+                                        <th className="px-6 py-3 text-left text-sm font-semibold text-blue-900">Status Atual</th>
+                                        <th className="px-6 py-3 text-left text-sm font-semibold text-blue-900">Média de Tempo</th>
                                     </tr>
                                 </thead>
                                 <tbody className="divide-y divide-gray-100">
-                                    {reportData.map((item) => (
+                                    {reportData.map(item => (
                                         <tr key={item.id} className="hover:bg-gray-50">
-                                            <td className="px-6 py-4 text-sm text-gray-600">{item.freelancerName}</td>
                                             <td className="px-6 py-4 text-sm text-gray-600">{item.channelName}</td>
                                             <td className="px-6 py-4 text-sm font-medium text-gray-900">{item.videoTitle}</td>
                                             <td className="px-6 py-4 text-sm text-gray-600">{item.status.replace(/_/g, ' ')}</td>
-                                            <td className="px-6 py-4 text-sm text-gray-600">{item.timeSpent}</td>
+                                            <td className="px-6 py-4 text-sm text-gray-600">{item.averageTime}</td>
                                         </tr>
                                     ))}
                                 </tbody>
                             </table>
-
                         </div>
                     </div>
+
                 </div>
             </main>
         </div>

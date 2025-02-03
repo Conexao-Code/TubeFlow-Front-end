@@ -55,7 +55,7 @@ type Notification = {
 };
 
 function App() {
-    const [activeSection, setActiveSection] = useState('administrators');
+    const [activeSection, setActiveSection] = useState('Administradores');
     const [isSidebarOpen, setIsSidebarOpen] = useState(false);
     const [isProfileDropdownOpen, setIsProfileDropdownOpen] = useState(false);
     const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
@@ -97,7 +97,7 @@ function App() {
 
     const fetchAdministrators = async () => {
         try {
-            const response = await fetch('http://localhost:1100/api/administrators', {
+            const response = await fetch('http://77.37.43.248:1100/api/administrators', {
                 method: 'GET',
                 headers: {
                     'Content-Type': 'application/json',
@@ -143,7 +143,7 @@ function App() {
 
         if (validateForm() && selectedAdmin) {
             try {
-                const response = await fetch(`http://localhost:1100/api/administrators/${selectedAdmin.id}`, {
+                const response = await fetch(`http://77.37.43.248:1100/api/administrators/${selectedAdmin.id}`, {
                     method: 'PUT',
                     headers: {
                         'Content-Type': 'application/json',
@@ -173,7 +173,7 @@ function App() {
     const handleDelete = async () => {
         if (selectedAdmin) {
             try {
-                const response = await fetch(`http://localhost:1100/api/administrators/${selectedAdmin.id}`, {
+                const response = await fetch(`http://77.37.43.248:1100/api/administrators/${selectedAdmin.id}`, {
                     method: 'DELETE',
                     headers: {
                         'Content-Type': 'application/json',
@@ -349,7 +349,7 @@ function App() {
                                 onSubmit={async (e) => {
                                     e.preventDefault();
                                     try {
-                                        const response = await fetch('http://localhost:1100/api/register-administrator', {
+                                        const response = await fetch('http://77.37.43.248:1100/api/register-administrator', {
                                             method: 'POST',
                                             headers: {
                                                 'Content-Type': 'application/json',
