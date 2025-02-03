@@ -68,7 +68,6 @@ function App() {
           <h2 className="text-2xl font-semibold text-center text-gray-800 mb-6">
             Bem-vindo à TubeFlow
           </h2>
-
           <form onSubmit={handleSubmit} className="space-y-6">
             <div className="space-y-2">
               <label htmlFor="email" className="text-sm font-medium text-gray-700">
