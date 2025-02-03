@@ -66,7 +66,7 @@ function App() {
 
         <div className="w-full max-w-md bg-white/80 backdrop-blur-sm rounded-2xl shadow-xl p-8">
           <h2 className="text-2xl font-semibold text-center text-gray-800 mb-6">
-            Bem-vindo à TubeFlow
+            Bem-vindo à Tu
           </h2>
 
           <form onSubmit={handleSubmit} className="space-y-6">
