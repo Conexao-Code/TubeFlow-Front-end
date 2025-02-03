@@ -12,6 +12,7 @@ import Videos from './pages/Videos';
 import LogsAndStats from './pages/LogsAndStats';
 import CustomReports from './pages/CustomReports';
 import Settings from './pages/Settings';
+import Admin from './pages/Admin';
 
 const isAuthenticated = () => {
   return !!localStorage.getItem('token');
@@ -50,7 +51,11 @@ function App() {
         <Route
           path="/freelancers"
           element={<ProtectedRoute element={<Freelancer />} allowedForFreelancers={false} />}
-        />        <Route
+        /> 
+        <Route
+          path="/admin"
+          element={<ProtectedRoute element={<Freelancer />} allowedForFreelancers={false} />}
+        />       <Route
           path="/logs"
           element={<ProtectedRoute element={<LogsAndStats />} allowedForFreelancers={false} />}
         />

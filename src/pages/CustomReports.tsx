@@ -121,7 +121,7 @@ function CustomReports() {
 
     const fetchChannels = async () => {
         try {
-            const response = await fetch('http://77.37.43.248:1100/api/channels');
+            const response = await fetch('http://localhost:1100/api/channels');
             const json = await response.json();
             setChannels(json.channels);
         } catch (error) {
@@ -132,7 +132,7 @@ function CustomReports() {
 
     const fetchFreelancers = async () => {
         try {
-            const response = await fetch('http://77.37.43.248:1100/api/freelancers2');
+            const response = await fetch('http://localhost:1100/api/freelancers2');
             const json = await response.json();
             setFreelancers(json.data);
         } catch (error) {
@@ -154,9 +154,9 @@ function CustomReports() {
             });
 
             const [reportResponse, statsResponse, statusResponse] = await Promise.all([
-                fetch(`http://77.37.43.248:1100/api/reports/data?${params}`),
-                fetch(`http://77.37.43.248:1100/api/reports/stats?${params}`),
-                fetch(`http://77.37.43.248:1100/api/reports/status?${params}`),
+                fetch(`http://localhost:1100/api/reports/data?${params}`),
+                fetch(`http://localhost:1100/api/reports/stats?${params}`),
+                fetch(`http://localhost:1100/api/reports/status?${params}`),
             ]);
 
             const reportData = await reportResponse.json();
@@ -208,7 +208,7 @@ function CustomReports() {
                 ...(selectedStatus && { status: selectedStatus })
             });
 
-            const response = await fetch(`http://77.37.43.248:1100/api/reports/export?${params}`);
+            const response = await fetch(`http://localhost:1100/api/reports/export?${params}`);
             const blob = await response.blob();
             const url = window.URL.createObjectURL(blob);
             const a = document.createElement('a');

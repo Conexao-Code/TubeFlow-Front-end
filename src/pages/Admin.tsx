@@ -22,7 +22,8 @@ import {
     AlertTriangle,
     Phone,
     Mail,
-    Calendar
+    Calendar,
+    Shield
 } from 'lucide-react';
 import Sidebar from '../components/Sidebar';
 import Header from '../components/Header';
@@ -36,21 +37,16 @@ type MenuItem = {
     icon: React.ReactNode;
 };
 
-type Freelancer = {
+type Administrator = {
     id: string;
     name: string;
     email: string;
-    role: string;
     createdAt: string;
-    phone: string;
 };
 
-type FreelancerFormData = {
+type AdministratorFormData = {
     name: string;
     email: string;
-    role: string;
-    password?: string;
-    phone: string;
 };
 
 type Notification = {
@@ -59,26 +55,20 @@ type Notification = {
 };
 
 function App() {
-    const [activeSection, setActiveSection] = useState('freelancers');
+    const [activeSection, setActiveSection] = useState('administrators');
     const [isSidebarOpen, setIsSidebarOpen] = useState(false);
     const [isProfileDropdownOpen, setIsProfileDropdownOpen] = useState(false);
     const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
     const [isEditModalOpen, setIsEditModalOpen] = useState(false);
     const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
-    const [showPassword, setShowPassword] = useState(false);
     const [notification, setNotification] = useState<Notification | null>(null);
-    const [selectedFreelancer, setSelectedFreelancer] = useState<Freelancer | null>(null);
-    const [formData, setFormData] = useState<FreelancerFormData>({
+    const [selectedAdmin, setSelectedAdmin] = useState<Administrator | null>(null);
+    const [formData, setFormData] = useState<AdministratorFormData>({
         name: '',
         email: '',
-        role: '',
-        password: '',
-        phone: '',
     });
-    const [formErrors, setFormErrors] = useState<Partial<FreelancerFormData>>({});
-    const [freelancers, setFreelancers] = useState<Freelancer[]>([]);
-
-    const roles = ['Roteirista', 'Editor', 'Narrador', 'Thumb Maker'];
+    const [formErrors, setFormErrors] = useState<Partial<AdministratorFormData>>({});
+    const [administrators, setAdministrators] = useState<Administrator[]>([]);
 
     // Set sidebar open by default on desktop
     useEffect(() => {
@@ -105,9 +95,9 @@ function App() {
         setTimeout(() => setNotification(null), 3000);
     };
 
-    const fetchFreelancers = async () => {
+    const fetchAdministrators = async () => {
         try {
-            const response = await fetch('http://localhost:1100/api/freelancers', {
+            const response = await fetch('http://localhost:1100/api/administrators', {
                 method: 'GET',
                 headers: {
                     'Content-Type': 'application/json',
@@ -116,23 +106,23 @@ function App() {
 
             if (response.ok) {
                 const data = await response.json();
-                setFreelancers(data.data);
+                setAdministrators(data.data);
             } else {
                 const errorData = await response.json();
-                toast.error(errorData.message || 'Erro ao buscar freelancers.', { position: 'top-right' });
+                toast.error(errorData.message || 'Erro ao buscar administradores.', { position: 'top-right' });
             }
         } catch (error) {
-            console.error('Erro ao buscar freelancers:', error);
+            console.error('Erro ao buscar administradores:', error);
             toast.error('Erro na conexão com o servidor.', { position: 'top-right' });
         }
     };
 
     useEffect(() => {
-        fetchFreelancers();
+        fetchAdministrators();
     }, []);
 
-    const validateForm = (isEdit = false) => {
-        const errors: Partial<FreelancerFormData> = {};
+    const validateForm = () => {
+        const errors: Partial<AdministratorFormData> = {};
 
         if (!formData.name.trim()) {
             errors.name = 'Nome é obrigatório';
@@ -144,16 +134,6 @@ function App() {
             errors.email = 'E-mail inválido';
         }
 
-        if (!formData.role) {
-            errors.role = 'Função é obrigatória';
-        }
-
-        if (!isEdit && !formData.password?.trim()) {
-            errors.password = 'Senha é obrigatória';
-        } else if (!isEdit && formData.password && formData.password.length < 6) {
-            errors.password = 'Senha deve ter no mínimo 6 caracteres';
-        }
-
         setFormErrors(errors);
         return Object.keys(errors).length === 0;
     };
@@ -161,9 +141,9 @@ function App() {
     const handleEdit = async (e: React.FormEvent) => {
         e.preventDefault();
 
-        if (validateForm(true) && selectedFreelancer) {
+        if (validateForm() && selectedAdmin) {
             try {
-                const response = await fetch(`http://localhost:1100/api/freelancers/${selectedFreelancer.id}`, {
+                const response = await fetch(`http://localhost:1100/api/administrators/${selectedAdmin.id}`, {
                     method: 'PUT',
                     headers: {
                         'Content-Type': 'application/json',
@@ -171,31 +151,29 @@ function App() {
                     body: JSON.stringify({
                         name: formData.name,
                         email: formData.email,
-                        role: formData.role,
-                        phone: formData.phone,
                     }),
                 });
 
                 if (response.ok) {
-                    toast.success('Freelancer atualizado com sucesso!', { position: 'top-right' });
-                    fetchFreelancers();
+                    toast.success('Administrador atualizado com sucesso!', { position: 'top-right' });
+                    fetchAdministrators();
                     setIsEditModalOpen(false);
-                    setFormData({ name: '', email: '', role: '', password: '', phone: '' });
+                    setFormData({ name: '', email: '' });
                 } else {
                     const errorData = await response.json();
-                    toast.error(errorData.message || 'Erro ao atualizar freelancer.', { position: 'top-right' });
+                    toast.error(errorData.message || 'Erro ao atualizar administrador.', { position: 'top-right' });
                 }
             } catch (error) {
-                console.error('Erro ao atualizar freelancer:', error);
+                console.error('Erro ao atualizar administrador:', error);
                 toast.error('Erro na conexão com o servidor.', { position: 'top-right' });
             }
         }
     };
 
     const handleDelete = async () => {
-        if (selectedFreelancer) {
+        if (selectedAdmin) {
             try {
-                const response = await fetch(`http://localhost:1100/api/freelancers/${selectedFreelancer.id}`, {
+                const response = await fetch(`http://localhost:1100/api/administrators/${selectedAdmin.id}`, {
                     method: 'DELETE',
                     headers: {
                         'Content-Type': 'application/json',
@@ -203,34 +181,32 @@ function App() {
                 });
 
                 if (response.ok) {
-                    toast.success('Freelancer excluído com sucesso!', { position: 'top-right' });
-                    fetchFreelancers();
+                    toast.success('Administrador excluído com sucesso!', { position: 'top-right' });
+                    fetchAdministrators();
                     setIsDeleteModalOpen(false);
-                    setSelectedFreelancer(null);
+                    setSelectedAdmin(null);
                 } else {
                     const errorData = await response.json();
-                    toast.error(errorData.message || 'Erro ao excluir freelancer.', { position: 'top-right' });
+                    toast.error(errorData.message || 'Erro ao excluir administrador.', { position: 'top-right' });
                 }
             } catch (error) {
-                console.error('Erro ao excluir freelancer:', error);
+                console.error('Erro ao excluir administrador:', error);
                 toast.error('Erro na conexão com o servidor.', { position: 'top-right' });
             }
         }
     };
 
-    const openEditModal = (freelancer: Freelancer) => {
-        setSelectedFreelancer(freelancer);
+    const openEditModal = (admin: Administrator) => {
+        setSelectedAdmin(admin);
         setFormData({
-            name: freelancer.name,
-            email: freelancer.email,
-            role: freelancer.role,
-            phone: freelancer.phone,
+            name: admin.name,
+            email: admin.email,
         });
         setIsEditModalOpen(true);
     };
 
-    const openDeleteModal = (freelancer: Freelancer) => {
-        setSelectedFreelancer(freelancer);
+    const openDeleteModal = (admin: Administrator) => {
+        setSelectedAdmin(admin);
         setIsDeleteModalOpen(true);
     };
 
@@ -262,14 +238,14 @@ function App() {
                 <div className="flex-1 p-4 sm:p-6 lg:p-8">
                     <div className="mb-6 flex justify-between items-center">
                         <h2 className="text-xl font-semibold text-gray-800 hidden sm:block">
-                            Lista de Freelancers
+                            Lista de Administradores
                         </h2>
                         <button
                             onClick={() => setIsCreateModalOpen(true)}
                             className="bg-blue-600 text-white px-4 py-2 rounded-lg flex items-center gap-2 hover:bg-blue-700 transition-colors"
                         >
                             <Plus className="w-5 h-5" />
-                            <span className="hidden sm:inline">Cadastrar Freelancer</span>
+                            <span className="hidden sm:inline">Cadastrar Administrador</span>
                             <span className="sm:hidden">Novo</span>
                         </button>
                     </div>
@@ -282,28 +258,26 @@ function App() {
                                     <tr className="bg-gray-50 border-b border-gray-100">
                                         <th className="px-6 py-4 text-left text-sm font-semibold text-gray-600">Nome</th>
                                         <th className="px-6 py-4 text-left text-sm font-semibold text-gray-600">E-mail</th>
-                                        <th className="px-6 py-4 text-left text-sm font-semibold text-gray-600">Função</th>
                                         <th className="px-6 py-4 text-left text-sm font-semibold text-gray-600">Data de Cadastro</th>
                                         <th className="px-6 py-4 text-left text-sm font-semibold text-gray-600">Ações</th>
                                     </tr>
                                 </thead>
                                 <tbody className="divide-y divide-gray-100">
-                                    {freelancers.map((freelancer) => (
-                                        <tr key={freelancer.id} className="hover:bg-gray-50">
-                                            <td className="px-6 py-4 text-sm text-gray-800">{freelancer.name}</td>
-                                            <td className="px-6 py-4 text-sm text-gray-600">{freelancer.email}</td>
-                                            <td className="px-6 py-4 text-sm text-gray-600">{freelancer.role}</td>
-                                            <td className="px-6 py-4 text-sm text-gray-600">{formatDate(freelancer.createdAt)}</td>
+                                    {administrators.map((admin) => (
+                                        <tr key={admin.id} className="hover:bg-gray-50">
+                                            <td className="px-6 py-4 text-sm text-gray-800">{admin.name}</td>
+                                            <td className="px-6 py-4 text-sm text-gray-600">{admin.email}</td>
+                                            <td className="px-6 py-4 text-sm text-gray-600">{formatDate(admin.createdAt)}</td>
                                             <td className="px-6 py-4">
                                                 <div className="flex gap-2">
                                                     <button
-                                                        onClick={() => openEditModal(freelancer)}
+                                                        onClick={() => openEditModal(admin)}
                                                         className="p-1 text-blue-600 hover:text-blue-800"
                                                     >
                                                         <Edit2 className="w-5 h-5" />
                                                     </button>
                                                     <button
-                                                        onClick={() => openDeleteModal(freelancer)}
+                                                        onClick={() => openDeleteModal(admin)}
                                                         className="p-1 text-red-600 hover:text-red-800"
                                                     >
                                                         <Trash2 className="w-5 h-5" />
@@ -319,24 +293,21 @@ function App() {
 
                     {/* Mobile Card View */}
                     <div className="grid grid-cols-1 gap-4 md:hidden">
-                        {freelancers.map((freelancer) => (
-                            <div key={freelancer.id} className="bg-white rounded-xl shadow-sm border border-gray-100 p-4">
+                        {administrators.map((admin) => (
+                            <div key={admin.id} className="bg-white rounded-xl shadow-sm border border-gray-100 p-4">
                                 <div className="flex justify-between items-start mb-4">
                                     <div>
-                                        <h3 className="text-lg font-semibold text-gray-800">{freelancer.name}</h3>
-                                        <span className="inline-block px-2 py-1 text-xs font-medium bg-blue-100 text-blue-800 rounded-full mt-1">
-                                            {freelancer.role}
-                                        </span>
+                                        <h3 className="text-lg font-semibold text-gray-800">{admin.name}</h3>
                                     </div>
                                     <div className="flex gap-2">
                                         <button
-                                            onClick={() => openEditModal(freelancer)}
+                                            onClick={() => openEditModal(admin)}
                                             className="p-2 text-blue-600 hover:text-blue-800 bg-blue-50 rounded-lg"
                                         >
                                             <Edit2 className="w-4 h-4" />
                                         </button>
                                         <button
-                                            onClick={() => openDeleteModal(freelancer)}
+                                            onClick={() => openDeleteModal(admin)}
                                             className="p-2 text-red-600 hover:text-red-800 bg-red-50 rounded-lg"
                                         >
                                             <Trash2 className="w-4 h-4" />
@@ -346,17 +317,11 @@ function App() {
                                 <div className="space-y-2">
                                     <div className="flex items-center gap-2 text-gray-600">
                                         <Mail className="w-4 h-4" />
-                                        <span className="text-sm">{freelancer.email}</span>
+                                        <span className="text-sm">{admin.email}</span>
                                     </div>
-                                    {freelancer.phone && (
-                                        <div className="flex items-center gap-2 text-gray-600">
-                                            <Phone className="w-4 h-4" />
-                                            <span className="text-sm">{freelancer.phone}</span>
-                                        </div>
-                                    )}
                                     <div className="flex items-center gap-2 text-gray-600">
                                         <Calendar className="w-4 h-4" />
-                                        <span className="text-sm">Cadastrado em {formatDate(freelancer.createdAt)}</span>
+                                        <span className="text-sm">Cadastrado em {formatDate(admin.createdAt)}</span>
                                     </div>
                                 </div>
                             </div>
@@ -370,7 +335,7 @@ function App() {
                         <div className="bg-white rounded-xl shadow-xl w-full max-w-md">
                             <div className="p-6 border-b border-gray-100">
                                 <div className="flex items-center justify-between">
-                                    <h2 className="text-xl font-semibold text-gray-800">Cadastrar Novo Freelancer</h2>
+                                    <h2 className="text-xl font-semibold text-gray-800">Cadastrar Novo Administrador</h2>
                                     <button
                                         onClick={() => setIsCreateModalOpen(false)}
                                         className="text-gray-400 hover:text-gray-600"
@@ -384,7 +349,7 @@ function App() {
                                 onSubmit={async (e) => {
                                     e.preventDefault();
                                     try {
-                                        const response = await fetch('http://localhost:1100/api/register-freelancer', {
+                                        const response = await fetch('http://localhost:1100/api/register-administrator', {
                                             method: 'POST',
                                             headers: {
                                                 'Content-Type': 'application/json',
@@ -392,8 +357,6 @@ function App() {
                                             body: JSON.stringify({
                                                 name: formData.name,
                                                 email: formData.email,
-                                                role: formData.role,
-                                                phone: formData.phone,
                                             }),
                                         });
 
@@ -401,11 +364,11 @@ function App() {
                                             const data = await response.json();
                                             toast.success(data.message, { position: 'top-right' });
                                             setIsCreateModalOpen(false);
-                                            setFormData({ name: '', email: '', role: '', phone: '' });
-                                            fetchFreelancers();
+                                            setFormData({ name: '', email: '' });
+                                            fetchAdministrators();
                                         } else {
                                             const errorData = await response.json();
-                                            toast.error(errorData.message || 'Erro ao cadastrar freelancer.', { position: 'top-right' });
+                                            toast.error(errorData.message || 'Erro ao cadastrar administrador.', { position: 'top-right' });
                                         }
                                     } catch (error) {
                                         console.error('Erro na solicitação de cadastro:', error);
@@ -448,45 +411,6 @@ function App() {
                                         />
                                         {formErrors.email && <p className="mt-1 text-sm text-red-500">{formErrors.email}</p>}
                                     </div>
-
-                                    <div>
-                                        <label htmlFor="role" className="block text-sm font-medium text-gray-700 mb-1">
-                                            Função
-                                        </label>
-                                        <select
-                                            id="role"
-                                            value={formData.role}
-                                            onChange={(e) => setFormData({ ...formData, role: e.target.value })}
-                                            className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${
-                                                formErrors.role ? 'border-red-500' : 'border-gray-300'
-                                            }`}
-                                        >
-                                            <option value="">Selecione uma função</option>
-                                            {roles.map((role) => (
-                                                <option key={role} value={role}>
-                                                    {role}
-                                                </option>
-                                            ))}
-                                        </select>
-                                        {formErrors.role && <p className="mt-1 text-sm text-red-500">{formErrors.role}</p>}
-                                    </div>
-
-                                    <div>
-                                        <label htmlFor="phone" className="block text-sm font-medium text-gray-700 mb-1">
-                                            Telefone
-                                        </label>
-                                        <InputMask
-                                            mask="(99) 99999-9999"
-                                            id="phone"
-                                            value={formData.phone}
-                                            onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-                                            className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${
-                                                formErrors.phone ? 'border-red-500' : 'border-gray-300'
-                                            }`}
-                                            placeholder="Digite o número de telefone"
-                                        />
-                                        {formErrors.phone && <p className="mt-1 text-sm text-red-500">{formErrors.phone}</p>}
-                                    </div>
                                 </div>
 
                                 <div className="mt-6 flex gap-3 justify-end">
@@ -515,7 +439,7 @@ function App() {
                         <div className="bg-white rounded-xl shadow-xl w-full max-w-md">
                             <div className="p-6 border-b border-gray-100">
                                 <div className="flex items-center justify-between">
-                                    <h2 className="text-xl font-semibold text-gray-800">Editar Freelancer</h2>
+                                    <h2 className="text-xl font-semibold text-gray-800">Editar Administrador</h2>
                                     <button
                                         onClick={() => setIsEditModalOpen(false)}
                                         className="text-gray-400 hover:text-gray-600"
@@ -560,45 +484,6 @@ function App() {
                                         />
                                         {formErrors.email && <p className="mt-1 text-sm text-red-500">{formErrors.email}</p>}
                                     </div>
-
-                                    <div>
-                                        <label htmlFor="edit-role" className="block text-sm font-medium text-gray-700 mb-1">
-                                            Função
-                                        </label>
-                                        <select
-                                            id="edit-role"
-                                            value={formData.role}
-                                            onChange={(e) => setFormData({ ...formData, role: e.target.value })}
-                                            className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${
-                                                formErrors.role ? 'border-red-500' : 'border-gray-300'
-                                            }`}
-                                        >
-                                            <option value="">Selecione uma função</option>
-                                            {roles.map((role) => (
-                                                <option key={role} value={role}>
-                                                    {role}
-                                                </option>
-                                            ))}
-                                        </select>
-                                        {formErrors.role && <p className="mt-1 text-sm text-red-500">{formErrors.role}</p>}
-                                    </div>
-
-                                    <div>
-                                        <label htmlFor="edit-phone" className="block text-sm font-medium text-gray-700 mb-1">
-                                            Telefone
-                                        </label>
-                                        <InputMask
-                                            mask="(99) 99999-9999"
-                                            id="edit-phone"
-                                            value={formData.phone}
-                                            onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-                                            className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${
-                                                formErrors.phone ? 'border-red-500' : 'border-gray-300'
-                                            }`}
-                                            placeholder="Digite o número de telefone"
-                                        />
-                                        {formErrors.phone && <p className="mt-1 text-sm text-red-500">{formErrors.phone}</p>}
-                                    </div>
                                 </div>
 
                                 <div className="mt-6 flex gap-3 justify-end">
@@ -622,12 +507,12 @@ function App() {
                 )}
 
                 {/* Delete Modal */}
-                {isDeleteModalOpen && selectedFreelancer && (
+                {isDeleteModalOpen && selectedAdmin && (
                     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
                         <div className="bg-white rounded-xl shadow-xl w-full max-w-md">
                             <div className="p-6 border-b border-gray-100">
                                 <div className="flex items-center justify-between">
-                                    <h2 className="text-xl font-semibold text-gray-800">Excluir Freelancer</h2>
+                                    <h2 className="text-xl font-semibold text-gray-800">Excluir Administrador</h2>
                                     <button
                                         onClick={() => setIsDeleteModalOpen(false)}
                                         className="text-gray-400 hover:text-gray-600"
@@ -643,7 +528,7 @@ function App() {
                                         <AlertTriangle className="w-6 h-6 text-red-600" />
                                     </div>
                                     <p className="text-gray-600">
-                                        Tem certeza de que deseja excluir o freelancer <span className="font-semibold">{selectedFreelancer.name}</span>? Essa ação não poderá ser desfeita.
+                                        Tem certeza de que deseja excluir o administrador <span className="font-semibold">{selectedAdmin.name}</span>? Essa ação não poderá ser desfeita.
                                     </p>
                                 </div>
 

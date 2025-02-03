@@ -48,7 +48,7 @@ function NewPassword() {
         setIsLoading(true);
 
         try {
-            const response = await fetch('http://77.37.43.248:1100/api/reset-password', {
+            const response = await fetch('http://localhost:1100/api/reset-password', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ email, code, newPassword: password }),
