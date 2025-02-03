@@ -14,7 +14,7 @@ function Settings() {
     useEffect(() => {
         const fetchSettings = async () => {
             try {
-                const response = await fetch(`http://77.37.43.248:1100/api/settings`);
+                const response = await fetch(`https://tubeflow-backend.uu2adj.easypanel.host/api/settings`);
                 if (!response.ok) {
                     throw new Error('Erro ao carregar configurações.');
                 }
@@ -37,7 +37,7 @@ function Settings() {
         e.preventDefault();
 
         try {
-            const response = await fetch('http://77.37.43.248:1100/api/settings', {
+            const response = await fetch('https://tubeflow-backend.uu2adj.easypanel.host/api/settings', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',

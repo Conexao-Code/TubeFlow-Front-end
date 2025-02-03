@@ -107,7 +107,7 @@ function App() {
 
     const fetchFreelancers = async () => {
         try {
-            const response = await fetch('http://77.37.43.248:1100/api/freelancers', {
+            const response = await fetch('https://tubeflow-backend.uu2adj.easypanel.host/api/freelancers', {
                 method: 'GET',
                 headers: {
                     'Content-Type': 'application/json',
@@ -163,7 +163,7 @@ function App() {
 
         if (validateForm(true) && selectedFreelancer) {
             try {
-                const response = await fetch(`http://77.37.43.248:1100/api/freelancers/${selectedFreelancer.id}`, {
+                const response = await fetch(`https://tubeflow-backend.uu2adj.easypanel.host/api/freelancers/${selectedFreelancer.id}`, {
                     method: 'PUT',
                     headers: {
                         'Content-Type': 'application/json',
@@ -195,7 +195,7 @@ function App() {
     const handleDelete = async () => {
         if (selectedFreelancer) {
             try {
-                const response = await fetch(`http://77.37.43.248:1100/api/freelancers/${selectedFreelancer.id}`, {
+                const response = await fetch(`https://tubeflow-backend.uu2adj.easypanel.host/api/freelancers/${selectedFreelancer.id}`, {
                     method: 'DELETE',
                     headers: {
                         'Content-Type': 'application/json',
@@ -384,7 +384,7 @@ function App() {
                                 onSubmit={async (e) => {
                                     e.preventDefault();
                                     try {
-                                        const response = await fetch('http://77.37.43.248:1100/api/register-freelancer', {
+                                        const response = await fetch('https://tubeflow-backend.uu2adj.easypanel.host/api/register-freelancer', {
                                             method: 'POST',
                                             headers: {
                                                 'Content-Type': 'application/json',

@@ -16,7 +16,7 @@ function App() {
     e.preventDefault();
 
     try {
-      const response = await fetch('http://77.37.43.248:1100/api/login', {
+      const response = await fetch('https://tubeflow-backend.uu2adj.easypanel.host/api/login', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

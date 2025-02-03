@@ -49,7 +49,7 @@ function Dashboard() {
                 const isAdmin = !isFreelancer;
                 setIsUser(isAdmin);
 
-                const response = await fetch(`http://77.37.43.248:1100/api/dashboard?userId=${userId}&isUser=${isAdmin ? 1 : 0}`);
+                const response = await fetch(`https://tubeflow-backend.uu2adj.easypanel.host/api/dashboard?userId=${userId}&isUser=${isAdmin ? 1 : 0}`);
                 const data = await response.json();
 
                 setStats(data.stats);

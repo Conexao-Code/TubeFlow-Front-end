@@ -29,7 +29,7 @@ function Recuperacao() {
     setIsLoading(true);
 
     try {
-      const response = await fetch('http://77.37.43.248:1100/api/forgot-password', {
+      const response = await fetch('https://tubeflow-backend.uu2adj.easypanel.host/api/forgot-password', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email }),

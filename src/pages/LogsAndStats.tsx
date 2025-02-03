@@ -85,7 +85,7 @@ function LogsAndStats() {
 
     const fetchChannels = async () => {
         try {
-            const response = await fetch('http://77.37.43.248:1100/api/channels');
+            const response = await fetch('https://tubeflow-backend.uu2adj.easypanel.host/api/channels');
             const json = await response.json();
             setChannels(json.channels);
         } catch (error) {
@@ -96,7 +96,7 @@ function LogsAndStats() {
 
     const fetchFreelancers = async () => {
         try {
-            const response = await fetch('http://77.37.43.248:1100/api/freelancers');
+            const response = await fetch('https://tubeflow-backend.uu2adj.easypanel.host/api/freelancers');
             const json = await response.json();
             setFreelancers(json.data);
         } catch (error) {
@@ -115,7 +115,7 @@ function LogsAndStats() {
                 ...(selectedChannel && { channelId: selectedChannel }),
                 ...(selectedFreelancer && { freelancerId: selectedFreelancer })
             });
-            const response = await fetch(`http://77.37.43.248:1100/api/logs?${params}`);
+            const response = await fetch(`https://tubeflow-backend.uu2adj.easypanel.host/api/logs?${params}`);
             const data = await response.json();
             setLogs(data.logs);
             setTotalPages(Math.ceil(data.total / ITEMS_PER_PAGE));
@@ -133,7 +133,7 @@ function LogsAndStats() {
                 ...(selectedChannel && { channelId: selectedChannel }),
                 ...(selectedFreelancer && { freelancerId: selectedFreelancer })
             });
-            const response = await fetch(`http://77.37.43.248:1100/api/stats?${params}`);
+            const response = await fetch(`https://tubeflow-backend.uu2adj.easypanel.host/api/stats?${params}`);
             const data = await response.json();
             const formattedStats = data.stats.map((stat: FreelancerStats) => ({
                 ...stat,
@@ -164,7 +164,7 @@ function LogsAndStats() {
                 ...(selectedFreelancer && { freelancerId: selectedFreelancer }),
                 type
             });
-            const response = await fetch(`http://77.37.43.248:1100/api/export?${params}`);
+            const response = await fetch(`https://tubeflow-backend.uu2adj.easypanel.host/api/export?${params}`);
             const blob = await response.blob();
             const url = window.URL.createObjectURL(blob);
             const a = document.createElement('a');
