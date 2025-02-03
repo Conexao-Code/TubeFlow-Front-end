@@ -51,9 +51,9 @@ function App() {
           path="/freelancers"
           element={<ProtectedRoute element={<Freelancer />} allowedForFreelancers={false} />}
         />        <Route
-        path="/logs"
-        element={<ProtectedRoute element={<LogsAndStats />} allowedForFreelancers={false} />}
-      />
+          path="/logs"
+          element={<ProtectedRoute element={<LogsAndStats />} allowedForFreelancers={false} />}
+        />
         <Route
           path="/videos"
           element={<ProtectedRoute element={<Videos />} allowedForFreelancers={true} />}

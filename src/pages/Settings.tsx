@@ -14,7 +14,7 @@ function Settings() {
     useEffect(() => {
         const fetchSettings = async () => {
             try {
-                const response = await fetch(`http://localhost:1100/api/settings`);
+                const response = await fetch(`http://77.37.43.248:1100/api/settings`);
                 if (!response.ok) {
                     throw new Error('Erro ao carregar configurações.');
                 }
@@ -37,7 +37,7 @@ function Settings() {
         e.preventDefault();
 
         try {
-            const response = await fetch('http://localhost:1100/api/settings', {
+            const response = await fetch('http://77.37.43.248:1100/api/settings', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -45,7 +45,6 @@ function Settings() {
                 body: JSON.stringify({
                     apiKey,
                     senderPhone,
-                    // Converter quebras de linha reais para \n antes de salvar no banco
                     messageTemplate: messageTemplate.replace(/\n/g, '\\n'),
                     autoNotify,
                 }),

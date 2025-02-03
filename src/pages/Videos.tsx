@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Plus, X, Edit2, Trash2, AlertTriangle, Youtube, ExternalLink, Search, Filter, Menu, Video, MessageSquare,MessageCircle, Send, XCircle, BellRing, MessageSquareWarning } from 'lucide-react';
+import { Plus, X, Edit2, Trash2, AlertTriangle, Youtube, ExternalLink, Search, Filter, Menu, Video, MessageSquare, MessageCircle, Send, XCircle, BellRing, MessageSquareWarning } from 'lucide-react';
 import Sidebar from '../components/Sidebar';
 import Header from '../components/Header';
 import { ToastContainer, toast } from 'react-toastify';
@@ -12,9 +12,9 @@ interface Video {
     channelName: string;
     freelancerId: string;
     freelancerName: string;
-    scriptWriterId?: string; // Adicionada
-    narratorId?: string; // Adicionada
-    editorId?: string; // Adicionada
+    scriptWriterId?: string;
+    narratorId?: string;
+    editorId?: string; // Adicionad
     thumbMakerId?: string; // Adicionada
     scriptWriterName?: string; // Já existente
     narratorName?: string; // Já existente
@@ -90,7 +90,7 @@ function Videos() {
 
     const fetchComments = async (videoId: string) => {
         try {
-            const response = await fetch(`http://localhost:1100/api/videos/${videoId}/comments`);
+            const response = await fetch(`http://77.37.43.248:1100/api/videos/${videoId}/comments`);
             const data = await response.json();
 
             if (data.comments) {
@@ -120,7 +120,7 @@ function Videos() {
         const userType = isFreelancer ? 'freelancer' : 'user';
 
         try {
-            const response = await fetch(`http://localhost:1100/api/videos/${selectedVideoForComments.id}/comments`, {
+            const response = await fetch(`http://77.37.43.248:1100/api/videos/${selectedVideoForComments.id}/comments`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ text: newComment, userId, userType }),
@@ -231,7 +231,7 @@ function Videos() {
             if (selectedStatus) params.append('status', selectedStatus);
             if (searchTerm) params.append('searchTerm', searchTerm);
 
-            const response = await fetch(`http://localhost:1100/api/videos?${params.toString()}`);
+            const response = await fetch(`http://77.37.43.248:1100/api/videos?${params.toString()}`);
             const data = await response.json();
 
             const mappedVideos = data.map((video: any) => ({
@@ -361,7 +361,7 @@ function Videos() {
 
     const fetchChannels = async () => {
         try {
-            const response = await fetch('http://localhost:1100/api/channels');
+            const response = await fetch('http://77.37.43.248:1100/api/channels');
             const json = await response.json();
 
             if (Array.isArray(json.channels)) {
@@ -377,7 +377,7 @@ function Videos() {
 
     const fetchFreelancers = async () => {
         try {
-            const response = await fetch('http://localhost:1100/api/freelancers');
+            const response = await fetch('http://77.37.43.248:1100/api/freelancers');
             const json = await response.json();
 
             if (Array.isArray(json.data)) {
@@ -448,18 +448,19 @@ function Videos() {
         const data = {
             title: newVideoTitle,
             channelId: newVideoChannel,
-            scriptWriterId: newVideoFreelancer, // Altere freelancerId para scriptWriterId
+            scriptWriterId: newVideoFreelancer,
             narratorId: newVideoNarrator,
             editorId: newVideoEditor,
             thumbMakerId: newVideoThumbMaker,
             status: 'Pendente',
             observations: newVideoObservations || null,
             youtubeUrl: null,
+            userId: localStorage.getItem('userIdA')  // 🠔 Adicione esta linha
         };
 
 
         try {
-            const response = await fetch('http://localhost:1100/api/videos', {
+            const response = await fetch('http://77.37.43.248:1100/api/videos', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(data),
@@ -513,7 +514,7 @@ function Videos() {
         };
 
         try {
-            const response = await fetch(`http://localhost:1100/api/videos/${selectedVideo.id}`, {
+            const response = await fetch(`http://77.37.43.248:1100/api/videos/${selectedVideo.id}`, {
                 method: 'PUT',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(updatedData),
@@ -538,7 +539,7 @@ function Videos() {
     const handleDeleteVideo = async () => {
         if (!selectedVideo) return;
         try {
-            const response = await fetch(`http://localhost:1100/api/videos/${selectedVideo.id}`, {
+            const response = await fetch(`http://77.37.43.248:1100/api/videos/${selectedVideo.id}`, {
                 method: 'DELETE',
             });
             if (response.ok) {
@@ -588,7 +589,7 @@ function Videos() {
         }
 
         try {
-            const response = await fetch(`http://localhost:1100/api/videos/${videoId}/status`, {
+            const response = await fetch(`http://77.37.43.248:1100/api/videos/${videoId}/status`, {
                 method: 'PUT',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
@@ -612,8 +613,6 @@ function Videos() {
         }
     };
 
-
-
     const clearFilters = () => {
         setSelectedChannel('');
         setSelectedStatus('');
@@ -621,9 +620,8 @@ function Videos() {
         setSearchTerm('');
     };
 
-
     return (
-        <div className="min-h-screen bg-gray-50 flex">
+        <div className="min-h-screen flex overflow-x-hidden">
             <ToastContainer />
             <Sidebar
                 activeSection={activeSection}
@@ -632,7 +630,7 @@ function Videos() {
                 onCloseSidebar={() => setIsSidebarOpen(false)}
             />
 
-            <main className="flex-1 min-h-screen flex flex-col relative w-full max-w-full">
+            <main className="flex-1 min-h-screen flex flex-col relative bg-gray-50 w-full overflow-x-auto">
                 <Header activeSection={activeSection}>
                     <button
                         onClick={() => setIsSidebarOpen((prevState) => !prevState)}
@@ -643,7 +641,7 @@ function Videos() {
 
                 </Header>
                 <div className="flex-1 p-4 sm:p-6 lg:p-8">
-                    <div className="mb-8">
+                    <div className="mb-8 max-w-[1920px] mx-auto">
                         {role === 'admin' && (
                             <div className="flex flex-col sm:flex-row items-end sm:items-center justify-end mb-6 gap-4">
                                 {canCreateVideo() && (
@@ -741,8 +739,77 @@ function Videos() {
                             </div>
                         </div>
 
+                        <div className="hidden lg:block 2xl:hidden">
+                            <div className="bg-white rounded-lg shadow-lg border border-gray-200 overflow-x-auto">
+                                <table className="w-full whitespace-nowrap">
+                                    <thead>
+                                        <tr className="bg-gradient-to-r from-blue-50 to-blue-100">
+                                            <th className="px-4 py-3 text-left text-sm font-semibold text-blue-900 border-b">Título</th>
+                                            <th className="px-4 py-3 text-left text-sm font-semibold text-blue-900 border-b">Canal</th>
+                                            <th className="px-4 py-3 text-left text-sm font-semibold text-blue-900 border-b">Status</th>
+                                            <th className="px-4 py-3 text-left text-sm font-semibold text-blue-900 border-b w-[250px]">Observações</th>
+                                            <th className="px-4 py-3 text-left text-sm font-semibold text-blue-900 border-b">Roteirista</th>
+                                            <th className="px-4 py-3 text-left text-sm font-semibold text-blue-900 border-b">Narrador</th>
+                                            <th className="px-4 py-3 text-left text-sm font-semibold text-blue-900 border-b">Editor</th>
+                                            <th className="px-4 py-3 text-left text-sm font-semibold text-blue-900 border-b">Thumb Maker</th>
+                                            <th className="px-4 py-3 text-left text-sm font-semibold text-blue-900 border-b">Ações</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody className="divide-y divide-gray-100">
+                                        {filteredVideos.map((video) => (
+                                            <tr key={video.id} className="hover:bg-gray-50 transition-colors duration-150">
+                                                <td className="px-4 py-3 font-medium text-gray-900 break-words">{video.title}</td>
+                                                <td className="px-4 py-3 text-gray-600 break-words flex items-center">
+                                                    <Youtube className="w-4 h-4 text-red-600 mr-2 flex-shrink-0" />
+                                                    {video.channelName}
+                                                </td>
+                                                <td className="px-4 py-3">
+                                                    <select
+                                                        value={video.status}
+                                                        onChange={(e) => handleStatusChange(video.id, e.target.value)}
+                                                        className={`inline-flex items-center px-3 py-2 rounded-full text-sm border focus:ring-2 focus:ring-blue-500 transition-colors duration-150 ${statusColors[video.status]?.bg || 'bg-gray-100'} ${statusColors[video.status]?.text || 'text-gray-600'}`}
+                                                    >
+                                                        {getAvailableStatuses().map((status) => (
+                                                            <option key={status} value={status}>
+                                                                {status.replace(/_/g, ' ')}
+                                                            </option>
+                                                        ))}
+                                                    </select>
+                                                </td>
+                                                <td className="px-4 py-3 text-gray-600 break-words">{video.observations || 'N/A'}</td>
+                                                <td className="px-4 py-3 text-gray-600 break-words">{video.scriptWriterName || 'N/A'}</td>
+                                                <td className="px-4 py-3 text-gray-600 break-words">{video.narratorName || 'N/A'}</td>
+                                                <td className="px-4 py-3 text-gray-600 break-words">{video.editorName || 'N/A'}</td>
+                                                <td className="px-4 py-3 text-gray-600 break-words">{video.thumbMakerName || 'N/A'}</td>
+                                                <td className="px-4 py-3 flex gap-2">
+                                                    {canEditVideo(video) && (
+                                                        <button onClick={() => { setSelectedVideo(video); setIsEditModalOpen(true); }} className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg" title="Editar">
+                                                            <Edit2 className="w-5 h-5" />
+                                                        </button>
+                                                    )}
+                                                    {canDeleteVideo() && (
+                                                        <button onClick={() => { setSelectedVideo(video); setIsDeleteModalOpen(true); }} className="p-2 text-red-600 hover:bg-red-50 rounded-lg" title="Excluir">
+                                                            <Trash2 className="w-5 h-5" />
+                                                        </button>
+                                                    )}
+                                                    {video.youtubeUrl && (
+                                                        <a href={video.youtubeUrl} target="_blank" rel="noopener noreferrer" className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg" title="Ver no YouTube">
+                                                            <ExternalLink className="w-5 h-5" />
+                                                        </a>
+                                                    )}
+                                                    <button onClick={() => openCommentsModal(video)} className="p-2 text-green-600 hover:bg-green-50 rounded-lg" title="Comentários">
+                                                        <MessageSquare className="w-5 h-5" />
+                                                    </button>
+                                                </td>
+                                            </tr>
+                                        ))}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+
                         {/* Desktop Table View */}
-                        <div className="hidden lg:block">
+                        <div className="hidden 2xl:block">
                             <div className="bg-white rounded-lg shadow-lg border border-gray-200 overflow-x-auto">
                                 <table className="w-full whitespace-normal">
                                     <thead>

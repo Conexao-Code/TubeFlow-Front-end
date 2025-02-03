@@ -89,7 +89,7 @@ function LogsAndStats() {
 
     const fetchChannels = async () => {
         try {
-            const response = await fetch('http://localhost:1100/api/channels');
+            const response = await fetch('http://77.37.43.248:1100/api/channels');
             const json = await response.json();
             setChannels(json.channels);
         } catch (error) {
@@ -100,7 +100,7 @@ function LogsAndStats() {
 
     const fetchFreelancers = async () => {
         try {
-            const response = await fetch('http://localhost:1100/api/freelancers');
+            const response = await fetch('http://77.37.43.248:1100/api/freelancers');
             const json = await response.json();
             setFreelancers(json.data);
         } catch (error) {
@@ -120,7 +120,7 @@ function LogsAndStats() {
                 ...(selectedFreelancer && { freelancerId: selectedFreelancer }),
             });
 
-            const response = await fetch(`http://localhost:1100/api/logs?${params}`);
+            const response = await fetch(`http://77.37.43.248:1100/api/logs?${params}`);
             const data = await response.json();
             setLogs(data.logs);
             setTotalPages(Math.ceil(data.total / ITEMS_PER_PAGE));
@@ -139,7 +139,7 @@ function LogsAndStats() {
                 ...(selectedFreelancer && { freelancerId: selectedFreelancer }),
             });
 
-            const response = await fetch(`http://localhost:1100/api/stats?${params}`);
+            const response = await fetch(`http://77.37.43.248:1100/api/stats?${params}`);
             const data = await response.json();
 
             const formattedStats = data.stats.map((stat: FreelancerStats) => ({
@@ -175,7 +175,7 @@ function LogsAndStats() {
                 type,
             });
 
-            const response = await fetch(`http://localhost:1100/api/export?${params}`);
+            const response = await fetch(`http://77.37.43.248:1100/api/export?${params}`);
             const blob = await response.blob();
             const url = window.URL.createObjectURL(blob);
             const a = document.createElement('a');
@@ -365,10 +365,10 @@ function LogsAndStats() {
                                                 {log.freelancerName}
                                             </td>
                                             <td className="px-6 py-4 text-sm text-gray-600">
-                                                {log.previousStatus.replace(/_/g, ' ')}
+                                                {log.previousStatus?.replace(/_/g, ' ') || ''}
                                             </td>
                                             <td className="px-6 py-4 text-sm text-gray-600">
-                                                {log.newStatus.replace(/_/g, ' ')}
+                                                {log.newStatus?.replace(/_/g, ' ') || ''}
                                             </td>
                                         </tr>
                                     ))}
