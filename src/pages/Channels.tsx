@@ -27,6 +27,9 @@ function Channels() {
   const [editFormData, setEditFormData] = useState({ name: '', description: '', youtubeUrl: '' });
   const [formErrors, setFormErrors] = useState<{ name?: string; description?: string; youtubeUrl?: string }>({});
 
+  const [createFormData, setCreateFormData] = useState({ name: '', description: '', youtubeUrl: '' });
+  const [createFormErrors, setCreateFormErrors] = useState<{ name?: string; description?: string; youtubeUrl?: string }>({});
+
   const totalChannels = channels.length;
 
   useEffect(() => {
@@ -74,6 +77,7 @@ function Channels() {
         const newChannel = await response.json();
         setChannels([...channels, { ...data, id: newChannel.id, totalVideos: 0, monthlyVideos: 0 }]);
         setIsCreateModalOpen(false);
+        setCreateFormData({ name: '', description: '', youtubeUrl: '' });
         toast.success('Canal criado com sucesso!', { position: 'top-right' });
       } else {
         const error = await response.json();
@@ -143,6 +147,17 @@ function Channels() {
     await handleEditChannel(editFormData);
   };
 
+  const handleCreate = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    const errors: { name?: string; description?: string; youtubeUrl?: string } = {};
+    if (!createFormData.name) errors.name = 'O nome é obrigatório.';
+    if (!createFormData.description) errors.description = 'A descrição é obrigatória.';
+    if (!createFormData.youtubeUrl) errors.youtubeUrl = 'A URL do YouTube é obrigatória.';
+    setCreateFormErrors(errors);
+    if (Object.keys(errors).length > 0) return;
+    await handleCreateChannel(createFormData);
+  };
+
   return (
     <div className="min-h-screen bg-gray-50 flex">
       <Sidebar
@@ -201,6 +216,90 @@ function Channels() {
           </div>
         </main>
       </div>
+      {isCreateModalOpen && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+          <div className="bg-white rounded-xl shadow-xl w-full max-w-md">
+            <div className="p-6 border-b border-gray-100 flex items-center justify-between">
+              <h2 className="text-xl font-semibold text-gray-800">Novo Canal</h2>
+              <button
+                onClick={() => {
+                  setIsCreateModalOpen(false);
+                  setCreateFormData({ name: '', description: '', youtubeUrl: '' });
+                }}
+                className="text-gray-400 hover:text-gray-600"
+              >
+                <X className="w-6 h-6" />
+              </button>
+            </div>
+            <form onSubmit={handleCreate} className="p-6">
+              <div className="space-y-4">
+                <div>
+                  <label htmlFor="create-name" className="block text-sm font-medium text-gray-700 mb-1">
+                    Nome
+                  </label>
+                  <input
+                    type="text"
+                    id="create-name"
+                    value={createFormData.name}
+                    onChange={(e) => setCreateFormData({ ...createFormData, name: e.target.value })}
+                    className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${
+                      createFormErrors.name ? 'border-red-500' : 'border-gray-300'
+                    }`}
+                    placeholder="Digite o nome do canal"
+                  />
+                  {createFormErrors.name && <p className="mt-1 text-sm text-red-500">{createFormErrors.name}</p>}
+                </div>
+                <div>
+                  <label htmlFor="create-description" className="block text-sm font-medium text-gray-700 mb-1">
+                    Descrição
+                  </label>
+                  <textarea
+                    id="create-description"
+                    value={createFormData.description}
+                    onChange={(e) => setCreateFormData({ ...createFormData, description: e.target.value })}
+                    className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${
+                      createFormErrors.description ? 'border-red-500' : 'border-gray-300'
+                    }`}
+                    placeholder="Digite a descrição do canal"
+                  />
+                  {createFormErrors.description && <p className="mt-1 text-sm text-red-500">{createFormErrors.description}</p>}
+                </div>
+                <div>
+                  <label htmlFor="create-youtubeUrl" className="block text-sm font-medium text-gray-700 mb-1">
+                    YouTube URL
+                  </label>
+                  <input
+                    type="text"
+                    id="create-youtubeUrl"
+                    value={createFormData.youtubeUrl}
+                    onChange={(e) => setCreateFormData({ ...createFormData, youtubeUrl: e.target.value })}
+                    className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${
+                      createFormErrors.youtubeUrl ? 'border-red-500' : 'border-gray-300'
+                    }`}
+                    placeholder="Digite a URL do canal no YouTube"
+                  />
+                  {createFormErrors.youtubeUrl && <p className="mt-1 text-sm text-red-500">{createFormErrors.youtubeUrl}</p>}
+                </div>
+              </div>
+              <div className="mt-6 flex gap-3 justify-end">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setIsCreateModalOpen(false);
+                    setCreateFormData({ name: '', description: '', youtubeUrl: '' });
+                  }}
+                  className="px-4 py-2 text-gray-700 border border-gray-300 rounded-lg hover:bg-gray-50"
+                >
+                  Cancelar
+                </button>
+                <button type="submit" className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700">
+                  Criar Canal
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
       {isEditModalOpen && selectedChannel && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
           <div className="bg-white rounded-xl shadow-xl w-full max-w-md">
