@@ -31,6 +31,8 @@ interface PaymentResponse {
   qrCode?: string;
   qrCodeBase64?: string;
   expires?: string;
+  error?: string;
+  status?: string;
 }
 
 const PaymentPage: React.FC<PaymentPageProps> = ({ onBack }) => {
@@ -54,7 +56,7 @@ const PaymentPage: React.FC<PaymentPageProps> = ({ onBack }) => {
   const [isGeneratingPix, setIsGeneratingPix] = useState(false);
   const [copiedCode, setCopiedCode] = useState(false);
   const [timeLeft, setTimeLeft] = useState<number>(0);
-
+  const [paymentId, setPaymentId] = useState<string>('');
   const { plan } = location.state as LocationState;
 
   useEffect(() => {
@@ -72,6 +74,40 @@ const PaymentPage: React.FC<PaymentPageProps> = ({ onBack }) => {
     }
     return () => clearInterval(timer);
   }, [pixCode, timeLeft]);
+
+  useEffect(() => {
+    let timer: number;
+    const checkPaymentStatus = async () => {
+      try {
+        const response = await fetch(`https://api.conexaocode.com/api/payments/${paymentId}`, {
+          headers: {
+            'Authorization': `Bearer ${localStorage.getItem('token')}`
+          }
+        });
+
+        if (!response.ok) throw new Error('Erro na verificação do status');
+
+        const data = await response.json();
+
+        if (data.status === 'approved') {
+          navigate('/payment-success', {
+            state: {
+              paymentId: data.id,
+              amount: data.amount,
+              plan: data.plan_type
+            }
+          });
+        }
+      } catch (error) {
+        console.error('Erro ao verificar status:', error);
+      }
+    };
+
+    if (pixCode && timeLeft > 0) {
+      timer = window.setInterval(checkPaymentStatus, 5000);
+    }
+    return () => clearInterval(timer);
+  }, [pixCode, timeLeft, paymentId]);
 
   const formatTimeLeft = (seconds: number) => {
     const minutes = Math.floor(seconds / 60);
@@ -97,16 +133,12 @@ const PaymentPage: React.FC<PaymentPageProps> = ({ onBack }) => {
 
   const validateForm = () => {
     const errors: Partial<FormData> = {};
+    const cpfRegex = /^\d{3}\.\d{3}\.\d{3}-\d{2}$/;
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
     if (!formData.name.trim()) errors.name = 'Nome é obrigatório';
-    if (!formData.email.trim()) errors.email = 'Email é obrigatório';
-    if (!formData.cpf.trim()) errors.cpf = 'CPF é obrigatório';
-
-    if (selectedMethod === 'credit') {
-      if (!formData.cardNumber?.trim()) errors.cardNumber = 'Número do cartão é obrigatório';
-      if (!formData.cardExpiry?.trim()) errors.cardExpiry = 'Data de validade é obrigatória';
-      if (!formData.cardCVC?.trim()) errors.cardCVC = 'CVC é obrigatório';
-    }
+    if (!emailRegex.test(formData.email)) errors.email = 'Email inválido';
+    if (!cpfRegex.test(formData.cpf)) errors.cpf = 'CPF inválido (use o formato 000.000.000-00)';
 
     setFormErrors(errors);
     return Object.keys(errors).length === 0;
@@ -119,11 +151,11 @@ const PaymentPage: React.FC<PaymentPageProps> = ({ onBack }) => {
     setLoading(true);
 
     try {
-      // Montagem dos dados de pagamento
       const paymentData = {
-        paymentMethod: selectedMethod === 'pix' ? 'pix' : 'credit_card',
+        paymentMethod: 'pix',
         plan: {
-          ...plan,
+          label: plan.label,
+          period: plan.period,
           price: Number(plan.price)
         },
         userData: {
@@ -133,45 +165,32 @@ const PaymentPage: React.FC<PaymentPageProps> = ({ onBack }) => {
         }
       };
 
-      // Log dos dados enviados para o back-end
-      console.log('Enviando dados para o back-end:', paymentData);
-
-      // Requisição ao servidor
       const response = await fetch('https://api.conexaocode.com/api/create-payment', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
+          'Authorization': `Bearer ${localStorage.getItem('token')}`
         },
         body: JSON.stringify(paymentData),
       });
 
-      // Tratamento de resposta não bem-sucedida
+      const data: PaymentResponse = await response.json();
+
       if (!response.ok) {
-        const errorData = await response.json();
-        console.error('Erro na resposta do servidor:', errorData);
-        throw new Error(`HTTP error! status: ${response.status}, message: ${errorData.error || 'Erro desconhecido'}`);
+        throw new Error(data.error || 'Erro ao processar pagamento');
       }
 
-      // Log da resposta bem-sucedida
-      const data: PaymentResponse = await response.json();
-      console.log('Resposta do servidor:', data);
+      setPaymentId(data.paymentId);
+      setPixCode(data.qrCode || '');
+      setPixCodeBase64(data.qrCodeBase64 || '');
+      setPixExpiry(data.expires || '');
 
-      // Processamento específico para cada método de pagamento
-      if (selectedMethod === 'pix') {
-        setPixCode(data.qrCode || '');
-        setPixCodeBase64(data.qrCodeBase64 || '');
-        setPixExpiry(data.expires || '');
-        if (data.expires) {
-          setTimeLeft(Math.floor((new Date(data.expires).getTime() - Date.now()) / 1000));
-        }
-      } else {
-        navigate('/payment-success');
+      if (data.expires) {
+        setTimeLeft(Math.floor((new Date(data.expires).getTime() - Date.now()) / 1000));
       }
 
     } catch (error) {
-      // Log detalhado do erro e exibição de mensagem para o usuário
-      console.error('Erro detalhado no pagamento:', error);
-      alert(`Erro ao processar pagamento:`);
+      alert(error instanceof Error ? error.message : 'Erro desconhecido');
     } finally {
       setLoading(false);
     }
@@ -212,8 +231,8 @@ const PaymentPage: React.FC<PaymentPageProps> = ({ onBack }) => {
               <motion.button
                 onClick={() => setSelectedMethod('credit')}
                 className={`p-4 rounded-xl border-2 transition-colors ${selectedMethod === 'credit'
-                    ? 'border-blue-600 bg-blue-50'
-                    : 'border-gray-200 hover:border-gray-300'
+                  ? 'border-blue-600 bg-blue-50'
+                  : 'border-gray-200 hover:border-gray-300'
                   }`}
                 whileHover={{ scale: 1.02 }}
                 whileTap={{ scale: 0.98 }}
@@ -229,8 +248,8 @@ const PaymentPage: React.FC<PaymentPageProps> = ({ onBack }) => {
               <motion.button
                 onClick={() => setSelectedMethod('pix')}
                 className={`p-4 rounded-xl border-2 transition-colors ${selectedMethod === 'pix'
-                    ? 'border-blue-600 bg-blue-50'
-                    : 'border-gray-200 hover:border-gray-300'
+                  ? 'border-blue-600 bg-blue-50'
+                  : 'border-gray-200 hover:border-gray-300'
                   }`}
                 whileHover={{ scale: 1.02 }}
                 whileTap={{ scale: 0.98 }}
@@ -504,34 +523,25 @@ const PaymentPage: React.FC<PaymentPageProps> = ({ onBack }) => {
 
                 <motion.button
                   type="submit"
-                  disabled={loading || isGeneratingPix}
-                  className="w-full py-4 bg-blue-600 text-white rounded-xl font-medium hover:bg-blue-700 transition-colors flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                  disabled={loading}
+                  className="w-full py-4 bg-blue-600 text-white rounded-xl font-medium hover:bg-blue-700 transition-colors flex items-center justify-center gap-2 disabled:opacity-50"
                   whileHover={{ scale: 1.02 }}
                   whileTap={{ scale: 0.98 }}
                 >
-                  {loading || isGeneratingPix ? (
+                  {loading ? (
                     <>
                       <div className="animate-spin rounded-full h-5 w-5 border-2 border-white border-t-transparent" />
-                      <span>Processando...</span>
+                      <span>Gerando QR Code...</span>
+                    </>
+                  ) : pixCode ? (
+                    <>
+                      <span>Atualizar QR Code</span>
+                      <RefreshCw className="h-5 w-5" />
                     </>
                   ) : (
                     <>
-                      {selectedMethod === 'credit' ? (
-                        <>
-                          <span>Pagar R$ {plan?.price.toFixed(2)}</span>
-                          <Shield className="h-5 w-5" />
-                        </>
-                      ) : pixCode ? (
-                        <>
-                          <span>Gerar Novo QR Code</span>
-                          <RefreshCw className="h-5 w-5" />
-                        </>
-                      ) : (
-                        <>
-                          <span>Gerar QR Code PIX</span>
-                          <QrCode className="h-5 w-5" />
-                        </>
-                      )}
+                      <span>Gerar QR Code PIX</span>
+                      <QrCode className="h-5 w-5" />
                     </>
                   )}
                 </motion.button>
