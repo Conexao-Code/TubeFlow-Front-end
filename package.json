@@ -7,7 +7,7 @@
     "dev": "vite --host --watch false",
     "build": "vite build",
     "lint": "eslint .",
-    "preview": "vite preview",
+    "preview": "vite preview --port 3100",
     "start": "vite preview --port 3100",
     "heroku-postbuild": "npm install"
   },

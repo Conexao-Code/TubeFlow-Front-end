@@ -1,21 +1,27 @@
-# Usa a imagem oficial do Node.js
-FROM node:18-alpine
+# Etapa de build
+FROM node:18-alpine AS builder
 
 WORKDIR /
 
 COPY package*.json ./
 
-# Instala as dependências de produção
-RUN npm install
+RUN npm install --frozen-lockfile
 
-# Copia todo o código da aplicação para dentro do container
 COPY . .
 
-# Define a variável de ambiente do Heroku
+RUN npm run build
+
+# Etapa final (apenas os arquivos necessários)
+FROM node:18-alpine
+
+WORKDIR /
+
+COPY --from=builder /dist ./dist
+COPY --from=builder /node_modules ./node_modules
+COPY package.json ./
+
 ENV PORT=3100
 
-# Expõe a porta que será usada pela aplicação
 EXPOSE $PORT
 
-# Comando para rodar a aplicação
-CMD ["npm", "run", "dev"]
+CMD ["npm", "run", "preview"]
