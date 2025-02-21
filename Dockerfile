@@ -6,7 +6,7 @@ WORKDIR /
 COPY package*.json ./
 
 # Instala as dependências de produção
-RUN npm install --omit=dev
+RUN npm install
 
 # Copia todo o código da aplicação para dentro do container
 COPY . .
