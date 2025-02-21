@@ -97,7 +97,7 @@ function App() {
 
     const fetchAdministrators = async () => {
         try {
-            const response = await fetch('https://api.conexaocode.com/api/administrators', {
+            const response = await fetch('apitubeflow.conexaocode.com/api/administrators', {
                 method: 'GET',
                 headers: {
                     'Content-Type': 'application/json',
@@ -143,7 +143,7 @@ function App() {
 
         if (validateForm() && selectedAdmin) {
             try {
-                const response = await fetch(`https://api.conexaocode.com/api/administrators/${selectedAdmin.id}`, {
+                const response = await fetch(`apitubeflow.conexaocode.com/api/administrators/${selectedAdmin.id}`, {
                     method: 'PUT',
                     headers: {
                         'Content-Type': 'application/json',
@@ -173,7 +173,7 @@ function App() {
     const handleDelete = async () => {
         if (selectedAdmin) {
             try {
-                const response = await fetch(`https://api.conexaocode.com/api/administrators/${selectedAdmin.id}`, {
+                const response = await fetch(`apitubeflow.conexaocode.com/api/administrators/${selectedAdmin.id}`, {
                     method: 'DELETE',
                     headers: {
                         'Content-Type': 'application/json',
@@ -349,7 +349,7 @@ function App() {
                                 onSubmit={async (e) => {
                                     e.preventDefault();
                                     try {
-                                        const response = await fetch('https://api.conexaocode.com/api/register-administrator', {
+                                        const response = await fetch('apitubeflow.conexaocode.com/api/register-administrator', {
                                             method: 'POST',
                                             headers: {
                                                 'Content-Type': 'application/json',

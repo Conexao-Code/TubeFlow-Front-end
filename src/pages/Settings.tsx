@@ -14,7 +14,7 @@ function Settings() {
     useEffect(() => {
         const fetchSettings = async () => {
             try {
-                const response = await fetch(`https://api.conexaocode.com/api/settings`);
+                const response = await fetch(`apitubeflow.conexaocode.com/api/settings`);
                 if (!response.ok) {
                     throw new Error('Erro ao carregar configurações.');
                 }
@@ -37,7 +37,7 @@ function Settings() {
         e.preventDefault();
 
         try {
-            const response = await fetch('https://api.conexaocode.com/api/settings', {
+            const response = await fetch('apitubeflow.conexaocode.com/api/settings', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',

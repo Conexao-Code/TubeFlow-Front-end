@@ -49,7 +49,7 @@ function Dashboard() {
                 const isAdmin = !isFreelancer;
                 setIsUser(isAdmin);
 
-                const response = await fetch(`https://api.conexaocode.com/api/dashboard?userId=${userId}&isUser=${isAdmin ? 1 : 0}`);
+                const response = await fetch(`apitubeflow.conexaocode.com/api/dashboard?userId=${userId}&isUser=${isAdmin ? 1 : 0}`);
                 const data = await response.json();
 
                 setStats(data.stats);

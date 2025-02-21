@@ -79,7 +79,7 @@ const PaymentPage: React.FC<PaymentPageProps> = ({ onBack }) => {
     let timer: number;
     const checkPaymentStatus = async () => {
       try {
-        const response = await fetch(`https://api.conexaocode.com/api/payments/${paymentId}`, {
+        const response = await fetch(`apitubeflow.conexaocode.com/api/payments/${paymentId}`, {
           headers: {
             'Authorization': `Bearer ${localStorage.getItem('token')}`
           }
@@ -165,7 +165,7 @@ const PaymentPage: React.FC<PaymentPageProps> = ({ onBack }) => {
         }
       };
 
-      const response = await fetch('https://api.conexaocode.com/api/create-payment', {
+      const response = await fetch('apitubeflow.conexaocode.com/api/create-payment', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
