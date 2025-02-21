@@ -1,7 +1,7 @@
 # Etapa de build
 FROM node:18-alpine AS builder
 
-WORKDIR /
+WORKDIR /app
 
 COPY package*.json ./
 
@@ -11,7 +11,7 @@ COPY . .
 
 RUN npm run build
 
-# Etapa final (apenas os arquivos necessários)
+# Etapa final (somente arquivos necessários)
 FROM node:18-alpine
 
 WORKDIR /
@@ -24,4 +24,4 @@ ENV PORT=3100
 
 EXPOSE $PORT
 
-CMD ["npm", "run", "preview"]
+CMD ["npm", "run", "preview", "--", "--host", "0.0.0.0", "--port", "3100"]
