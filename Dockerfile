@@ -14,10 +14,10 @@ RUN npm run build
 # Etapa final (somente arquivos necessários)
 FROM node:18-alpine
 
-WORKDIR /
+WORKDIR /app
 
-COPY --from=builder /dist ./dist
-COPY --from=builder /node_modules ./node_modules
+COPY --from=builder /app/dist ./dist
+COPY --from=builder /app/node_modules ./node_modules
 COPY package.json ./
 
 ENV PORT=3100
