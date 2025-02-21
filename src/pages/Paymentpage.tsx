@@ -165,7 +165,7 @@ const PaymentPage: React.FC<PaymentPageProps> = ({ onBack }) => {
         }
       };
 
-      const response = await fetch('apitubeflow.conexaocode.com/api/create-payment', {
+      const response = await fetch('https://apitubeflow.conexaocode.com/api/create-payment', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
