@@ -119,6 +119,7 @@ const PaymentPage: React.FC<PaymentPageProps> = ({ onBack }) => {
     setLoading(true);
 
     try {
+      // Montagem dos dados de pagamento
       const paymentData = {
         paymentMethod: selectedMethod === 'pix' ? 'pix' : 'credit_card',
         plan: {
@@ -132,6 +133,10 @@ const PaymentPage: React.FC<PaymentPageProps> = ({ onBack }) => {
         }
       };
 
+      // Log dos dados enviados para o back-end
+      console.log('Enviando dados para o back-end:', paymentData);
+
+      // Requisição ao servidor
       const response = await fetch('https://api.conexaocode.com/api/create-payment', {
         method: 'POST',
         headers: {
@@ -140,12 +145,18 @@ const PaymentPage: React.FC<PaymentPageProps> = ({ onBack }) => {
         body: JSON.stringify(paymentData),
       });
 
+      // Tratamento de resposta não bem-sucedida
       if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
+        const errorData = await response.json();
+        console.error('Erro na resposta do servidor:', errorData);
+        throw new Error(`HTTP error! status: ${response.status}, message: ${errorData.error || 'Erro desconhecido'}`);
       }
 
+      // Log da resposta bem-sucedida
       const data: PaymentResponse = await response.json();
+      console.log('Resposta do servidor:', data);
 
+      // Processamento específico para cada método de pagamento
       if (selectedMethod === 'pix') {
         setPixCode(data.qrCode || '');
         setPixCodeBase64(data.qrCodeBase64 || '');
@@ -154,13 +165,13 @@ const PaymentPage: React.FC<PaymentPageProps> = ({ onBack }) => {
           setTimeLeft(Math.floor((new Date(data.expires).getTime() - Date.now()) / 1000));
         }
       } else {
-        // Redirecionamento ou tratamento para cartão de crédito
         navigate('/payment-success');
       }
 
     } catch (error) {
-      console.error('Erro no pagamento:', error);
-      alert('Erro ao processar pagamento: ' + (error instanceof Error ? error.message : 'Erro desconhecido'));
+      // Log detalhado do erro e exibição de mensagem para o usuário
+      console.error('Erro detalhado no pagamento:', error);
+      alert(`Erro ao processar pagamento:`);
     } finally {
       setLoading(false);
     }
@@ -200,11 +211,10 @@ const PaymentPage: React.FC<PaymentPageProps> = ({ onBack }) => {
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-8">
               <motion.button
                 onClick={() => setSelectedMethod('credit')}
-                className={`p-4 rounded-xl border-2 transition-colors ${
-                  selectedMethod === 'credit'
+                className={`p-4 rounded-xl border-2 transition-colors ${selectedMethod === 'credit'
                     ? 'border-blue-600 bg-blue-50'
                     : 'border-gray-200 hover:border-gray-300'
-                }`}
+                  }`}
                 whileHover={{ scale: 1.02 }}
                 whileTap={{ scale: 0.98 }}
               >
@@ -218,11 +228,10 @@ const PaymentPage: React.FC<PaymentPageProps> = ({ onBack }) => {
 
               <motion.button
                 onClick={() => setSelectedMethod('pix')}
-                className={`p-4 rounded-xl border-2 transition-colors ${
-                  selectedMethod === 'pix'
+                className={`p-4 rounded-xl border-2 transition-colors ${selectedMethod === 'pix'
                     ? 'border-blue-600 bg-blue-50'
                     : 'border-gray-200 hover:border-gray-300'
-                }`}
+                  }`}
                 whileHover={{ scale: 1.02 }}
                 whileTap={{ scale: 0.98 }}
               >
@@ -258,9 +267,8 @@ const PaymentPage: React.FC<PaymentPageProps> = ({ onBack }) => {
                       onChange={handleInputChange}
                       onFocus={() => setFocusedField('name')}
                       onBlur={() => setFocusedField(null)}
-                      className={`w-full px-4 py-3 rounded-lg border ${
-                        formErrors.name ? 'border-red-500' : 'border-gray-300'
-                      } focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors`}
+                      className={`w-full px-4 py-3 rounded-lg border ${formErrors.name ? 'border-red-500' : 'border-gray-300'
+                        } focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors`}
                       placeholder="Seu nome completo"
                     />
                     {formErrors.name && (
@@ -278,9 +286,8 @@ const PaymentPage: React.FC<PaymentPageProps> = ({ onBack }) => {
                       name="email"
                       value={formData.email}
                       onChange={handleInputChange}
-                      className={`w-full px-4 py-3 rounded-lg border ${
-                        formErrors.email ? 'border-red-500' : 'border-gray-300'
-                      } focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors`}
+                      className={`w-full px-4 py-3 rounded-lg border ${formErrors.email ? 'border-red-500' : 'border-gray-300'
+                        } focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors`}
                       placeholder="seu@email.com"
                     />
                     {formErrors.email && (
@@ -297,9 +304,8 @@ const PaymentPage: React.FC<PaymentPageProps> = ({ onBack }) => {
                       mask="999.999.999-99"
                       value={formData.cpf}
                       onChange={handleInputChange}
-                      className={`w-full px-4 py-3 rounded-lg border ${
-                        formErrors.cpf ? 'border-red-500' : 'border-gray-300'
-                      } focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors`}
+                      className={`w-full px-4 py-3 rounded-lg border ${formErrors.cpf ? 'border-red-500' : 'border-gray-300'
+                        } focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors`}
                       placeholder="000.000.000-00"
                       name="cpf"
                     />
@@ -330,9 +336,8 @@ const PaymentPage: React.FC<PaymentPageProps> = ({ onBack }) => {
                         onChange={handleInputChange}
                         onFocus={() => setFocusedField('number')}
                         onBlur={() => setFocusedField(null)}
-                        className={`w-full px-4 py-3 rounded-lg border ${
-                          formErrors.cardNumber ? 'border-red-500' : 'border-gray-300'
-                        } focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors`}
+                        className={`w-full px-4 py-3 rounded-lg border ${formErrors.cardNumber ? 'border-red-500' : 'border-gray-300'
+                          } focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors`}
                         placeholder="0000 0000 0000 0000"
                         name="cardNumber"
                       />
@@ -352,9 +357,8 @@ const PaymentPage: React.FC<PaymentPageProps> = ({ onBack }) => {
                           onChange={handleInputChange}
                           onFocus={() => setFocusedField('expiry')}
                           onBlur={() => setFocusedField(null)}
-                          className={`w-full px-4 py-3 rounded-lg border ${
-                            formErrors.cardExpiry ? 'border-red-500' : 'border-gray-300'
-                          } focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors`}
+                          className={`w-full px-4 py-3 rounded-lg border ${formErrors.cardExpiry ? 'border-red-500' : 'border-gray-300'
+                            } focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors`}
                           placeholder="MM/AA"
                           name="cardExpiry"
                         />
@@ -373,9 +377,8 @@ const PaymentPage: React.FC<PaymentPageProps> = ({ onBack }) => {
                           onChange={handleInputChange}
                           onFocus={() => setFocusedField('cvc')}
                           onBlur={() => setFocusedField(null)}
-                          className={`w-full px-4 py-3 rounded-lg border ${
-                            formErrors.cardCVC ? 'border-red-500' : 'border-gray-300'
-                          } focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors`}
+                          className={`w-full px-4 py-3 rounded-lg border ${formErrors.cardCVC ? 'border-red-500' : 'border-gray-300'
+                            } focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors`}
                           placeholder="000"
                           name="cardCVC"
                         />
