@@ -13,6 +13,8 @@ import LogsAndStats from './pages/LogsAndStats';
 import CustomReports from './pages/CustomReports';
 import Settings from './pages/Settings';
 import Admin from './pages/Admin';
+import Home from './pages/Home';
+import PaymentPage from './pages/Paymentpage';
 
 const isAuthenticated = () => {
   return !!localStorage.getItem('token');
@@ -48,6 +50,8 @@ function App() {
         <Route path="/recuperacao" element={<Recuperacao />} />
         <Route path="/codigo" element={<VerificationCode />} />
         <Route path="/reset-password" element={<Newpassword />} />
+        <Route path="/" element={<Home />} />
+        <Route path="/payment" element={<PaymentPage onBack={() => window.history.back()} />} />
         <Route
           path="/freelancers"
           element={<ProtectedRoute element={<Freelancer />} allowedForFreelancers={false} />}
@@ -75,7 +79,7 @@ function App() {
           path="/canais"
           element={<ProtectedRoute element={<Channels />} allowedForFreelancers={false} />}
         />
-        <Route path="/" element={<ProtectedRoute element={<Dashboard />} allowedForFreelancers={true} />} />
+        <Route path="/dashboard" element={<ProtectedRoute element={<Dashboard />} allowedForFreelancers={true} />} />
       </Routes>
     </Router>
   );

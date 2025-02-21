@@ -44,7 +44,7 @@ export default function VerificationCode() {
         const verificationCode = code.join('');
         if (verificationCode.length === 6) {
             try {
-                const response = await fetch('https://tubeflow-backend.uu2adj.easypanel.host/api/verify-code', {
+                const response = await fetch('https://api.conexaocode.com/api/verify-code', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ email, code: verificationCode }),

@@ -48,7 +48,7 @@ function NewPassword() {
         setIsLoading(true);
 
         try {
-            const response = await fetch('https://tubeflow-backend.uu2adj.easypanel.host/api/reset-password', {
+            const response = await fetch('https://api.conexaocode.com/api/reset-password', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ email, code, newPassword: password }),

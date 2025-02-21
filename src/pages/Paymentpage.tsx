@@ -1,0 +1,556 @@
+import React, { useState, useEffect } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { useLocation, useNavigate } from 'react-router-dom';
+import { CreditCard, QrCode, ArrowLeft, Check, Shield, Clock, AlertCircle, User, Mail, FileText, Copy, Smartphone, RefreshCw } from 'lucide-react';
+import InputMask from 'react-input-mask';
+import CreditCardComponent from '../components/CreditCard';
+
+interface PaymentPageProps {
+  onBack: () => void;
+}
+
+interface LocationState {
+  plan: {
+    period: string;
+    price: number;
+    label: string;
+  };
+}
+
+interface FormData {
+  name: string;
+  email: string;
+  cpf: string;
+  cardNumber?: string;
+  cardExpiry?: string;
+  cardCVC?: string;
+}
+
+interface PaymentResponse {
+  paymentId: string;
+  qrCode?: string;
+  qrCodeBase64?: string;
+  expires?: string;
+}
+
+const PaymentPage: React.FC<PaymentPageProps> = ({ onBack }) => {
+  const location = useLocation();
+  const navigate = useNavigate();
+  const [selectedMethod, setSelectedMethod] = useState<'credit' | 'pix'>('credit');
+  const [loading, setLoading] = useState(false);
+  const [formData, setFormData] = useState<FormData>({
+    name: '',
+    email: '',
+    cpf: '',
+    cardNumber: '',
+    cardExpiry: '',
+    cardCVC: '',
+  });
+  const [pixCode, setPixCode] = useState('');
+  const [pixCodeBase64, setPixCodeBase64] = useState('');
+  const [pixExpiry, setPixExpiry] = useState('');
+  const [formErrors, setFormErrors] = useState<Partial<FormData>>({});
+  const [focusedField, setFocusedField] = useState<'number' | 'name' | 'expiry' | 'cvc' | null>(null);
+  const [isGeneratingPix, setIsGeneratingPix] = useState(false);
+  const [copiedCode, setCopiedCode] = useState(false);
+  const [timeLeft, setTimeLeft] = useState<number>(0);
+
+  const { plan } = location.state as LocationState;
+
+  useEffect(() => {
+    if (!plan) {
+      navigate('/');
+    }
+  }, [navigate, plan]);
+
+  useEffect(() => {
+    let timer: number;
+    if (pixCode && timeLeft > 0) {
+      timer = window.setInterval(() => {
+        setTimeLeft(prev => prev - 1);
+      }, 1000);
+    }
+    return () => clearInterval(timer);
+  }, [pixCode, timeLeft]);
+
+  const formatTimeLeft = (seconds: number) => {
+    const minutes = Math.floor(seconds / 60);
+    const remainingSeconds = seconds % 60;
+    return `${minutes}:${remainingSeconds.toString().padStart(2, '0')}`;
+  };
+
+  const handleCopyCode = async () => {
+    try {
+      await navigator.clipboard.writeText(pixCode);
+      setCopiedCode(true);
+      setTimeout(() => setCopiedCode(false), 2000);
+    } catch (error) {
+      console.error('Failed to copy code:', error);
+    }
+  };
+
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = e.target;
+    setFormData(prev => ({ ...prev, [name]: value }));
+    setFormErrors(prev => ({ ...prev, [name]: '' }));
+  };
+
+  const validateForm = () => {
+    const errors: Partial<FormData> = {};
+
+    if (!formData.name.trim()) errors.name = 'Nome é obrigatório';
+    if (!formData.email.trim()) errors.email = 'Email é obrigatório';
+    if (!formData.cpf.trim()) errors.cpf = 'CPF é obrigatório';
+
+    if (selectedMethod === 'credit') {
+      if (!formData.cardNumber?.trim()) errors.cardNumber = 'Número do cartão é obrigatório';
+      if (!formData.cardExpiry?.trim()) errors.cardExpiry = 'Data de validade é obrigatória';
+      if (!formData.cardCVC?.trim()) errors.cardCVC = 'CVC é obrigatório';
+    }
+
+    setFormErrors(errors);
+    return Object.keys(errors).length === 0;
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!validateForm()) return;
+
+    setLoading(true);
+
+    try {
+      const paymentData = {
+        paymentMethod: selectedMethod === 'pix' ? 'pix' : 'credit_card',
+        plan: {
+          ...plan,
+          price: Number(plan.price)
+        },
+        userData: {
+          name: formData.name,
+          email: formData.email,
+          cpf: formData.cpf.replace(/\D/g, '')
+        }
+      };
+
+      const response = await fetch('https://api.conexaocode.com/api/create-payment', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(paymentData),
+      });
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      const data: PaymentResponse = await response.json();
+
+      if (selectedMethod === 'pix') {
+        setPixCode(data.qrCode || '');
+        setPixCodeBase64(data.qrCodeBase64 || '');
+        setPixExpiry(data.expires || '');
+        if (data.expires) {
+          setTimeLeft(Math.floor((new Date(data.expires).getTime() - Date.now()) / 1000));
+        }
+      } else {
+        // Redirecionamento ou tratamento para cartão de crédito
+        navigate('/payment-success');
+      }
+
+    } catch (error) {
+      console.error('Erro no pagamento:', error);
+      alert('Erro ao processar pagamento: ' + (error instanceof Error ? error.message : 'Erro desconhecido'));
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const containerVariants = {
+    hidden: { opacity: 0, y: 20 },
+    visible: { opacity: 1, y: 0 },
+    exit: { opacity: 0, y: -20 }
+  };
+
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-white py-6 px-4 sm:py-12 sm:px-6 lg:px-8">
+      <div className="max-w-4xl mx-auto">
+        <motion.button
+          onClick={onBack}
+          className="flex items-center text-gray-600 hover:text-gray-900 mb-8 group"
+          whileHover={{ x: -4 }}
+        >
+          <ArrowLeft className="h-5 w-5 mr-2 transition-transform group-hover:-translate-x-1" />
+          Voltar
+        </motion.button>
+
+        <div className="bg-white rounded-2xl shadow-xl overflow-hidden">
+          <div className="px-4 py-6 sm:p-10">
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-8">
+              <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">Finalizar Compra</h1>
+              <div className="text-right">
+                <p className="text-sm text-gray-500">Total a pagar</p>
+                <p className="text-2xl font-bold text-blue-600">
+                  R$ {plan?.price.toFixed(2)}
+                  <span className="text-sm text-gray-500 font-normal">/{plan?.period}</span>
+                </p>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-8">
+              <motion.button
+                onClick={() => setSelectedMethod('credit')}
+                className={`p-4 rounded-xl border-2 transition-colors ${
+                  selectedMethod === 'credit'
+                    ? 'border-blue-600 bg-blue-50'
+                    : 'border-gray-200 hover:border-gray-300'
+                }`}
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
+              >
+                <div className="flex items-center justify-center gap-3">
+                  <CreditCard className={selectedMethod === 'credit' ? 'text-blue-600' : 'text-gray-400'} />
+                  <span className={selectedMethod === 'credit' ? 'text-blue-600' : 'text-gray-600'}>
+                    Cartão de Crédito
+                  </span>
+                </div>
+              </motion.button>
+
+              <motion.button
+                onClick={() => setSelectedMethod('pix')}
+                className={`p-4 rounded-xl border-2 transition-colors ${
+                  selectedMethod === 'pix'
+                    ? 'border-blue-600 bg-blue-50'
+                    : 'border-gray-200 hover:border-gray-300'
+                }`}
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
+              >
+                <div className="flex items-center justify-center gap-3">
+                  <QrCode className={selectedMethod === 'pix' ? 'text-blue-600' : 'text-gray-400'} />
+                  <span className={selectedMethod === 'pix' ? 'text-blue-600' : 'text-gray-600'}>
+                    PIX
+                  </span>
+                </div>
+              </motion.button>
+            </div>
+
+            <AnimatePresence mode="wait">
+              <motion.form
+                key={selectedMethod}
+                variants={containerVariants}
+                initial="hidden"
+                animate="visible"
+                exit="exit"
+                onSubmit={handleSubmit}
+                className="space-y-6"
+              >
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      <User className="inline-block w-4 h-4 mr-2" />
+                      Nome Completo
+                    </label>
+                    <input
+                      type="text"
+                      name="name"
+                      value={formData.name}
+                      onChange={handleInputChange}
+                      onFocus={() => setFocusedField('name')}
+                      onBlur={() => setFocusedField(null)}
+                      className={`w-full px-4 py-3 rounded-lg border ${
+                        formErrors.name ? 'border-red-500' : 'border-gray-300'
+                      } focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors`}
+                      placeholder="Seu nome completo"
+                    />
+                    {formErrors.name && (
+                      <p className="mt-1 text-sm text-red-500">{formErrors.name}</p>
+                    )}
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      <Mail className="inline-block w-4 h-4 mr-2" />
+                      E-mail
+                    </label>
+                    <input
+                      type="email"
+                      name="email"
+                      value={formData.email}
+                      onChange={handleInputChange}
+                      className={`w-full px-4 py-3 rounded-lg border ${
+                        formErrors.email ? 'border-red-500' : 'border-gray-300'
+                      } focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors`}
+                      placeholder="seu@email.com"
+                    />
+                    {formErrors.email && (
+                      <p className="mt-1 text-sm text-red-500">{formErrors.email}</p>
+                    )}
+                  </div>
+
+                  <div className={selectedMethod === 'credit' ? 'md:col-span-2' : ''}>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      <FileText className="inline-block w-4 h-4 mr-2" />
+                      CPF
+                    </label>
+                    <InputMask
+                      mask="999.999.999-99"
+                      value={formData.cpf}
+                      onChange={handleInputChange}
+                      className={`w-full px-4 py-3 rounded-lg border ${
+                        formErrors.cpf ? 'border-red-500' : 'border-gray-300'
+                      } focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors`}
+                      placeholder="000.000.000-00"
+                      name="cpf"
+                    />
+                    {formErrors.cpf && (
+                      <p className="mt-1 text-sm text-red-500">{formErrors.cpf}</p>
+                    )}
+                  </div>
+                </div>
+
+                {selectedMethod === 'credit' ? (
+                  <div className="space-y-6">
+                    <CreditCardComponent
+                      number={formData.cardNumber || ''}
+                      name={formData.name || ''}
+                      expiry={formData.cardExpiry || ''}
+                      cvc={formData.cardCVC || ''}
+                      focused={focusedField}
+                    />
+
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                        <CreditCard className="inline-block w-4 h-4 mr-2" />
+                        Número do Cartão
+                      </label>
+                      <InputMask
+                        mask="9999 9999 9999 9999"
+                        value={formData.cardNumber}
+                        onChange={handleInputChange}
+                        onFocus={() => setFocusedField('number')}
+                        onBlur={() => setFocusedField(null)}
+                        className={`w-full px-4 py-3 rounded-lg border ${
+                          formErrors.cardNumber ? 'border-red-500' : 'border-gray-300'
+                        } focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors`}
+                        placeholder="0000 0000 0000 0000"
+                        name="cardNumber"
+                      />
+                      {formErrors.cardNumber && (
+                        <p className="mt-1 text-sm text-red-500">{formErrors.cardNumber}</p>
+                      )}
+                    </div>
+
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                          Validade
+                        </label>
+                        <InputMask
+                          mask="99/99"
+                          value={formData.cardExpiry}
+                          onChange={handleInputChange}
+                          onFocus={() => setFocusedField('expiry')}
+                          onBlur={() => setFocusedField(null)}
+                          className={`w-full px-4 py-3 rounded-lg border ${
+                            formErrors.cardExpiry ? 'border-red-500' : 'border-gray-300'
+                          } focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors`}
+                          placeholder="MM/AA"
+                          name="cardExpiry"
+                        />
+                        {formErrors.cardExpiry && (
+                          <p className="mt-1 text-sm text-red-500">{formErrors.cardExpiry}</p>
+                        )}
+                      </div>
+
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                          CVC
+                        </label>
+                        <InputMask
+                          mask="999"
+                          value={formData.cardCVC}
+                          onChange={handleInputChange}
+                          onFocus={() => setFocusedField('cvc')}
+                          onBlur={() => setFocusedField(null)}
+                          className={`w-full px-4 py-3 rounded-lg border ${
+                            formErrors.cardCVC ? 'border-red-500' : 'border-gray-300'
+                          } focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors`}
+                          placeholder="000"
+                          name="cardCVC"
+                        />
+                        {formErrors.cardCVC && (
+                          <p className="mt-1 text-sm text-red-500">{formErrors.cardCVC}</p>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="space-y-6">
+                    {!pixCode ? (
+                      <div className="text-center py-8">
+                        <motion.div
+                          initial={{ scale: 0.9, opacity: 0 }}
+                          animate={{ scale: 1, opacity: 1 }}
+                          transition={{ duration: 0.3 }}
+                          className="bg-blue-50 rounded-2xl p-8 max-w-md mx-auto"
+                        >
+                          <Smartphone className="w-12 h-12 text-blue-600 mx-auto mb-4" />
+                          <h3 className="text-lg font-semibold text-gray-900 mb-2">
+                            Pagamento Instantâneo via PIX
+                          </h3>
+                          <p className="text-gray-600 mb-4">
+                            Pague em segundos usando o app do seu banco. Basta preencher seus dados e escanear o QR Code.
+                          </p>
+                          <div className="flex items-center justify-center gap-4 text-sm text-gray-500">
+                            <div className="flex items-center gap-2">
+                              <Clock className="h-4 w-4" />
+                              <span>Aprovação Imediata</span>
+                            </div>
+                            <div className="flex items-center gap-2">
+                              <Shield className="h-4 w-4" />
+                              <span>100% Seguro</span>
+                            </div>
+                          </div>
+                        </motion.div>
+                      </div>
+                    ) : (
+                      <motion.div
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        className="bg-gradient-to-br from-blue-50 to-white rounded-2xl p-8 shadow-lg"
+                      >
+                        <div className="flex flex-col md:flex-row items-center gap-8">
+                          <div className="w-full md:w-1/2 flex flex-col items-center">
+                            <motion.div
+                              initial={{ scale: 0.8 }}
+                              animate={{ scale: 1 }}
+                              transition={{ type: "spring", stiffness: 200, damping: 15 }}
+                              className="relative"
+                            >
+                              <img
+                                src={`data:image/jpeg;base64,${pixCodeBase64}`}
+                                alt="QR Code PIX"
+                                className="w-48 h-48 rounded-xl shadow-lg"
+                              />
+                              <motion.div
+                                animate={{ scale: [1, 1.02, 1] }}
+                                transition={{ repeat: Infinity, duration: 2 }}
+                                className="absolute inset-0 border-2 border-blue-400 rounded-xl"
+                              />
+                            </motion.div>
+                            <div className="mt-4 text-center">
+                              <div className="inline-flex items-center gap-2 px-4 py-2 bg-blue-100 rounded-full text-blue-700 font-medium">
+                                <Clock className="h-4 w-4" />
+                                <span>{formatTimeLeft(timeLeft)}</span>
+                              </div>
+                            </div>
+                          </div>
+
+                          <div className="w-full md:w-1/2 space-y-6">
+                            <div>
+                              <h3 className="text-lg font-semibold text-gray-900 mb-2">
+                                Código PIX
+                              </h3>
+                              <div className="relative">
+                                <input
+                                  type="text"
+                                  value={pixCode}
+                                  readOnly
+                                  className="w-full px-4 py-3 pr-12 rounded-lg bg-white border border-gray-300 font-mono text-sm text-gray-600"
+                                />
+                                <motion.button
+                                  type="button"
+                                  onClick={handleCopyCode}
+                                  className="absolute right-2 top-1/2 -translate-y-1/2 p-2 text-blue-600 hover:bg-blue-50 rounded-lg"
+                                  whileHover={{ scale: 1.1 }}
+                                  whileTap={{ scale: 0.9 }}
+                                >
+                                  {copiedCode ? (
+                                    <Check className="h-5 w-5 text-green-500" />
+                                  ) : (
+                                    <Copy className="h-5 w-5" />
+                                  )}
+                                </motion.button>
+                              </div>
+                            </div>
+
+                            <div className="space-y-4">
+                              <h4 className="font-medium text-gray-900">Como pagar:</h4>
+                              <ol className="space-y-3 text-sm text-gray-600">
+                                <li className="flex items-start gap-3">
+                                  <span className="flex-shrink-0 w-6 h-6 flex items-center justify-center bg-blue-100 text-blue-600 rounded-full font-medium">1</span>
+                                  <span>Abra o app do seu banco</span>
+                                </li>
+                                <li className="flex items-start gap-3">
+                                  <span className="flex-shrink-0 w-6 h-6 flex items-center justify-center bg-blue-100 text-blue-600 rounded-full font-medium">2</span>
+                                  <span>Escolha pagar via PIX com QR Code</span>
+                                </li>
+                                <li className="flex items-start gap-3">
+                                  <span className="flex-shrink-0 w-6 h-6 flex items-center justify-center bg-blue-100 text-blue-600 rounded-full font-medium">3</span>
+                                  <span>Escaneie o código e confirme o pagamento</span>
+                                </li>
+                              </ol>
+                            </div>
+                          </div>
+                        </div>
+                      </motion.div>
+                    )}
+                  </div>
+                )}
+
+                <motion.button
+                  type="submit"
+                  disabled={loading || isGeneratingPix}
+                  className="w-full py-4 bg-blue-600 text-white rounded-xl font-medium hover:bg-blue-700 transition-colors flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                  whileHover={{ scale: 1.02 }}
+                  whileTap={{ scale: 0.98 }}
+                >
+                  {loading || isGeneratingPix ? (
+                    <>
+                      <div className="animate-spin rounded-full h-5 w-5 border-2 border-white border-t-transparent" />
+                      <span>Processando...</span>
+                    </>
+                  ) : (
+                    <>
+                      {selectedMethod === 'credit' ? (
+                        <>
+                          <span>Pagar R$ {plan?.price.toFixed(2)}</span>
+                          <Shield className="h-5 w-5" />
+                        </>
+                      ) : pixCode ? (
+                        <>
+                          <span>Gerar Novo QR Code</span>
+                          <RefreshCw className="h-5 w-5" />
+                        </>
+                      ) : (
+                        <>
+                          <span>Gerar QR Code PIX</span>
+                          <QrCode className="h-5 w-5" />
+                        </>
+                      )}
+                    </>
+                  )}
+                </motion.button>
+
+                <div className="bg-blue-50 rounded-xl p-4 flex items-start gap-3">
+                  <AlertCircle className="h-5 w-5 text-blue-600 flex-shrink-0 mt-0.5" />
+                  <p className="text-sm text-blue-600">
+                    Após a confirmação do pagamento, você receberá um e-mail com as instruções de acesso à sua conta.
+                  </p>
+                </div>
+              </motion.form>
+            </AnimatePresence>
+          </div>
+
+          <div className="px-6 py-4 bg-gray-50 flex items-center justify-center gap-2 text-sm text-gray-500">
+            <Shield className="h-4 w-4" />
+            <span>Pagamento 100% seguro processado por Stripe</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+export default PaymentPage;

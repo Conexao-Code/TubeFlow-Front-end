@@ -80,7 +80,13 @@ function App() {
 
     const roles = ['Roteirista', 'Editor', 'Narrador', 'Thumb Maker'];
 
-    // Set sidebar open by default on desktop
+    const roleOptions = [
+        { value: 'roteirista', label: 'Roteirista' },
+        { value: 'editor', label: 'Editor' },
+        { value: 'narrador', label: 'Narrador' },
+        { value: 'thumb maker', label: 'Thumb Maker' }
+    ];
+
     useEffect(() => {
         const handleResize = () => {
             if (window.innerWidth >= 1024) {
@@ -90,13 +96,10 @@ function App() {
             }
         };
 
-        // Set initial state
         handleResize();
 
-        // Add event listener
         window.addEventListener('resize', handleResize);
 
-        // Cleanup
         return () => window.removeEventListener('resize', handleResize);
     }, []);
 
@@ -107,7 +110,7 @@ function App() {
 
     const fetchFreelancers = async () => {
         try {
-            const response = await fetch('https://tubeflow-backend.uu2adj.easypanel.host/api/freelancers', {
+            const response = await fetch('https://api.conexaocode.com/api/freelancers', {
                 method: 'GET',
                 headers: {
                     'Content-Type': 'application/json',
@@ -163,7 +166,7 @@ function App() {
 
         if (validateForm(true) && selectedFreelancer) {
             try {
-                const response = await fetch(`https://tubeflow-backend.uu2adj.easypanel.host/api/freelancers/${selectedFreelancer.id}`, {
+                const response = await fetch(`https://api.conexaocode.com/api/freelancers/${selectedFreelancer.id}`, {
                     method: 'PUT',
                     headers: {
                         'Content-Type': 'application/json',
@@ -195,7 +198,7 @@ function App() {
     const handleDelete = async () => {
         if (selectedFreelancer) {
             try {
-                const response = await fetch(`https://tubeflow-backend.uu2adj.easypanel.host/api/freelancers/${selectedFreelancer.id}`, {
+                const response = await fetch(`https://api.conexaocode.com/api/freelancers/${selectedFreelancer.id}`, {
                     method: 'DELETE',
                     headers: {
                         'Content-Type': 'application/json',
@@ -218,12 +221,18 @@ function App() {
         }
     };
 
+    const formatPhone = (phone: string) => {
+        const cleaned = phone.replace(/\D/g, '');
+        const match = cleaned.match(/^(\d{2})(\d{5})(\d{4})$/);
+        return match ? `(${match[1]}) ${match[2]}-${match[3]}` : phone;
+    };
+
     const openEditModal = (freelancer: Freelancer) => {
         setSelectedFreelancer(freelancer);
         setFormData({
             name: freelancer.name,
             email: freelancer.email,
-            role: freelancer.role,
+            role: freelancer.role.toLowerCase(),
             phone: freelancer.phone,
         });
         setIsEditModalOpen(true);
@@ -241,9 +250,9 @@ function App() {
     return (
         <div className="min-h-screen bg-gray-50 flex">
             <ToastContainer />
-            
-            <Sidebar 
-                activeSection={activeSection} 
+
+            <Sidebar
+                activeSection={activeSection}
                 setActiveSection={setActiveSection}
                 isSidebarOpen={isSidebarOpen}
                 onCloseSidebar={() => setIsSidebarOpen(false)}
@@ -384,7 +393,7 @@ function App() {
                                 onSubmit={async (e) => {
                                     e.preventDefault();
                                     try {
-                                        const response = await fetch('https://tubeflow-backend.uu2adj.easypanel.host/api/register-freelancer', {
+                                        const response = await fetch('https://api.conexaocode.com/api/register-freelancer', {
                                             method: 'POST',
                                             headers: {
                                                 'Content-Type': 'application/json',
@@ -424,9 +433,8 @@ function App() {
                                             id="name"
                                             value={formData.name}
                                             onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                                            className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${
-                                                formErrors.name ? 'border-red-500' : 'border-gray-300'
-                                            }`}
+                                            className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${formErrors.name ? 'border-red-500' : 'border-gray-300'
+                                                }`}
                                             placeholder="Digite o nome completo"
                                         />
                                         {formErrors.name && <p className="mt-1 text-sm text-red-500">{formErrors.name}</p>}
@@ -441,9 +449,8 @@ function App() {
                                             id="email"
                                             value={formData.email}
                                             onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                                            className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${
-                                                formErrors.email ? 'border-red-500' : 'border-gray-300'
-                                            }`}
+                                            className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${formErrors.email ? 'border-red-500' : 'border-gray-300'
+                                                }`}
                                             placeholder="Digite o e-mail"
                                         />
                                         {formErrors.email && <p className="mt-1 text-sm text-red-500">{formErrors.email}</p>}
@@ -457,9 +464,8 @@ function App() {
                                             id="role"
                                             value={formData.role}
                                             onChange={(e) => setFormData({ ...formData, role: e.target.value })}
-                                            className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${
-                                                formErrors.role ? 'border-red-500' : 'border-gray-300'
-                                            }`}
+                                            className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${formErrors.role ? 'border-red-500' : 'border-gray-300'
+                                                }`}
                                         >
                                             <option value="">Selecione uma função</option>
                                             {roles.map((role) => (
@@ -480,9 +486,8 @@ function App() {
                                             id="phone"
                                             value={formData.phone}
                                             onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-                                            className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${
-                                                formErrors.phone ? 'border-red-500' : 'border-gray-300'
-                                            }`}
+                                            className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${formErrors.phone ? 'border-red-500' : 'border-gray-300'
+                                                }`}
                                             placeholder="Digite o número de telefone"
                                         />
                                         {formErrors.phone && <p className="mt-1 text-sm text-red-500">{formErrors.phone}</p>}
@@ -511,7 +516,7 @@ function App() {
 
                 {/* Edit Modal */}
                 {isEditModalOpen && (
-                    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+                    <div key={selectedFreelancer?.id} className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
                         <div className="bg-white rounded-xl shadow-xl w-full max-w-md">
                             <div className="p-6 border-b border-gray-100">
                                 <div className="flex items-center justify-between">
@@ -536,9 +541,8 @@ function App() {
                                             id="edit-name"
                                             value={formData.name}
                                             onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                                            className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${
-                                                formErrors.name ? 'border-red-500' : 'border-gray-300'
-                                            }`}
+                                            className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${formErrors.name ? 'border-red-500' : 'border-gray-300'
+                                                }`}
                                             placeholder="Digite o nome completo"
                                         />
                                         {formErrors.name && <p className="mt-1 text-sm text-red-500">{formErrors.name}</p>}
@@ -553,9 +557,8 @@ function App() {
                                             id="edit-email"
                                             value={formData.email}
                                             onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                                            className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${
-                                                formErrors.email ? 'border-red-500' : 'border-gray-300'
-                                            }`}
+                                            className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${formErrors.email ? 'border-red-500' : 'border-gray-300'
+                                                }`}
                                             placeholder="Digite o e-mail"
                                         />
                                         {formErrors.email && <p className="mt-1 text-sm text-red-500">{formErrors.email}</p>}
@@ -569,14 +572,13 @@ function App() {
                                             id="edit-role"
                                             value={formData.role}
                                             onChange={(e) => setFormData({ ...formData, role: e.target.value })}
-                                            className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${
-                                                formErrors.role ? 'border-red-500' : 'border-gray-300'
-                                            }`}
+                                            className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${formErrors.role ? 'border-red-500' : 'border-gray-300'
+                                                }`}
                                         >
                                             <option value="">Selecione uma função</option>
-                                            {roles.map((role) => (
-                                                <option key={role} value={role}>
-                                                    {role}
+                                            {roleOptions.map((role) => (
+                                                <option key={role.value} value={role.value}>
+                                                    {role.label}
                                                 </option>
                                             ))}
                                         </select>
@@ -592,9 +594,8 @@ function App() {
                                             id="edit-phone"
                                             value={formData.phone}
                                             onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-                                            className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${
-                                                formErrors.phone ? 'border-red-500' : 'border-gray-300'
-                                            }`}
+                                            className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${formErrors.phone ? 'border-red-500' : 'border-gray-300'
+                                                }`}
                                             placeholder="Digite o número de telefone"
                                         />
                                         {formErrors.phone && <p className="mt-1 text-sm text-red-500">{formErrors.phone}</p>}

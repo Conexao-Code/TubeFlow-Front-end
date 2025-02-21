@@ -6,13 +6,11 @@ export default defineConfig({
   plugins: [react()],
   server: {
     host: '0.0.0.0', // Permite acesso externo
-    port: 3100,       // Porta para desenvolvimento
-    https: true,
+    port: 3100,    
   },
   preview: {
-    host: '0.0.0.0', // Configuração para produção
-    port: 3100,  // Porta para desenvolvimento
-    https: true,
+    host: '0.0.0.0', 
+    port: 3100,  
   },
   optimizeDeps: {
     exclude: ['lucide-react'],

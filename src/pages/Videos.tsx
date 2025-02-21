@@ -90,7 +90,7 @@ function Videos() {
 
     const fetchComments = async (videoId: string) => {
         try {
-            const response = await fetch(`https://tubeflow-backend.uu2adj.easypanel.host/api/videos/${videoId}/comments`);
+            const response = await fetch(`https://api.conexaocode.com/api/videos/${videoId}/comments`);
             const data = await response.json();
 
             if (data.comments) {
@@ -120,7 +120,7 @@ function Videos() {
         const userType = isFreelancer ? 'freelancer' : 'user';
 
         try {
-            const response = await fetch(`https://tubeflow-backend.uu2adj.easypanel.host/api/videos/${selectedVideoForComments.id}/comments`, {
+            const response = await fetch(`https://api.conexaocode.com/api/videos/${selectedVideoForComments.id}/comments`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ text: newComment, userId, userType }),
@@ -231,7 +231,7 @@ function Videos() {
             if (selectedStatus) params.append('status', selectedStatus);
             if (searchTerm) params.append('searchTerm', searchTerm);
 
-            const response = await fetch(`https://tubeflow-backend.uu2adj.easypanel.host/api/videos?${params.toString()}`);
+            const response = await fetch(`https://api.conexaocode.com/api/videos?${params.toString()}`);
             const data = await response.json();
 
             const mappedVideos = data.map((video: any) => ({
@@ -361,7 +361,7 @@ function Videos() {
 
     const fetchChannels = async () => {
         try {
-            const response = await fetch('https://tubeflow-backend.uu2adj.easypanel.host/api/channels');
+            const response = await fetch('https://api.conexaocode.com/api/channels');
             const json = await response.json();
 
             if (Array.isArray(json.channels)) {
@@ -377,7 +377,7 @@ function Videos() {
 
     const fetchFreelancers = async () => {
         try {
-            const response = await fetch('https://tubeflow-backend.uu2adj.easypanel.host/api/freelancers');
+            const response = await fetch('https://api.conexaocode.com/api/freelancers');
             const json = await response.json();
 
             if (Array.isArray(json.data)) {
@@ -460,7 +460,7 @@ function Videos() {
 
 
         try {
-            const response = await fetch('https://tubeflow-backend.uu2adj.easypanel.host/api/videos', {
+            const response = await fetch('https://api.conexaocode.com/api/videos', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(data),
@@ -514,7 +514,7 @@ function Videos() {
         };
 
         try {
-            const response = await fetch(`https://tubeflow-backend.uu2adj.easypanel.host/api/videos/${selectedVideo.id}`, {
+            const response = await fetch(`https://api.conexaocode.com/api/videos/${selectedVideo.id}`, {
                 method: 'PUT',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(updatedData),
@@ -539,7 +539,7 @@ function Videos() {
     const handleDeleteVideo = async () => {
         if (!selectedVideo) return;
         try {
-            const response = await fetch(`https://tubeflow-backend.uu2adj.easypanel.host/api/videos/${selectedVideo.id}`, {
+            const response = await fetch(`https://api.conexaocode.com/api/videos/${selectedVideo.id}`, {
                 method: 'DELETE',
             });
             if (response.ok) {
@@ -589,7 +589,7 @@ function Videos() {
         }
 
         try {
-            const response = await fetch(`https://tubeflow-backend.uu2adj.easypanel.host/api/videos/${videoId}/status`, {
+            const response = await fetch(`https://api.conexaocode.com/api/videos/${videoId}/status`, {
                 method: 'PUT',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({

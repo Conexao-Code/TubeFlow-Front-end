@@ -8,13 +8,16 @@
     "build": "vite build",
     "lint": "eslint .",
     "preview": "vite preview",
-    "start": "vite preview --port 3100"
+    "start": "vite preview --port 3100",
+    "heroku-postbuild": "npm install"
   },
   "dependencies": {
+    "framer-motion": "^12.4.2",
     "lucide-react": "^0.344.0",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
     "react-input-mask": "^2.0.4",
+    "react-intersection-observer": "^9.15.1",
     "react-router-dom": "^6.28.1",
     "react-toastify": "^11.0.2",
     "recharts": "^2.15.0"
@@ -34,6 +37,7 @@
     "tailwindcss": "^3.4.1",
     "typescript": "^5.5.3",
     "typescript-eslint": "^8.3.0",
-    "vite": "^5.4.2"
+    "vite": "^5.4.2",
+    "vite-plugin-obfuscator": "^1.0.5"
   }
 }

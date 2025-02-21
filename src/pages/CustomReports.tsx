@@ -122,7 +122,7 @@ function CustomReports() {
 
     const fetchChannels = async () => {
         try {
-            const response = await fetch('https://tubeflow-backend.uu2adj.easypanel.host/api/channels');
+            const response = await fetch('https://api.conexaocode.com/api/channels');
             const json = await response.json();
             setChannels(json.channels);
         } catch (error) {
@@ -133,7 +133,7 @@ function CustomReports() {
 
     const fetchFreelancers = async () => {
         try {
-            const response = await fetch('https://tubeflow-backend.uu2adj.easypanel.host/api/freelancers2');
+            const response = await fetch('https://api.conexaocode.com/api/freelancers2');
             const json = await response.json();
             setFreelancers(json.data);
         } catch (error) {
@@ -155,9 +155,9 @@ function CustomReports() {
             });
 
             const [reportResponse, statsResponse, statusResponse] = await Promise.all([
-                fetch(`https://tubeflow-backend.uu2adj.easypanel.host/api/reports/data?${params}`),
-                fetch(`https://tubeflow-backend.uu2adj.easypanel.host/api/reports/stats?${params}`),
-                fetch(`https://tubeflow-backend.uu2adj.easypanel.host/api/reports/status?${params}`),
+                fetch(`https://api.conexaocode.com/api/reports/data?${params}`),
+                fetch(`https://api.conexaocode.com/api/reports/stats?${params}`),
+                fetch(`https://api.conexaocode.com/api/reports/status?${params}`),
             ]);
 
             const reportData = await reportResponse.json();
@@ -209,7 +209,7 @@ function CustomReports() {
                 ...(selectedStatus && { status: selectedStatus })
             });
 
-            const response = await fetch(`https://tubeflow-backend.uu2adj.easypanel.host/api/reports/export?${params}`);
+            const response = await fetch(`https://api.conexaocode.com/api/reports/export?${params}`);
             const blob = await response.blob();
             const url = window.URL.createObjectURL(blob);
             const a = document.createElement('a');
