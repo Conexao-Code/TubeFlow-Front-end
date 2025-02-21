@@ -6,7 +6,10 @@ export default defineConfig({
   plugins: [react()],
   server: {
     host: '0.0.0.0', // Permite acesso externo
-    port: 3100,    
+    port: 3100,   
+    watch: {
+      ignored: ['**/tsconfig.json', '**/vite.config.ts']
+    } 
   },
   preview: {
     host: '0.0.0.0', 
