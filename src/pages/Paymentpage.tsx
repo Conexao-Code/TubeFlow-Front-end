@@ -145,8 +145,30 @@ const PaymentPage: React.FC<PaymentPageProps> = ({ onBack }) => {
     return Object.keys(errors).length === 0;
   };
 
+  useEffect(() => {
+    const state = location.state as LocationState;
+    
+    if (!state?.plan?.type || !state.plan.price) {
+      console.error('Dados do plano inválidos:', state?.plan);
+      return navigate('/', { replace: true });
+    }
+    
+    // Garante o tipo correto do período
+    const validPeriods = ['monthly', 'quarterly', 'annual'];
+    if (!validPeriods.includes(state.plan.period.toLowerCase())) {
+      console.error('Período do plano inválido:', state.plan.period);
+      return navigate('/', { replace: true });
+    }
+  }, [navigate, location.state]);
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+
+    if (!plan?.type) {
+      alert('Selecione um plano válido antes de continuar');
+      return navigate('/');
+    }
+    
     if (!validateForm()) return;
 
     setLoading(true);
@@ -155,7 +177,7 @@ const PaymentPage: React.FC<PaymentPageProps> = ({ onBack }) => {
       const paymentData = {
         paymentMethod: 'pix',
         plan: {
-          type: plan.type
+          type: plan.type // Certifique-se que isso está vindo corretamente do state
         },
         userData: {
           name: formData.name,
