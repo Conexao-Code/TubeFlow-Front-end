@@ -11,10 +11,10 @@ interface PaymentPageProps {
 
 interface LocationState {
   plan: {
+    type: string; // Campo obrigatório
     period: string;
     price: number;
     label: string;
-    type: string;
   };
 }
 
@@ -148,16 +148,17 @@ const PaymentPage: React.FC<PaymentPageProps> = ({ onBack }) => {
   useEffect(() => {
     const state = location.state as LocationState;
     
-    if (!state?.plan?.type || !state.plan.price) {
-      console.error('Dados do plano inválidos:', state?.plan);
-      return navigate('/', { replace: true });
+    // Verificação completa de todas propriedades necessárias
+    if (!state?.plan || !state.plan.type || !state.plan.price || !state.plan.period) {
+      console.error('Plano incompleto:', state?.plan);
+      navigate('/', { replace: true });
     }
     
-    // Garante o tipo correto do período
-    const validPeriods = ['monthly', 'quarterly', 'annual'];
-    if (!validPeriods.includes(state.plan.period.toLowerCase())) {
-      console.error('Período do plano inválido:', state.plan.period);
-      return navigate('/', { replace: true });
+    // Validação dos valores permitidos
+    const validTypes = ['monthly', 'quarterly', 'annual'];
+    if (!validTypes.includes(state.plan.type.toLowerCase())) {
+      console.error('Tipo de plano inválido:', state.plan.type);
+      navigate('/', { replace: true });
     }
   }, [navigate, location.state]);
 
