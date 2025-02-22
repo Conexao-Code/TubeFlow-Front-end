@@ -60,11 +60,7 @@ const PaymentPage: React.FC<PaymentPageProps> = ({ onBack }) => {
   const [paymentId, setPaymentId] = useState<string>('');
   const { plan } = location.state as LocationState;
 
-  useEffect(() => {
-    if (!plan) {
-      navigate('/');
-    }
-  }, [navigate, plan]);
+
 
   useEffect(() => {
     let timer: number;
