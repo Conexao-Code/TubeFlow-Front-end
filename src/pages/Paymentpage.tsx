@@ -134,13 +134,13 @@ const PaymentPage: React.FC<PaymentPageProps> = ({ onBack }) => {
 
   const validateForm = () => {
     const errors: Partial<FormData> = {};
-    const cpfRegex = /^\d{3}\.\d{3}\.\d{3}-\d{2}$/;
+    const cpfRegex = /^\d{3}\.\d{3}\.\d{3}-\d{2}$/; // Validação visual mantida
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-
+  
     if (!formData.name.trim()) errors.name = 'Nome é obrigatório';
     if (!emailRegex.test(formData.email)) errors.email = 'Email inválido';
     if (!cpfRegex.test(formData.cpf)) errors.cpf = 'CPF inválido (use o formato 000.000.000-00)';
-
+  
     setFormErrors(errors);
     return Object.keys(errors).length === 0;
   };
@@ -155,7 +155,7 @@ const PaymentPage: React.FC<PaymentPageProps> = ({ onBack }) => {
       const paymentData = {
         paymentMethod: 'pix',
         plan: {
-          type: plan.type // Envia apenas o tipo do plano
+          type: plan.type
         },
         userData: {
           name: formData.name,
