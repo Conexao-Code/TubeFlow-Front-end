@@ -86,28 +86,34 @@ const PaymentPage: React.FC<PaymentPageProps> = ({ onBack }) => {
 
       const data = await response.json();
 
-      // Estados finais que não precisam mais de verificação
-      const finalStates = ['approved', 'rejected', 'canceled', 'refunded', 'chargeback'];
-
-      if (finalStates.includes(data.status)) {
-        // Redireciona para página de sucesso ou erro
-        navigate('/payment-result', {
+      if (data.status === 'approved') {
+        navigate('/payment-success', {
+          state: {
+            paymentId: data.payment_id,
+            amount: data.amount,
+            plan: data.plan_type
+          }
+        });
+      }
+      else if (['rejected', 'canceled', 'chargeback'].includes(data.status)) {
+        navigate('/payment-error', {
           state: {
             status: data.status,
             paymentId: data.payment_id,
-            amount: data.amount,
-            plan: data.plan_type,
-            lastUpdate: data.last_updated
+            amount: data.amount
           }
         });
       }
 
     } catch (error) {
       console.error('Erro ao verificar status:', error);
-      // Adicione tratamento visual de erros se necessário
+      navigate('/payment-error', {
+        state: {
+          errorMessage: 'Falha ao verificar o status do pagamento'
+        }
+      });
     }
   };
-
   // Atualize o useEffect de verificação
   useEffect(() => {
     let timer: number;
@@ -264,8 +270,8 @@ const PaymentPage: React.FC<PaymentPageProps> = ({ onBack }) => {
               <motion.button
                 onClick={() => setSelectedMethod('credit')}
                 className={`p-4 rounded-xl border-2 transition-colors ${selectedMethod === 'credit'
-                    ? 'border-blue-600 bg-blue-50'
-                    : 'border-gray-200 hover:border-gray-300'
+                  ? 'border-blue-600 bg-blue-50'
+                  : 'border-gray-200 hover:border-gray-300'
                   }`}
                 whileHover={{ scale: 1.02 }}
                 whileTap={{ scale: 0.98 }}
@@ -281,8 +287,8 @@ const PaymentPage: React.FC<PaymentPageProps> = ({ onBack }) => {
               <motion.button
                 onClick={() => setSelectedMethod('pix')}
                 className={`p-4 rounded-xl border-2 transition-colors ${selectedMethod === 'pix'
-                    ? 'border-blue-600 bg-blue-50'
-                    : 'border-gray-200 hover:border-gray-300'
+                  ? 'border-blue-600 bg-blue-50'
+                  : 'border-gray-200 hover:border-gray-300'
                   }`}
                 whileHover={{ scale: 1.02 }}
                 whileTap={{ scale: 0.98 }}
