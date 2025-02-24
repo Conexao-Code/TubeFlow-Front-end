@@ -19,12 +19,26 @@ const PaymentSuccessPage: React.FC = () => {
     height: window.innerHeight,
   });
 
-  // Add default values to handle undefined state
+  // Log inicial do estado da localização
+  console.log('[PaymentSuccessPage] Location state:', location.state);
+
+  // Efeito para debug do estado
+  useEffect(() => {
+    console.log('[PaymentSuccessPage] State after initialization:', {
+      paymentId: location.state?.paymentId,
+      amount: location.state?.amount,
+      plan: location.state?.plan
+    });
+  }, []);
+
+  // Dados com fallbacks e validação
   const paymentData = {
     paymentId: location.state?.paymentId || '',
     amount: location.state?.amount || 0,
     plan: location.state?.plan || ''
   };
+
+  console.log('[PaymentSuccessPage] Processed payment data:', paymentData);
 
   useEffect(() => {
     const handleResize = () => {
@@ -35,28 +49,38 @@ const PaymentSuccessPage: React.FC = () => {
     };
 
     window.addEventListener('resize', handleResize);
-    const confettiTimer = setTimeout(() => setShowConfetti(false), 5000);
+    const confettiTimer = setTimeout(() => {
+      console.log('[PaymentSuccessPage] Confetti disabled after 5 seconds');
+      setShowConfetti(false);
+    }, 5000);
 
     return () => {
+      console.log('[PaymentSuccessPage] Cleanup effects');
       window.removeEventListener('resize', handleResize);
       clearTimeout(confettiTimer);
     };
   }, []);
 
   useEffect(() => {
-    // Redirect if no payment data is present
+    console.log('[PaymentSuccessPage] Checking payment ID existence');
     if (!location.state?.paymentId) {
+      console.warn('[PaymentSuccessPage] No payment ID - redirecting to home');
       navigate('/', { replace: true });
     }
   }, [location.state, navigate]);
 
   const formatPlanType = (type: string) => {
+    console.log('[PaymentSuccessPage] Formatting plan type:', type);
+    
     const plans = {
       monthly: 'Mensal',
       quarterly: 'Trimestral',
       annual: 'Anual'
     };
-    return plans[type.toLowerCase() as keyof typeof plans] || type;
+
+    const formatted = plans[type.toLowerCase() as keyof typeof plans] || type;
+    console.log('[PaymentSuccessPage] Formatted plan result:', formatted);
+    return formatted;
   };
 
   const containerVariants = {
@@ -94,10 +118,36 @@ const PaymentSuccessPage: React.FC = () => {
     }
   ];
 
-  // If no payment data, show loading or redirect
+  // Verificação detalhada dos dados
   if (!location.state?.paymentId) {
-    return null; // Component will unmount and redirect via useEffect
+    console.error('[PaymentSuccessPage] Missing critical payment data:', {
+      state: location.state,
+      path: location.pathname,
+      search: location.search
+    });
+    return null;
   }
+
+  // Validação adicional do amount
+  if (typeof paymentData.amount !== 'number' || isNaN(paymentData.amount)) {
+    console.error('[PaymentSuccessPage] Invalid amount value:', paymentData.amount);
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 to-white flex items-center justify-center">
+        <div className="text-center p-8 max-w-2xl">
+          <CheckCircle className="w-16 h-16 text-red-500 mx-auto mb-4" />
+          <h1 className="text-2xl font-bold text-gray-900 mb-2">Erro no processamento</h1>
+          <p className="text-gray-600 mb-4">
+            Valor do pagamento inválido. Por favor entre em contato com o suporte.
+          </p>
+          <p className="text-sm text-gray-500">
+            ID da transação: {paymentData.paymentId}
+          </p>
+        </div>
+      </div>
+    );
+  }
+
+  console.log('[PaymentSuccessPage] Rendering component');
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-white py-12 px-4 sm:px-6 lg:px-8 relative overflow-hidden">
@@ -159,7 +209,7 @@ const PaymentSuccessPage: React.FC = () => {
               <div className="mt-4 sm:mt-0">
                 <p className="text-sm text-gray-500">Valor pago</p>
                 <p className="text-3xl font-bold text-green-600">
-                  R$ {paymentData.amount.toFixed(2)}
+                  R$ {paymentData.amount?.toFixed(2) || '0,00'}
                 </p>
               </div>
             </div>
@@ -191,7 +241,10 @@ const PaymentSuccessPage: React.FC = () => {
           variants={itemVariants}
         >
           <motion.button
-            onClick={() => navigate('/dashboard')}
+            onClick={() => {
+              console.log('[PaymentSuccessPage] Navigating to dashboard');
+              navigate('/dashboard');
+            }}
             className="inline-flex items-center px-8 py-4 bg-blue-600 text-white rounded-xl font-medium hover:bg-blue-700 transition-colors"
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
