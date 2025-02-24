@@ -174,7 +174,7 @@ const PaymentPage: React.FC<PaymentPageProps> = ({ onBack }) => {
       const paymentData = {
         paymentMethod: 'pix',
         plan: {
-          type: plan.type // Certifique-se que isso está vindo corretamente do state
+          type: plan.type
         },
         userData: {
           name: formData.name,
