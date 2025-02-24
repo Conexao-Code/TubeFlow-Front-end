@@ -90,7 +90,7 @@ const PaymentPage: React.FC<PaymentPageProps> = ({ onBack }) => {
         navigate('/payment-success', {
           state: {
             paymentId: data.payment_id,
-            amount: data.amount,
+            amount: "234.04",
             plan: data.plan_type
           }
         });
