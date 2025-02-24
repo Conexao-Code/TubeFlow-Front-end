@@ -11,7 +11,7 @@ interface PaymentPageProps {
 
 interface LocationState {
   plan: {
-    type: string; // Campo obrigatório
+    type: string;
     period: string;
     price: number;
     label: string;
@@ -28,12 +28,14 @@ interface FormData {
 }
 
 interface PaymentResponse {
-  paymentId: string;
-  qrCode?: string;
-  qrCodeBase64?: string;
-  expires?: string;
+  payment_id: string;
+  qr_code?: string;
+  qr_code_base64?: string;
+  expiration_date?: string;
   error?: string;
   status?: string;
+  ticket_url?: string;
+  external_reference?: string;
 }
 
 const PaymentPage: React.FC<PaymentPageProps> = ({ onBack }) => {
@@ -60,8 +62,6 @@ const PaymentPage: React.FC<PaymentPageProps> = ({ onBack }) => {
   const [paymentId, setPaymentId] = useState<string>('');
   const { plan } = location.state as LocationState;
 
-
-
   useEffect(() => {
     let timer: number;
     if (pixCode && timeLeft > 0) {
@@ -76,7 +76,7 @@ const PaymentPage: React.FC<PaymentPageProps> = ({ onBack }) => {
     let timer: number;
     const checkPaymentStatus = async () => {
       try {
-        const response = await fetch(`apitubeflow.conexaocode.com/api/payments/${paymentId}`, {
+        const response = await fetch(`https://apitubeflow.conexaocode.com/api/payments/${paymentId}`, {
           headers: {
             'Authorization': `Bearer ${localStorage.getItem('token')}`
           }
@@ -104,7 +104,7 @@ const PaymentPage: React.FC<PaymentPageProps> = ({ onBack }) => {
       timer = window.setInterval(checkPaymentStatus, 5000);
     }
     return () => clearInterval(timer);
-  }, [pixCode, timeLeft, paymentId]);
+  }, [pixCode, timeLeft, paymentId, navigate]);
 
   const formatTimeLeft = (seconds: number) => {
     const minutes = Math.floor(seconds / 60);
@@ -118,7 +118,7 @@ const PaymentPage: React.FC<PaymentPageProps> = ({ onBack }) => {
       setCopiedCode(true);
       setTimeout(() => setCopiedCode(false), 2000);
     } catch (error) {
-      console.error('Failed to copy code:', error);
+      console.error('Falha ao copiar código:', error);
     }
   };
 
@@ -130,13 +130,13 @@ const PaymentPage: React.FC<PaymentPageProps> = ({ onBack }) => {
 
   const validateForm = () => {
     const errors: Partial<FormData> = {};
-    const cpfRegex = /^\d{3}\.\d{3}\.\d{3}-\d{2}$/; // Validação visual mantida
+    const cpfRegex = /^\d{3}\.\d{3}\.\d{3}-\d{2}$/;
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-  
+
     if (!formData.name.trim()) errors.name = 'Nome é obrigatório';
     if (!emailRegex.test(formData.email)) errors.email = 'Email inválido';
     if (!cpfRegex.test(formData.cpf)) errors.cpf = 'CPF inválido (use o formato 000.000.000-00)';
-  
+
     setFormErrors(errors);
     return Object.keys(errors).length === 0;
   };
@@ -144,13 +144,11 @@ const PaymentPage: React.FC<PaymentPageProps> = ({ onBack }) => {
   useEffect(() => {
     const state = location.state as LocationState;
     
-    // Verificação completa de todas propriedades necessárias
     if (!state?.plan || !state.plan.type || !state.plan.price || !state.plan.period) {
       console.error('Plano incompleto:', state?.plan);
       navigate('/', { replace: true });
     }
     
-    // Validação dos valores permitidos
     const validTypes = ['monthly', 'quarterly', 'annual'];
     if (!validTypes.includes(state.plan.type.toLowerCase())) {
       console.error('Tipo de plano inválido:', state.plan.type);
@@ -198,13 +196,14 @@ const PaymentPage: React.FC<PaymentPageProps> = ({ onBack }) => {
         throw new Error(data.error || 'Erro ao processar pagamento');
       }
 
-      setPaymentId(data.paymentId);
-      setPixCode(data.qrCode || '');
-      setPixCodeBase64(data.qrCodeBase64 || '');
-      setPixExpiry(data.expires || '');
+      setPaymentId(data.payment_id);
+      setPixCode(data.qr_code || '');
+      setPixCodeBase64(data.qr_code_base64 || '');
+      setPixExpiry(data.expiration_date || '');
 
-      if (data.expires) {
-        setTimeLeft(Math.floor((new Date(data.expires).getTime() - Date.now()) / 1000));
+      if (data.expiration_date) {
+        const expires = new Date(data.expiration_date);
+        setTimeLeft(Math.floor((expires.getTime() - Date.now()) / 1000));
       }
 
     } catch (error) {
@@ -469,7 +468,7 @@ const PaymentPage: React.FC<PaymentPageProps> = ({ onBack }) => {
                               className="relative"
                             >
                               <img
-                                src={`data:image/jpeg;base64,${pixCodeBase64}`}
+                                src={`data:image/png;base64,${pixCodeBase64}`}
                                 alt="QR Code PIX"
                                 className="w-48 h-48 rounded-xl shadow-lg"
                               />
@@ -490,14 +489,15 @@ const PaymentPage: React.FC<PaymentPageProps> = ({ onBack }) => {
                           <div className="w-full md:w-1/2 space-y-6">
                             <div>
                               <h3 className="text-lg font-semibold text-gray-900 mb-2">
-                                Código PIX
+                                Código PIX Copiável
                               </h3>
                               <div className="relative">
                                 <input
                                   type="text"
                                   value={pixCode}
                                   readOnly
-                                  className="w-full px-4 py-3 pr-12 rounded-lg bg-white border border-gray-300 font-mono text-sm text-gray-600"
+                                  className="w-full px-4 py-3 pr-12 rounded-lg bg-white border border-gray-300 font-mono text-sm text-gray-600 break-all"
+                                  style={{ minHeight: '3rem' }}
                                 />
                                 <motion.button
                                   type="button"
@@ -549,7 +549,7 @@ const PaymentPage: React.FC<PaymentPageProps> = ({ onBack }) => {
                   {loading ? (
                     <>
                       <div className="animate-spin rounded-full h-5 w-5 border-2 border-white border-t-transparent" />
-                      <span>Gerando QR Code...</span>
+                      <span>{pixCode ? 'Atualizando...' : 'Gerando QR Code...'}</span>
                     </>
                   ) : pixCode ? (
                     <>
@@ -576,7 +576,7 @@ const PaymentPage: React.FC<PaymentPageProps> = ({ onBack }) => {
 
           <div className="px-6 py-4 bg-gray-50 flex items-center justify-center gap-2 text-sm text-gray-500">
             <Shield className="h-4 w-4" />
-            <span>Pagamento 100% seguro processado por Stripe</span>
+            <span>Pagamento 100% seguro processado por Mercado Pago</span>
           </div>
         </div>
       </div>
