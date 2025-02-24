@@ -70,37 +70,58 @@ const PaymentPage: React.FC<PaymentPageProps> = ({ onBack }) => {
     return () => clearInterval(timer);
   }, [pixCode, timeLeft]);
 
-  useEffect(() => {
-    let timer: number;
-    const checkPaymentStatus = async () => {
-      try {
-        const response = await fetch(`https://apitubeflow.conexaocode.com/api/payments/${paymentId}`, {
+  // Atualize a função checkPaymentStatus
+  const checkPaymentStatus = async () => {
+    try {
+      const response = await fetch(
+        `https://apitubeflow.conexaocode.com/api/payments/${paymentId}/status`,
+        {
           headers: {
             'Authorization': `Bearer ${localStorage.getItem('token')}`
           }
-        });
-
-        if (!response.ok) throw new Error('Erro na verificação do status');
-
-        const data = await response.json();
-
-        if (data.status === 'approved') {
-          navigate('/payment-success', {
-            state: {
-              paymentId: data.id,
-              amount: data.amount,
-              plan: data.plan_type
-            }
-          });
         }
-      } catch (error) {
-        console.error('Erro ao verificar status:', error);
+      );
+
+      if (!response.ok) throw new Error('Erro na verificação do status');
+
+      const data = await response.json();
+
+      // Estados finais que não precisam mais de verificação
+      const finalStates = ['approved', 'rejected', 'canceled', 'refunded', 'chargeback'];
+
+      if (finalStates.includes(data.status)) {
+        // Redireciona para página de sucesso ou erro
+        navigate('/payment-result', {
+          state: {
+            status: data.status,
+            paymentId: data.payment_id,
+            amount: data.amount,
+            plan: data.plan_type,
+            lastUpdate: data.last_updated
+          }
+        });
+      }
+
+    } catch (error) {
+      console.error('Erro ao verificar status:', error);
+      // Adicione tratamento visual de erros se necessário
+    }
+  };
+
+  // Atualize o useEffect de verificação
+  useEffect(() => {
+    let timer: number;
+
+    const startVerification = () => {
+      if (pixCode && timeLeft > 0) {
+        // Verificação imediata primeiro
+        checkPaymentStatus();
+        // Depois verifica a cada 30 segundos
+        timer = window.setInterval(checkPaymentStatus, 30000);
       }
     };
 
-    if (pixCode && timeLeft > 0) {
-      timer = window.setInterval(checkPaymentStatus, 5000);
-    }
+    startVerification();
     return () => clearInterval(timer);
   }, [pixCode, timeLeft, paymentId, navigate]);
 
@@ -141,11 +162,11 @@ const PaymentPage: React.FC<PaymentPageProps> = ({ onBack }) => {
 
   useEffect(() => {
     const state = location.state as LocationState;
-    
+
     if (!state?.plan || !state.plan.type || !state.plan.price || !state.plan.period) {
       navigate('/', { replace: true });
     }
-    
+
     const validTypes = ['monthly', 'quarterly', 'annual'];
     if (!validTypes.includes(state.plan.type.toLowerCase())) {
       navigate('/', { replace: true });
@@ -159,7 +180,7 @@ const PaymentPage: React.FC<PaymentPageProps> = ({ onBack }) => {
       alert('Selecione um plano válido antes de continuar');
       return navigate('/');
     }
-    
+
     if (!validateForm()) return;
 
     setLoading(true);
@@ -242,11 +263,10 @@ const PaymentPage: React.FC<PaymentPageProps> = ({ onBack }) => {
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-8">
               <motion.button
                 onClick={() => setSelectedMethod('credit')}
-                className={`p-4 rounded-xl border-2 transition-colors ${
-                  selectedMethod === 'credit' 
-                    ? 'border-blue-600 bg-blue-50' 
+                className={`p-4 rounded-xl border-2 transition-colors ${selectedMethod === 'credit'
+                    ? 'border-blue-600 bg-blue-50'
                     : 'border-gray-200 hover:border-gray-300'
-                }`}
+                  }`}
                 whileHover={{ scale: 1.02 }}
                 whileTap={{ scale: 0.98 }}
               >
@@ -260,11 +280,10 @@ const PaymentPage: React.FC<PaymentPageProps> = ({ onBack }) => {
 
               <motion.button
                 onClick={() => setSelectedMethod('pix')}
-                className={`p-4 rounded-xl border-2 transition-colors ${
-                  selectedMethod === 'pix' 
-                    ? 'border-blue-600 bg-blue-50' 
+                className={`p-4 rounded-xl border-2 transition-colors ${selectedMethod === 'pix'
+                    ? 'border-blue-600 bg-blue-50'
                     : 'border-gray-200 hover:border-gray-300'
-                }`}
+                  }`}
                 whileHover={{ scale: 1.02 }}
                 whileTap={{ scale: 0.98 }}
               >
@@ -300,9 +319,8 @@ const PaymentPage: React.FC<PaymentPageProps> = ({ onBack }) => {
                       onChange={handleInputChange}
                       onFocus={() => setFocusedField('name')}
                       onBlur={() => setFocusedField(null)}
-                      className={`w-full px-4 py-3 rounded-lg border ${
-                        formErrors.name ? 'border-red-500' : 'border-gray-300'
-                      } focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors`}
+                      className={`w-full px-4 py-3 rounded-lg border ${formErrors.name ? 'border-red-500' : 'border-gray-300'
+                        } focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors`}
                       placeholder="Seu nome completo"
                     />
                     {formErrors.name && (
@@ -320,9 +338,8 @@ const PaymentPage: React.FC<PaymentPageProps> = ({ onBack }) => {
                       name="email"
                       value={formData.email}
                       onChange={handleInputChange}
-                      className={`w-full px-4 py-3 rounded-lg border ${
-                        formErrors.email ? 'border-red-500' : 'border-gray-300'
-                      } focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors`}
+                      className={`w-full px-4 py-3 rounded-lg border ${formErrors.email ? 'border-red-500' : 'border-gray-300'
+                        } focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors`}
                       placeholder="seu@email.com"
                     />
                     {formErrors.email && (
@@ -339,9 +356,8 @@ const PaymentPage: React.FC<PaymentPageProps> = ({ onBack }) => {
                       mask="999.999.999-99"
                       value={formData.cpf}
                       onChange={handleInputChange}
-                      className={`w-full px-4 py-3 rounded-lg border ${
-                        formErrors.cpf ? 'border-red-500' : 'border-gray-300'
-                      } focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors`}
+                      className={`w-full px-4 py-3 rounded-lg border ${formErrors.cpf ? 'border-red-500' : 'border-gray-300'
+                        } focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors`}
                       placeholder="000.000.000-00"
                       name="cpf"
                     />
@@ -372,9 +388,8 @@ const PaymentPage: React.FC<PaymentPageProps> = ({ onBack }) => {
                         onChange={handleInputChange}
                         onFocus={() => setFocusedField('number')}
                         onBlur={() => setFocusedField(null)}
-                        className={`w-full px-4 py-3 rounded-lg border ${
-                          formErrors.cardNumber ? 'border-red-500' : 'border-gray-300'
-                        } focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors`}
+                        className={`w-full px-4 py-3 rounded-lg border ${formErrors.cardNumber ? 'border-red-500' : 'border-gray-300'
+                          } focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors`}
                         placeholder="0000 0000 0000 0000"
                         name="cardNumber"
                       />
@@ -394,9 +409,8 @@ const PaymentPage: React.FC<PaymentPageProps> = ({ onBack }) => {
                           onChange={handleInputChange}
                           onFocus={() => setFocusedField('expiry')}
                           onBlur={() => setFocusedField(null)}
-                          className={`w-full px-4 py-3 rounded-lg border ${
-                            formErrors.cardExpiry ? 'border-red-500' : 'border-gray-300'
-                          } focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors`}
+                          className={`w-full px-4 py-3 rounded-lg border ${formErrors.cardExpiry ? 'border-red-500' : 'border-gray-300'
+                            } focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors`}
                           placeholder="MM/AA"
                           name="cardExpiry"
                         />
@@ -415,9 +429,8 @@ const PaymentPage: React.FC<PaymentPageProps> = ({ onBack }) => {
                           onChange={handleInputChange}
                           onFocus={() => setFocusedField('cvc')}
                           onBlur={() => setFocusedField(null)}
-                          className={`w-full px-4 py-3 rounded-lg border ${
-                            formErrors.cardCVC ? 'border-red-500' : 'border-gray-300'
-                          } focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors`}
+                          className={`w-full px-4 py-3 rounded-lg border ${formErrors.cardCVC ? 'border-red-500' : 'border-gray-300'
+                            } focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors`}
                           placeholder="000"
                           name="cardCVC"
                         />
