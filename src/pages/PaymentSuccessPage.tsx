@@ -19,7 +19,12 @@ const PaymentSuccessPage: React.FC = () => {
     height: window.innerHeight,
   });
 
-  const state = location.state as PaymentSuccessState;
+  // Add default values to handle undefined state
+  const paymentData = {
+    paymentId: location.state?.paymentId || '',
+    amount: location.state?.amount || 0,
+    plan: location.state?.plan || ''
+  };
 
   useEffect(() => {
     const handleResize = () => {
@@ -39,10 +44,11 @@ const PaymentSuccessPage: React.FC = () => {
   }, []);
 
   useEffect(() => {
-    if (!state?.paymentId) {
+    // Redirect if no payment data is present
+    if (!location.state?.paymentId) {
       navigate('/', { replace: true });
     }
-  }, [state, navigate]);
+  }, [location.state, navigate]);
 
   const formatPlanType = (type: string) => {
     const plans = {
@@ -50,7 +56,7 @@ const PaymentSuccessPage: React.FC = () => {
       quarterly: 'Trimestral',
       annual: 'Anual'
     };
-    return plans[type as keyof typeof plans] || type;
+    return plans[type.toLowerCase() as keyof typeof plans] || type;
   };
 
   const containerVariants = {
@@ -87,6 +93,11 @@ const PaymentSuccessPage: React.FC = () => {
       description: 'Atendimento prioritário 24/7 para você'
     }
   ];
+
+  // If no payment data, show loading or redirect
+  if (!location.state?.paymentId) {
+    return null; // Component will unmount and redirect via useEffect
+  }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-white py-12 px-4 sm:px-6 lg:px-8 relative overflow-hidden">
@@ -127,7 +138,7 @@ const PaymentSuccessPage: React.FC = () => {
             Pagamento Confirmado!
           </h1>
           <p className="text-xl text-gray-600">
-            Seu plano {formatPlanType(state?.plan)} foi ativado com sucesso
+            Seu plano {formatPlanType(paymentData.plan)} foi ativado com sucesso
           </p>
         </motion.div>
 
@@ -142,13 +153,13 @@ const PaymentSuccessPage: React.FC = () => {
                   Detalhes do Pagamento
                 </h2>
                 <p className="text-gray-600">
-                  ID da transação: {state?.paymentId}
+                  ID da transação: {paymentData.paymentId}
                 </p>
               </div>
               <div className="mt-4 sm:mt-0">
                 <p className="text-sm text-gray-500">Valor pago</p>
                 <p className="text-3xl font-bold text-green-600">
-                  R$ {state?.amount.toFixed(2)}
+                  R$ {paymentData.amount.toFixed(2)}
                 </p>
               </div>
             </div>
