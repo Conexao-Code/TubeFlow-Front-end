@@ -183,8 +183,8 @@ const PaymentSuccessPage: React.FC = () => {
 
   if (!paymentData.paymentId || isNaN(paymentData.amount) || paymentData.amount <= 0) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-indigo-50 via-purple-50 to-pink-50 flex items-center justify-center p-4">
-        <div className="text-center max-w-2xl bg-white rounded-xl shadow-lg p-8">
+      <div className="min-h-screen bg-gradient-to-b from-blue-50 to-white flex items-center justify-center p-4">
+        <div className="text-center max-w-2xl bg-white rounded-xl shadow-lg p-8 border border-blue-100">
           <CheckCircle className="w-16 h-16 text-red-500 mx-auto mb-4" />
           <h1 className="text-2xl font-bold text-gray-900 mb-2">
             Ops! Algo deu errado
@@ -194,7 +194,7 @@ const PaymentSuccessPage: React.FC = () => {
           </p>
           <button
             onClick={() => navigate('/')}
-            className="px-6 py-2 bg-gradient-to-r from-purple-600 to-indigo-600 text-white rounded-lg hover:from-purple-700 hover:to-indigo-700 transition-all transform hover:scale-105"
+            className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-all transform hover:scale-105"
           >
             Voltar para a página inicial
           </button>
@@ -205,24 +205,24 @@ const PaymentSuccessPage: React.FC = () => {
 
   if (paymentData.userExists) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-indigo-50 via-purple-50 to-pink-50 flex items-center justify-center p-4">
+      <div className="min-h-screen bg-gradient-to-b from-blue-50 to-white flex items-center justify-center p-4">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          className="max-w-md w-full bg-white rounded-2xl shadow-xl p-8 text-center"
+          className="max-w-md w-full bg-white rounded-2xl shadow-xl p-8 text-center border border-blue-100"
         >
           <div className="relative mb-6">
-            <CheckCircle className="w-16 h-16 text-green-500 mx-auto" />
+            <CheckCircle className="w-16 h-16 text-blue-500 mx-auto" />
             <motion.div
               initial={{ scale: 0 }}
               animate={{ scale: 1 }}
               transition={{ delay: 0.3 }}
               className="absolute top-0 right-1/2 translate-x-12 -translate-y-2"
             >
-              <Sparkles className="w-6 h-6 text-yellow-400" />
+              <Sparkles className="w-6 h-6 text-blue-400" />
             </motion.div>
           </div>
-          <h2 className="text-2xl font-bold bg-gradient-to-r from-purple-600 to-indigo-600 bg-clip-text text-transparent mb-4">
+          <h2 className="text-2xl font-bold text-blue-600 mb-4">
             Pagamento Confirmado!
           </h2>
           <p className="text-gray-600 mb-2">
@@ -233,7 +233,7 @@ const PaymentSuccessPage: React.FC = () => {
           </p>
           <button
             onClick={() => navigate('/login')}
-            className="w-full px-6 py-3 bg-gradient-to-r from-purple-600 to-indigo-600 text-white rounded-xl font-medium hover:from-purple-700 hover:to-indigo-700 transition-all transform hover:scale-105 flex items-center justify-center"
+            className="w-full px-6 py-3 bg-blue-600 text-white rounded-xl font-medium hover:bg-blue-700 transition-all transform hover:scale-105 flex items-center justify-center"
           >
             <Gift className="w-5 h-5 mr-2" />
             Acessar minha conta
@@ -255,24 +255,24 @@ const PaymentSuccessPage: React.FC = () => {
       icon: Calendar,
       title: 'Acesso Imediato',
       description: 'Comece a usar agora mesmo todos os recursos premium',
-      gradient: 'from-purple-500 to-indigo-500'
+      color: 'bg-blue-500'
     },
     {
       icon: Shield,
       title: 'Garantia de 7 dias',
       description: 'Não ficou satisfeito? Devolvemos seu dinheiro',
-      gradient: 'from-indigo-500 to-blue-500'
+      color: 'bg-blue-600'
     },
     {
       icon: Download,
       title: 'Suporte Premium',
       description: 'Atendimento prioritário 24/7 para você',
-      gradient: 'from-blue-500 to-purple-500'
+      color: 'bg-blue-700'
     }
   ];
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-indigo-50 via-purple-50 to-pink-50 py-12 px-4 sm:px-6 lg:px-8">
+    <div className="min-h-screen bg-gradient-to-b from-blue-50 to-white py-12 px-4 sm:px-6 lg:px-8">
       {showConfetti && (
         <Confetti
           width={windowSize.width}
@@ -280,6 +280,7 @@ const PaymentSuccessPage: React.FC = () => {
           recycle={false}
           numberOfPieces={200}
           gravity={0.2}
+          colors={['#2563EB', '#60A5FA', '#93C5FD', '#FFFFFF']}
         />
       )}
       
@@ -300,23 +301,23 @@ const PaymentSuccessPage: React.FC = () => {
             }}
             className="relative inline-block"
           >
-            <CheckCircle className="w-20 h-20 text-green-500" />
+            <CheckCircle className="w-20 h-20 text-blue-500" />
             <motion.div
               initial={{ scale: 0 }}
               animate={{ scale: 1 }}
               transition={{ delay: 0.3 }}
               className="absolute -top-2 -right-2"
             >
-              <Sparkles className="w-8 h-8 text-yellow-400" />
+              <Sparkles className="w-8 h-8 text-blue-400" />
             </motion.div>
           </motion.div>
-          <h1 className="text-4xl font-bold bg-gradient-to-r from-purple-600 to-indigo-600 bg-clip-text text-transparent mt-6 mb-3">
+          <h1 className="text-4xl font-bold text-blue-600 mt-6 mb-3">
             Sucesso! 🎉
           </h1>
           <p className="text-xl text-gray-600 mb-2">
             Plano {formatPlanType(paymentData.plan)}
           </p>
-          <p className="text-3xl font-bold text-green-600 mb-8">
+          <p className="text-3xl font-bold text-blue-600 mb-8">
             {formattedAmount}
           </p>
           <p className="text-gray-600">
@@ -326,7 +327,7 @@ const PaymentSuccessPage: React.FC = () => {
 
         <motion.form
           onSubmit={handleSubmit}
-          className="bg-white rounded-2xl shadow-xl p-8 backdrop-blur-lg bg-opacity-90"
+          className="bg-white rounded-2xl shadow-xl p-8 backdrop-blur-lg bg-opacity-90 border border-blue-100"
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.2 }}
@@ -345,8 +346,8 @@ const PaymentSuccessPage: React.FC = () => {
                   value={registrationData.email}
                   onChange={handleInputChange}
                   className={`pl-10 w-full px-4 py-3 rounded-xl border ${
-                    formErrors.email ? 'border-red-500' : 'border-gray-200'
-                  } focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 outline-none transition-all`}
+                    formErrors.email ? 'border-red-500' : 'border-blue-200'
+                  } focus:border-blue-500 focus:ring-2 focus:ring-blue-200 outline-none transition-all`}
                   placeholder="seu@email.com"
                 />
                 {formErrors.email && (
@@ -368,8 +369,8 @@ const PaymentSuccessPage: React.FC = () => {
                   value={registrationData.companyName}
                   onChange={handleInputChange}
                   className={`pl-10 w-full px-4 py-3 rounded-xl border ${
-                    formErrors.companyName ? 'border-red-500' : 'border-gray-200'
-                  } focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 outline-none transition-all`}
+                    formErrors.companyName ? 'border-red-500' : 'border-blue-200'
+                  } focus:border-blue-500 focus:ring-2 focus:ring-blue-200 outline-none transition-all`}
                   placeholder="Nome da sua empresa"
                 />
                 {formErrors.companyName && (
@@ -391,8 +392,8 @@ const PaymentSuccessPage: React.FC = () => {
                   value={registrationData.password}
                   onChange={handleInputChange}
                   className={`pl-10 pr-12 w-full px-4 py-3 rounded-xl border ${
-                    formErrors.password ? 'border-red-500' : 'border-gray-200'
-                  } focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 outline-none transition-all`}
+                    formErrors.password ? 'border-red-500' : 'border-blue-200'
+                  } focus:border-blue-500 focus:ring-2 focus:ring-blue-200 outline-none transition-all`}
                   placeholder="Escolha uma senha segura"
                 />
                 <button
@@ -415,7 +416,7 @@ const PaymentSuccessPage: React.FC = () => {
 
           <motion.button
             type="submit"
-            className="mt-8 w-full flex items-center justify-center px-6 py-3 bg-gradient-to-r from-purple-600 to-indigo-600 text-white rounded-xl font-medium hover:from-purple-700 hover:to-indigo-700 transition-all transform hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed"
+            className="mt-8 w-full flex items-center justify-center px-6 py-3 bg-blue-600 text-white rounded-xl font-medium hover:bg-blue-700 transition-all transform hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed"
             whileHover={{ scale: 1.02 }}
             whileTap={{ scale: 0.98 }}
             disabled={isSubmitting}
@@ -434,13 +435,13 @@ const PaymentSuccessPage: React.FC = () => {
             {features.map((feature, index) => (
               <motion.div
                 key={index}
-                className="flex flex-col items-center text-center p-4 rounded-xl bg-white shadow-md hover:shadow-lg transition-all"
+                className="flex flex-col items-center text-center p-4 rounded-xl bg-white shadow-md hover:shadow-lg transition-all border border-blue-100"
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: index * 0.1 }}
                 whileHover={{ scale: 1.05 }}
               >
-                <div className={`p-2 rounded-full bg-gradient-to-r ${feature.gradient} mb-3`}>
+                <div className={`p-2 rounded-full ${feature.color} mb-3`}>
                   <feature.icon className="w-6 h-6 text-white" />
                 </div>
                 <h3 className="text-sm font-semibold text-gray-900 mb-1">
@@ -462,11 +463,11 @@ const PaymentSuccessPage: React.FC = () => {
         >
           <p>
             Ao criar sua conta, você concorda com nossos{' '}
-            <a href="/terms" className="text-indigo-600 hover:text-indigo-500 hover:underline">
+            <a href="/terms" className="text-blue-600 hover:text-blue-500 hover:underline">
               Termos de Uso
             </a>{' '}
             e{' '}
-            <a href="/privacy" className="text-indigo-600 hover:text-indigo-500 hover:underline">
+            <a href="/privacy" className="text-blue-600 hover:text-blue-500 hover:underline">
               Política de Privacidade
             </a>
           </p>
