@@ -16,6 +16,7 @@ import Admin from './pages/Admin';
 import Home from './pages/Home';
 import PaymentPage from './pages/Paymentpage';
 import PaymentSuccessPage from './pages/PaymentSuccessPage';
+import PaymentError from './pages/PaymentError';
 
 const isAuthenticated = () => {
   return !!localStorage.getItem('token');
@@ -52,6 +53,7 @@ function App() {
         <Route path="/codigo" element={<VerificationCode />} />
         <Route path="/reset-password" element={<Newpassword />} />
         <Route path="/payment-success" element={<PaymentSuccessPage />} />
+        <Route path="/payment-error" element={<PaymentError />} />
         <Route path="/" element={<Home />} />
         <Route path="/payment" element={<PaymentPage onBack={() => window.history.back()} />} />
         <Route
