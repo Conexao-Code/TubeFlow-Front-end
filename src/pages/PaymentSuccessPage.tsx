@@ -6,7 +6,7 @@ import Confetti from 'react-confetti';
 
 interface PaymentSuccessState {
   paymentId: string;
-  amount: number;
+  amount: number | string;
   plan: string;
 }
 
@@ -19,28 +19,47 @@ const PaymentSuccessPage: React.FC = () => {
     height: window.innerHeight,
   });
 
-  // Log inicial do estado da localização
-  console.log('[PaymentSuccessPage] Location state:', location.state);
+  // Função para conversão segura de valores monetários
+  const safeParseAmount = (value: any): number => {
+    try {
+      // Se o valor for string, faz tratamento especial
+      if (typeof value === 'string') {
+        // Remove caracteres não numéricos exceto pontos e vírgulas
+        const cleanedValue = value
+          .replace(/[^0-9.,]/g, '')
+          .replace(',', '.'); // Uniformiza separador decimal
+        
+        // Converte para float com precisão de 2 casas decimais
+        const parsedValue = parseFloat(cleanedValue);
+        return Number(parsedValue.toFixed(2));
+      }
+      
+      // Se já for número, converte diretamente
+      return Number(Number(value).toFixed(2));
+    } catch (error) {
+      console.error('[PaymentSuccessPage] Erro na conversão do valor:', error);
+      return 0;
+    }
+  };
 
-  // Efeito para debug do estado
+  // Processamento dos dados recebidos
+  const paymentData = {
+    paymentId: location.state?.paymentId || '',
+    amount: safeParseAmount(location.state?.amount),
+    plan: location.state?.plan || ''
+  };
+
+  // Logs de depuração
+  console.log('[PaymentSuccessPage] Estado inicial:', location.state);
+  console.log('[PaymentSuccessPage] Dados processados:', paymentData);
+
   useEffect(() => {
-    console.log('[PaymentSuccessPage] State after initialization:', {
+    console.log('[PaymentSuccessPage] Efeito de montagem - Dados recebidos:', {
       paymentId: location.state?.paymentId,
       amount: location.state?.amount,
       plan: location.state?.plan
     });
-  }, []);
 
-  // Dados com fallbacks e validação
-  const paymentData = {
-    paymentId: location.state?.paymentId || '',
-    amount: location.state?.amount || 0,
-    plan: location.state?.plan || ''
-  };
-
-  console.log('[PaymentSuccessPage] Processed payment data:', paymentData);
-
-  useEffect(() => {
     const handleResize = () => {
       setWindowSize({
         width: window.innerWidth,
@@ -50,37 +69,32 @@ const PaymentSuccessPage: React.FC = () => {
 
     window.addEventListener('resize', handleResize);
     const confettiTimer = setTimeout(() => {
-      console.log('[PaymentSuccessPage] Confetti disabled after 5 seconds');
+      console.log('[PaymentSuccessPage] Desativando confetes após 5 segundos');
       setShowConfetti(false);
     }, 5000);
 
     return () => {
-      console.log('[PaymentSuccessPage] Cleanup effects');
+      console.log('[PaymentSuccessPage] Limpeza de efeitos');
       window.removeEventListener('resize', handleResize);
       clearTimeout(confettiTimer);
     };
   }, []);
 
   useEffect(() => {
-    console.log('[PaymentSuccessPage] Checking payment ID existence');
-    if (!location.state?.paymentId) {
-      console.warn('[PaymentSuccessPage] No payment ID - redirecting to home');
+    console.log('[PaymentSuccessPage] Verificando ID do pagamento');
+    if (!paymentData.paymentId) {
+      console.warn('[PaymentSuccessPage] ID de pagamento ausente - Redirecionando');
       navigate('/', { replace: true });
     }
-  }, [location.state, navigate]);
+  }, [paymentData.paymentId, navigate]);
 
   const formatPlanType = (type: string) => {
-    console.log('[PaymentSuccessPage] Formatting plan type:', type);
-    
-    const plans = {
+    const planNames: Record<string, string> = {
       monthly: 'Mensal',
       quarterly: 'Trimestral',
       annual: 'Anual'
     };
-
-    const formatted = plans[type.toLowerCase() as keyof typeof plans] || type;
-    console.log('[PaymentSuccessPage] Formatted plan result:', formatted);
-    return formatted;
+    return planNames[type.toLowerCase()] || type;
   };
 
   const containerVariants = {
@@ -118,36 +132,54 @@ const PaymentSuccessPage: React.FC = () => {
     }
   ];
 
-  // Verificação detalhada dos dados
-  if (!location.state?.paymentId) {
-    console.error('[PaymentSuccessPage] Missing critical payment data:', {
-      state: location.state,
-      path: location.pathname,
-      search: location.search
+  // Validação completa dos dados
+  if (!paymentData.paymentId || isNaN(paymentData.amount) || paymentData.amount <= 0) {
+    console.error('[PaymentSuccessPage] Dados inválidos:', {
+      paymentIdValid: !!paymentData.paymentId,
+      amountValid: !isNaN(paymentData.amount) && paymentData.amount > 0,
+      originalAmount: location.state?.amount
     });
-    return null;
-  }
 
-  // Validação adicional do amount
-  if (typeof paymentData.amount !== 'number' || isNaN(paymentData.amount)) {
-    console.error('[PaymentSuccessPage] Invalid amount value:', paymentData.amount);
     return (
-      <div className="min-h-screen bg-gradient-to-br from-blue-50 to-white flex items-center justify-center">
-        <div className="text-center p-8 max-w-2xl">
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 to-white flex items-center justify-center p-4">
+        <div className="text-center max-w-2xl bg-white rounded-xl shadow-lg p-8">
           <CheckCircle className="w-16 h-16 text-red-500 mx-auto mb-4" />
-          <h1 className="text-2xl font-bold text-gray-900 mb-2">Erro no processamento</h1>
-          <p className="text-gray-600 mb-4">
-            Valor do pagamento inválido. Por favor entre em contato com o suporte.
-          </p>
-          <p className="text-sm text-gray-500">
-            ID da transação: {paymentData.paymentId}
-          </p>
+          <h1 className="text-2xl font-bold text-gray-900 mb-2">
+            Erro no processamento do pagamento
+          </h1>
+          
+          <div className="text-left mb-4">
+            <p className="text-gray-600">
+              <strong>ID da Transação:</strong> {paymentData.paymentId || 'Não informado'}
+            </p>
+            <p className="text-gray-600">
+              <strong>Valor Recebido:</strong> {location.state?.amount?.toString() || 'Não informado'}
+            </p>
+            <p className="text-gray-600">
+              <strong>Valor Convertido:</strong> {paymentData.amount}
+            </p>
+          </div>
+
+          <button
+            onClick={() => navigate('/')}
+            className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+          >
+            Voltar para a página inicial
+          </button>
         </div>
       </div>
     );
   }
 
-  console.log('[PaymentSuccessPage] Rendering component');
+  // Formatação monetária profissional
+  const formattedAmount = new Intl.NumberFormat('pt-BR', {
+    style: 'currency',
+    currency: 'BRL',
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2
+  }).format(paymentData.amount);
+
+  console.log('[PaymentSuccessPage] Renderizando componente principal');
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-white py-12 px-4 sm:px-6 lg:px-8 relative overflow-hidden">
@@ -209,7 +241,7 @@ const PaymentSuccessPage: React.FC = () => {
               <div className="mt-4 sm:mt-0">
                 <p className="text-sm text-gray-500">Valor pago</p>
                 <p className="text-3xl font-bold text-green-600">
-                  R$ {paymentData.amount?.toFixed(2) || '0,00'}
+                  {formattedAmount}
                 </p>
               </div>
             </div>
@@ -242,7 +274,7 @@ const PaymentSuccessPage: React.FC = () => {
         >
           <motion.button
             onClick={() => {
-              console.log('[PaymentSuccessPage] Navigating to dashboard');
+              console.log('[PaymentSuccessPage] Navegando para o dashboard');
               navigate('/dashboard');
             }}
             className="inline-flex items-center px-8 py-4 bg-blue-600 text-white rounded-xl font-medium hover:bg-blue-700 transition-colors"
