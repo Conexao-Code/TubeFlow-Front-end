@@ -14,9 +14,11 @@ import {
   Eye,
   EyeOff,
   Sparkles,
-  Gift
+  Gift,
+  Loader2
 } from 'lucide-react';
 import Confetti from 'react-confetti';
+import { toast } from 'react-toastify';
 
 interface PaymentSuccessState {
   paymentId: string;
@@ -36,6 +38,8 @@ const PaymentSuccessPage: React.FC = () => {
   const navigate = useNavigate();
   const [showConfetti, setShowConfetti] = useState(true);
   const [showPassword, setShowPassword] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [formErrors, setFormErrors] = useState<Partial<RegistrationData>>({});
   const [registrationData, setRegistrationData] = useState<RegistrationData>({
     email: '',
     companyName: '',
@@ -105,14 +109,66 @@ const PaymentSuccessPage: React.FC = () => {
       ...prev,
       [name]: value
     }));
+    setFormErrors(prev => ({ ...prev, [name]: '' }));
+  };
+
+  const validateForm = () => {
+    const errors: Partial<RegistrationData> = {};
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+    if (!registrationData.email.match(emailRegex)) {
+      errors.email = 'Email inválido';
+    }
+    if (registrationData.companyName.length < 3) {
+      errors.companyName = 'Nome da empresa deve ter pelo menos 3 caracteres';
+    }
+    if (registrationData.password.length < 6) {
+      errors.password = 'Senha deve ter pelo menos 6 caracteres';
+    }
+
+    setFormErrors(errors);
+    return Object.keys(errors).length === 0;
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!validateForm()) return;
+
+    setIsSubmitting(true);
+
     try {
-      navigate('/dashboard');
+      const response = await fetch('https://apitubeflow.conexaocode.com/api/create-account', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${localStorage.getItem('token')}`
+        },
+        body: JSON.stringify({
+          ...registrationData,
+          paymentId: paymentData.paymentId
+        }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || 'Erro ao criar conta');
+      }
+
+      localStorage.setItem('token', data.token);
+      localStorage.setItem('company', JSON.stringify(data.company));
+      
+      navigate('/dashboard', {
+        state: {
+          newAccount: true,
+          company: data.company
+        }
+      });
+
     } catch (error) {
-      console.error('Erro no registro:', error);
+      toast.error(error instanceof Error ? error.message : 'Erro desconhecido');
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -288,9 +344,14 @@ const PaymentSuccessPage: React.FC = () => {
                   required
                   value={registrationData.email}
                   onChange={handleInputChange}
-                  className="pl-10 w-full px-4 py-3 rounded-xl border border-gray-200 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 outline-none transition-all"
+                  className={`pl-10 w-full px-4 py-3 rounded-xl border ${
+                    formErrors.email ? 'border-red-500' : 'border-gray-200'
+                  } focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 outline-none transition-all`}
                   placeholder="seu@email.com"
                 />
+                {formErrors.email && (
+                  <p className="mt-1 text-sm text-red-500">{formErrors.email}</p>
+                )}
               </div>
             </div>
 
@@ -306,9 +367,14 @@ const PaymentSuccessPage: React.FC = () => {
                   required
                   value={registrationData.companyName}
                   onChange={handleInputChange}
-                  className="pl-10 w-full px-4 py-3 rounded-xl border border-gray-200 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 outline-none transition-all"
+                  className={`pl-10 w-full px-4 py-3 rounded-xl border ${
+                    formErrors.companyName ? 'border-red-500' : 'border-gray-200'
+                  } focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 outline-none transition-all`}
                   placeholder="Nome da sua empresa"
                 />
+                {formErrors.companyName && (
+                  <p className="mt-1 text-sm text-red-500">{formErrors.companyName}</p>
+                )}
               </div>
             </div>
 
@@ -324,7 +390,9 @@ const PaymentSuccessPage: React.FC = () => {
                   required
                   value={registrationData.password}
                   onChange={handleInputChange}
-                  className="pl-10 pr-12 w-full px-4 py-3 rounded-xl border border-gray-200 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 outline-none transition-all"
+                  className={`pl-10 pr-12 w-full px-4 py-3 rounded-xl border ${
+                    formErrors.password ? 'border-red-500' : 'border-gray-200'
+                  } focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 outline-none transition-all`}
                   placeholder="Escolha uma senha segura"
                 />
                 <button
@@ -338,20 +406,28 @@ const PaymentSuccessPage: React.FC = () => {
                     <Eye className="h-5 w-5" />
                   )}
                 </button>
+                {formErrors.password && (
+                  <p className="mt-1 text-sm text-red-500">{formErrors.password}</p>
+                )}
               </div>
             </div>
           </div>
 
           <motion.button
             type="submit"
-            className="mt-8 w-full flex items-center justify-center px-6 py-3 bg-gradient-to-r from-purple-600 to-indigo-600 text-white rounded-xl font-medium hover:from-purple-700 hover:to-indigo-700 transition-all transform hover:scale-105"
+            className="mt-8 w-full flex items-center justify-center px-6 py-3 bg-gradient-to-r from-purple-600 to-indigo-600 text-white rounded-xl font-medium hover:from-purple-700 hover:to-indigo-700 transition-all transform hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed"
             whileHover={{ scale: 1.02 }}
             whileTap={{ scale: 0.98 }}
+            disabled={isSubmitting}
           >
-            <>
-              Criar minha conta
-              <ArrowRight className="ml-2 h-5 w-5" />
-            </>
+            {isSubmitting ? (
+              <Loader2 className="w-5 h-5 animate-spin" />
+            ) : (
+              <>
+                Criar minha conta
+                <ArrowRight className="ml-2 h-5 w-5" />
+              </>
+            )}
           </motion.button>
 
           <div className="mt-8 grid grid-cols-1 md:grid-cols-3 gap-4">
