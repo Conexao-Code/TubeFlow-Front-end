@@ -162,9 +162,6 @@ const PaymentErrorPage: React.FC = () => {
         >
           <p className="text-sm text-gray-500">
             Precisa de ajuda? Entre em contato com nosso{' '}
-            <a href="/support" className="text-red-600 hover:text-red-500 hover:underline">
-              suporte 24/7
-            </a>
           </p>
         </motion.div>
       </motion.div>
