@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { 
   CheckCircle, 
@@ -7,11 +7,13 @@ import {
   Calendar, 
   CreditCard, 
   Shield, 
-  Download, 
-  User, 
-  Lock, 
+  Download,
+  Building2,
   Mail,
-  Loader2
+  Lock,
+  Loader2,
+  Eye,
+  EyeOff
 } from 'lucide-react';
 import Confetti from 'react-confetti';
 
@@ -19,37 +21,53 @@ interface PaymentSuccessState {
   paymentId: string;
   amount: number | string;
   plan: string;
-  userEmail?: string;
 }
 
-interface UserCheckResponse {
-  isRegistered: boolean;
-  exists: boolean;
+interface RegistrationData {
+  email: string;
+  companyName: string;
+  password: string;
 }
 
 const PaymentSuccessPage: React.FC = () => {
   const location = useLocation();
   const navigate = useNavigate();
   const [showConfetti, setShowConfetti] = useState(true);
+  const [isLoading, setIsLoading] = useState(true);
+  const [hasAccount, setHasAccount] = useState<boolean | null>(null);
+  const [showPassword, setShowPassword] = useState(false);
+  const [registrationData, setRegistrationData] = useState<RegistrationData>({
+    email: '',
+    companyName: '',
+    password: ''
+  });
   const [windowSize, setWindowSize] = useState({
     width: window.innerWidth,
     height: window.innerHeight,
   });
-  const [isRegistered, setIsRegistered] = useState(false);
-  const [isLoading, setIsLoading] = useState(true);
-  const [formData, setFormData] = useState({
-    name: '',
-    password: '',
-    confirmPassword: ''
-  });
-  const [formErrors, setFormErrors] = useState<string[]>([]);
 
-  // Processamento seguro dos dados recebidos
+  // Função para conversão segura de valores monetários
+  const safeParseAmount = (value: any): number => {
+    try {
+      if (typeof value === 'string') {
+        const cleanedValue = value
+          .replace(/[^0-9.,]/g, '')
+          .replace(',', '.');
+        const parsedValue = parseFloat(cleanedValue);
+        return Number(parsedValue.toFixed(2));
+      }
+      return Number(Number(value).toFixed(2));
+    } catch (error) {
+      console.error('[PaymentSuccessPage] Erro na conversão do valor:', error);
+      return 0;
+    }
+  };
+
+  // Processamento dos dados recebidos
   const paymentData = {
     paymentId: location.state?.paymentId || '',
-    amount: location.state?.amount || 0,
-    plan: location.state?.plan || '',
-    userEmail: location.state?.userEmail || ''
+    amount: safeParseAmount(location.state?.amount),
+    plan: location.state?.plan || ''
   };
 
   useEffect(() => {
@@ -61,135 +79,65 @@ const PaymentSuccessPage: React.FC = () => {
     };
 
     window.addEventListener('resize', handleResize);
-    const confettiTimer = setTimeout(() => setShowConfetti(false), 5000);
+    
+    // Simula verificação da API para conta existente
+    const checkAccount = setTimeout(() => {
+      setIsLoading(false);
+      setHasAccount(false); // Será substituído pela chamada real da API
+    }, 2000);
+
+    const confettiTimer = setTimeout(() => {
+      setShowConfetti(false);
+    }, 5000);
 
     return () => {
       window.removeEventListener('resize', handleResize);
+      clearTimeout(checkAccount);
       clearTimeout(confettiTimer);
     };
   }, []);
 
   useEffect(() => {
-    const checkUserStatus = async () => {
-      try {
-        if (!paymentData.userEmail) {
-          setIsLoading(false);
-          return;
-        }
-
-        const response = await fetch(
-          `https://apitubeflow.conexaocode.com/api/users/check?email=${encodeURIComponent(paymentData.userEmail)}`,
-          {
-            headers: {
-              'Authorization': `Bearer ${localStorage.getItem('token')}`
-            }
-          }
-        );
-
-        if (!response.ok) throw new Error('Falha na verificação do usuário');
-        
-        const data: UserCheckResponse = await response.json();
-        setIsRegistered(data.isRegistered || data.exists);
-      } catch (error) {
-        console.error('Erro ao verificar status do usuário:', error);
-        setIsRegistered(false);
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
-    checkUserStatus();
-  }, [paymentData.userEmail]);
+    if (!paymentData.paymentId) {
+      navigate('/', { replace: true });
+    }
+  }, [paymentData.paymentId, navigate]);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
-    setFormData(prev => ({
+    setRegistrationData(prev => ({
       ...prev,
       [name]: value
     }));
   };
 
-  const validateForm = () => {
-    const errors: string[] = [];
-    const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)[a-zA-Z\d]{8,}$/;
-
-    if (!formData.name.trim()) {
-      errors.push('Nome completo é obrigatório');
-    }
-
-    if (!passwordRegex.test(formData.password)) {
-      errors.push('Senha deve conter pelo menos 8 caracteres, uma letra maiúscula, uma minúscula e um número');
-    }
-
-    if (formData.password !== formData.confirmPassword) {
-      errors.push('As senhas não coincidem');
-    }
-
-    setFormErrors(errors);
-    return errors.length === 0;
-  };
-
-  const handleRegistration = async (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setIsLoading(true);
     
-    if (!validateForm()) return;
-
     try {
-      const response = await fetch(
-        'https://apitubeflow.conexaocode.com/api/users/register',
-        {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${localStorage.getItem('token')}`
-          },
-          body: JSON.stringify({
-            ...formData,
-            email: paymentData.userEmail,
-            paymentId: paymentData.paymentId,
-            plan: paymentData.plan
-          }),
-        }
-      );
-
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.message || 'Falha no registro');
-      }
-
-      const { token, user } = await response.json();
-      localStorage.setItem('token', token);
-      localStorage.setItem('user', JSON.stringify(user));
-      setIsRegistered(true);
-      setFormErrors([]);
+      // Simula chamada à API
+      await new Promise(resolve => setTimeout(resolve, 1500));
+      
+      // Será substituído pela integração real com a API
+      console.log('Dados de registro:', registrationData);
+      navigate('/dashboard');
     } catch (error) {
-      setFormErrors([error instanceof Error ? error.message : 'Erro desconhecido ao criar conta']);
-    }
-  };
-
-  const safeParseAmount = (value: any): number => {
-    try {
-      if (typeof value === 'string') {
-        const cleanedValue = value.replace(/[^0-9.,]/g, '').replace(',', '.');
-        return parseFloat(cleanedValue);
-      }
-      return Number(value);
-    } catch (error) {
-      console.error('Erro na conversão do valor:', error);
-      return 0;
+      console.error('Erro no registro:', error);
+      setIsLoading(false);
     }
   };
 
   const formatPlanType = (type: string) => {
-    const plans: Record<string, string> = {
+    const planNames: Record<string, string> = {
       monthly: 'Mensal',
       quarterly: 'Trimestral',
       annual: 'Anual'
     };
-    return plans[type.toLowerCase()] || type;
+    return planNames[type.toLowerCase()] || type;
   };
 
-  const containerVariants = {
+  const formVariants = {
     hidden: { opacity: 0, y: 20 },
     visible: {
       opacity: 1,
@@ -198,12 +146,19 @@ const PaymentSuccessPage: React.FC = () => {
         duration: 0.6,
         staggerChildren: 0.1
       }
+    },
+    exit: {
+      opacity: 0,
+      y: -20,
+      transition: {
+        duration: 0.3
+      }
     }
   };
 
-  const itemVariants = {
-    hidden: { opacity: 0, y: 20 },
-    visible: { opacity: 1, y: 0 }
+  const inputVariants = {
+    hidden: { opacity: 0, x: -20 },
+    visible: { opacity: 1, x: 0 }
   };
 
   const features = [
@@ -224,23 +179,31 @@ const PaymentSuccessPage: React.FC = () => {
     }
   ];
 
-  const formattedAmount = new Intl.NumberFormat('pt-BR', {
-    style: 'currency',
-    currency: 'BRL',
-    minimumFractionDigits: 2
-  }).format(safeParseAmount(paymentData.amount));
-
-  if (!paymentData.paymentId) {
+  // Validação completa dos dados
+  if (!paymentData.paymentId || isNaN(paymentData.amount) || paymentData.amount <= 0) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-blue-50 to-white flex items-center justify-center">
-        <div className="text-center p-8 max-w-2xl">
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 to-white flex items-center justify-center p-4">
+        <div className="text-center max-w-2xl bg-white rounded-xl shadow-lg p-8">
           <CheckCircle className="w-16 h-16 text-red-500 mx-auto mb-4" />
           <h1 className="text-2xl font-bold text-gray-900 mb-2">
-            Pagamento não identificado
+            Erro no processamento do pagamento
           </h1>
+          
+          <div className="text-left mb-4">
+            <p className="text-gray-600">
+              <strong>ID da Transação:</strong> {paymentData.paymentId || 'Não informado'}
+            </p>
+            <p className="text-gray-600">
+              <strong>Valor Recebido:</strong> {location.state?.amount?.toString() || 'Não informado'}
+            </p>
+            <p className="text-gray-600">
+              <strong>Valor Convertido:</strong> {paymentData.amount}
+            </p>
+          </div>
+
           <button
             onClick={() => navigate('/')}
-            className="mt-4 px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+            className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
           >
             Voltar para a página inicial
           </button>
@@ -249,8 +212,58 @@ const PaymentSuccessPage: React.FC = () => {
     );
   }
 
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 to-white flex items-center justify-center">
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          className="text-center"
+        >
+          <Loader2 className="w-12 h-12 text-blue-600 animate-spin mx-auto mb-4" />
+          <p className="text-gray-600">Verificando sua conta...</p>
+        </motion.div>
+      </div>
+    );
+  }
+
+  if (hasAccount === true) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 to-white flex items-center justify-center p-4">
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="max-w-md w-full bg-white rounded-2xl shadow-xl p-8 text-center"
+        >
+          <CheckCircle className="w-16 h-16 text-green-500 mx-auto mb-6" />
+          <h2 className="text-2xl font-bold text-gray-900 mb-4">
+            Conta Encontrada!
+          </h2>
+          <p className="text-gray-600 mb-8">
+            Detectamos que você já possui uma conta. Por favor, faça login para continuar.
+          </p>
+          <button
+            onClick={() => navigate('/login')}
+            className="w-full px-6 py-3 bg-blue-600 text-white rounded-xl font-medium hover:bg-blue-700 transition-all transform hover:scale-105"
+          >
+            Fazer Login
+          </button>
+        </motion.div>
+      </div>
+    );
+  }
+
+  // Formatação monetária profissional
+  const formattedAmount = new Intl.NumberFormat('pt-BR', {
+    style: 'currency',
+    currency: 'BRL',
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2
+  }).format(paymentData.amount);
+
+  // Formulário de registro para novos usuários
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-white py-12 px-4 sm:px-6 lg:px-8 relative overflow-hidden">
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-white py-12 px-4 sm:px-6 lg:px-8">
       {showConfetti && (
         <Confetti
           width={windowSize.width}
@@ -262,215 +275,164 @@ const PaymentSuccessPage: React.FC = () => {
       )}
       
       <motion.div
-        className="max-w-4xl mx-auto"
-        variants={containerVariants}
+        className="max-w-xl mx-auto"
+        variants={formVariants}
         initial="hidden"
         animate="visible"
       >
-        <motion.div
-          className="text-center mb-12"
-          variants={itemVariants}
-        >
+        <div className="text-center mb-12">
           <motion.div
-            className="inline-block"
             initial={{ scale: 0 }}
             animate={{ scale: 1 }}
             transition={{
               type: "spring",
               stiffness: 260,
-              damping: 20,
-              delay: 0.2
+              damping: 20
             }}
           >
-            <CheckCircle className="w-24 h-24 text-green-500 mx-auto mb-6" />
+            <CheckCircle className="w-20 h-20 text-green-500 mx-auto mb-6" />
           </motion.div>
-          <h1 className="text-4xl font-bold text-gray-900 mb-4">
+          <h1 className="text-3xl font-bold text-gray-900 mb-3">
             Pagamento Confirmado!
           </h1>
-          <p className="text-xl text-gray-600">
-            Seu plano {formatPlanType(paymentData.plan)} foi ativado com sucesso
+          <p className="text-xl text-gray-600 mb-2">
+            Plano {formatPlanType(paymentData.plan)}
           </p>
-        </motion.div>
+          <p className="text-2xl font-bold text-green-600 mb-8">
+            {formattedAmount}
+          </p>
+          <p className="text-gray-600">
+            Para começar a usar sua conta, precisamos de algumas informações
+          </p>
+        </div>
 
-        <motion.div
-          className="bg-white rounded-2xl shadow-xl overflow-hidden mb-8"
-          variants={itemVariants}
+        <motion.form
+          onSubmit={handleSubmit}
+          className="bg-white rounded-2xl shadow-xl p-8"
+          variants={formVariants}
         >
-          <div className="p-8">
-            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-8 border-b border-gray-100 pb-8">
-              <div>
-                <h2 className="text-2xl font-semibold text-gray-900 mb-2">
-                  Detalhes do Pagamento
-                </h2>
-                <p className="text-gray-600">
-                  ID da transação: {paymentData.paymentId}
-                </p>
-                {paymentData.userEmail && (
-                  <p className="text-gray-600 mt-2">
-                    Email vinculado: {paymentData.userEmail}
-                  </p>
-                )}
+          <div className="space-y-6">
+            <motion.div variants={inputVariants}>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                E-mail
+              </label>
+              <div className="relative">
+                <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-5 w-5" />
+                <input
+                  type="email"
+                  name="email"
+                  required
+                  value={registrationData.email}
+                  onChange={handleInputChange}
+                  className="pl-10 w-full px-4 py-3 rounded-xl border border-gray-200 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 outline-none transition-all"
+                  placeholder="seu@email.com"
+                />
               </div>
-              <div className="mt-4 sm:mt-0">
-                <p className="text-sm text-gray-500">Valor pago</p>
-                <p className="text-3xl font-bold text-green-600">
-                  {formattedAmount}
-                </p>
+            </motion.div>
+
+            <motion.div variants={inputVariants}>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Nome da Empresa
+              </label>
+              <div className="relative">
+                <Building2 className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-5 w-5" />
+                <input
+                  type="text"
+                  name="companyName"
+                  required
+                  value={registrationData.companyName}
+                  onChange={handleInputChange}
+                  className="pl-10 w-full px-4 py-3 rounded-xl border border-gray-200 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 outline-none transition-all"
+                  placeholder="Nome da sua empresa"
+                />
               </div>
-            </div>
+            </motion.div>
 
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-              {features.map((feature, index) => (
-                <motion.div
-                  key={index}
-                  className="flex flex-col items-center text-center p-4 rounded-xl bg-blue-50"
-                  variants={itemVariants}
-                  whileHover={{ scale: 1.05 }}
-                  transition={{ type: "spring", stiffness: 300 }}
+            <motion.div variants={inputVariants}>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Senha
+              </label>
+              <div className="relative">
+                <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-5 w-5" />
+                <input
+                  type={showPassword ? "text" : "password"}
+                  name="password"
+                  required
+                  value={registrationData.password}
+                  onChange={handleInputChange}
+                  className="pl-10 pr-12 w-full px-4 py-3 rounded-xl border border-gray-200 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 outline-none transition-all"
+                  placeholder="Escolha uma senha segura"
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
                 >
-                  <feature.icon className="w-8 h-8 text-blue-600 mb-4" />
-                  <h3 className="text-lg font-semibold text-gray-900 mb-2">
-                    {feature.title}
-                  </h3>
-                  <p className="text-gray-600 text-sm">
-                    {feature.description}
-                  </p>
-                </motion.div>
-              ))}
-            </div>
-          </div>
-        </motion.div>
-
-        {isLoading ? (
-          <div className="text-center py-12">
-            <Loader2 className="w-12 h-12 text-blue-600 animate-spin mx-auto" />
-            <p className="mt-4 text-gray-600">Verificando seu status...</p>
-          </div>
-        ) : (
-          <div className="mt-8">
-            {isRegistered ? (
-              <motion.div
-                className="text-center space-y-4"
-                variants={itemVariants}
-              >
-                <motion.button
-                  onClick={() => navigate('/dashboard')}
-                  className="inline-flex items-center px-8 py-4 bg-blue-600 text-white rounded-xl font-medium hover:bg-blue-700 transition-colors"
-                  whileHover={{ scale: 1.05 }}
-                  whileTap={{ scale: 0.95 }}
-                >
-                  Acessar minha conta
-                  <ArrowRight className="ml-2 h-5 w-5" />
-                </motion.button>
-                <p className="text-gray-600">
-                  Você será redirecionado automaticamente em 5 segundos...
-                </p>
-              </motion.div>
-            ) : (
-              <motion.div
-                className="bg-white rounded-xl p-6 shadow-lg mt-8 max-w-md mx-auto"
-                variants={itemVariants}
-              >
-                <h2 className="text-2xl font-bold text-gray-900 mb-4 flex items-center gap-2">
-                  <User className="w-6 h-6" />
-                  Complete seu cadastro
-                </h2>
-                
-                <form onSubmit={handleRegistration} className="space-y-4">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                      Nome completo
-                    </label>
-                    <input
-                      type="text"
-                      name="name"
-                      value={formData.name}
-                      onChange={handleInputChange}
-                      className="w-full px-4 py-2 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                      placeholder="Digite seu nome completo"
-                    />
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                      Senha
-                    </label>
-                    <div className="relative">
-                      <input
-                        type="password"
-                        name="password"
-                        value={formData.password}
-                        onChange={handleInputChange}
-                        className="w-full px-4 py-2 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                        placeholder="Crie uma senha segura"
-                      />
-                      <Lock className="absolute right-3 top-3 h-5 w-5 text-gray-400" />
-                    </div>
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                      Confirme sua senha
-                    </label>
-                    <div className="relative">
-                      <input
-                        type="password"
-                        name="confirmPassword"
-                        value={formData.confirmPassword}
-                        onChange={handleInputChange}
-                        className="w-full px-4 py-2 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                        placeholder="Repita sua senha"
-                      />
-                      <Lock className="absolute right-3 top-3 h-5 w-5 text-gray-400" />
-                    </div>
-                  </div>
-
-                  {formErrors.length > 0 && (
-                    <div className="text-red-500 text-sm space-y-1">
-                      {formErrors.map((error, index) => (
-                        <p key={index} className="flex items-center gap-1">
-                          <span>•</span>
-                          {error}
-                        </p>
-                      ))}
-                    </div>
+                  {showPassword ? (
+                    <EyeOff className="h-5 w-5" />
+                  ) : (
+                    <Eye className="h-5 w-5" />
                   )}
+                </button>
+              </div>
+            </motion.div>
+          </div>
 
-                  <button
-                    type="submit"
-                    className="w-full py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors flex items-center justify-center gap-2"
-                  >
-                    <Mail className="w-5 h-5" />
-                    Criar conta e acessar
-                  </button>
-                </form>
+          <motion.button
+            type="submit"
+            className="mt-8 w-full flex items-center justify-center px-6 py-3 bg-blue-600 text-white rounded-xl font-medium hover:bg-blue-700 transition-all transform hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed"
+            whileHover={{ scale: 1.02 }}
+            whileTap={{ scale: 0.98 }}
+            disabled={isLoading}
+          >
+            {isLoading ? (
+              <Loader2 className="w-5 h-5 animate-spin" />
+            ) : (
+              <>
+                Criar minha conta
+                <ArrowRight className="ml-2 h-5 w-5" />
+              </>
+            )}
+          </motion.button>
 
-                <p className="text-center mt-4 text-sm text-gray-600">
-                  Ao criar uma conta, você concorda com nossos{' '}
-                  <a
-                    href="/terms"
-                    className="text-blue-600 hover:underline"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                  >
-                    Termos de Serviço
-                  </a>
+          <div className="mt-6 grid grid-cols-1 md:grid-cols-3 gap-4">
+            {features.map((feature, index) => (
+              <motion.div
+                key={index}
+                className="flex flex-col items-center text-center p-4 rounded-xl bg-blue-50"
+                variants={inputVariants}
+                whileHover={{ scale: 1.05 }}
+                transition={{ type: "spring", stiffness: 300 }}
+              >
+                <feature.icon className="w-6 h-6 text-blue-600 mb-2" />
+                <h3 className="text-sm font-semibold text-gray-900 mb-1">
+                  {feature.title}
+                </h3>
+                <p className="text-xs text-gray-600">
+                  {feature.description}
                 </p>
               </motion.div>
-            )}
+            ))}
           </div>
-        )}
+        </motion.form>
 
         <motion.div
-          className="mt-12 text-center"
-          variants={itemVariants}
+          className="mt-8 text-center text-sm text-gray-500"
+          variants={formVariants}
         >
-          <p className="text-sm text-gray-500">
-            Um e-mail com os detalhes da sua compra foi enviado para você
+          <p>
+            Ao criar sua conta, você concorda com nossos{' '}
+            <a href="/terms" className="text-blue-600 hover:underline">
+              Termos de Uso
+            </a>{' '}
+            e{' '}
+            <a href="/privacy" className="text-blue-600 hover:underline">
+              Política de Privacidade
+            </a>
           </p>
-          <div className="flex items-center justify-center gap-2 mt-2 text-sm text-gray-400">
+          <div className="flex items-center justify-center gap-2 mt-4 text-sm text-gray-400">
             <CreditCard className="h-4 w-4" />
-            <span>Pagamento processado com segurança pelo Mercado Pago</span>
+            <span>Pagamento processado com segurança</span>
           </div>
         </motion.div>
       </motion.div>
