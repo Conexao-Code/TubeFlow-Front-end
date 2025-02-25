@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Settings as SettingsIcon, Menu, Info, Bell } from 'lucide-react';
-import Header from '../components/Header';
+import HeaderAdmin from '../components/HeaderAdmin';
 import Sidebar from '../components/Sidebar';
 import { ToastContainer, toast } from 'react-toastify';
 
@@ -72,14 +72,14 @@ function Settings() {
             />
 
             <main className="flex-1 min-h-screen flex flex-col">
-                <Header activeSection="settings">
+                <HeaderAdmin activeSection="settings">
                     <button
                         onClick={() => setIsSidebarOpen((prevState) => !prevState)}
                         className="lg:hidden p-2 -ml-2 text-gray-600 hover:text-gray-900"
                     >
                         <Menu className="w-6 h-6" />
                     </button>
-                </Header>
+                </HeaderAdmin>
 
                 <div className="flex-1 p-4 sm:p-6 lg:p-8">
                     <div className="mb-6">

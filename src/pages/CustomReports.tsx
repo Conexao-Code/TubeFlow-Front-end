@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { FileText, Download, Filter, Search, X, Menu, FileSpreadsheet, File, } from 'lucide-react';
 import Sidebar from '../components/Sidebar';
-import Header from '../components/Header';
+import HeaderAdmin from '../components/HeaderAdmin';
 import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import {
@@ -239,14 +239,14 @@ function CustomReports() {
             />
 
             <main className="flex-1 min-h-screen flex flex-col relative w-full max-w-full">
-                <Header activeSection={activeSection}>
+                <HeaderAdmin activeSection={activeSection}>
                     <button
                         onClick={() => setIsSidebarOpen((prevState) => !prevState)}
                         className="lg:hidden p-2 -ml-2 text-gray-600 hover:text-gray-900"
                     >
                         <Menu className="w-6 h-6" />
                     </button>
-                </Header>
+                </HeaderAdmin>
                 <div className="flex-1 p-4 sm:p-6 lg:p-8">
                     <div className="flex justify-end mb-6">
                         <div className="flex gap-2">
