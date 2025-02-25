@@ -70,7 +70,6 @@ const PaymentPage: React.FC<PaymentPageProps> = ({ onBack }) => {
     return () => clearInterval(timer);
   }, [pixCode, timeLeft]);
 
-  // Atualize a função checkPaymentStatus
   const checkPaymentStatus = async () => {
     try {
       const response = await fetch(
@@ -91,7 +90,8 @@ const PaymentPage: React.FC<PaymentPageProps> = ({ onBack }) => {
           state: {
             paymentId: data.payment_id,
             amount: data.amount,
-            plan: data.plan_type
+            plan: data.plan_type,
+            userExists: data.user_exists 
           }
         });
       }

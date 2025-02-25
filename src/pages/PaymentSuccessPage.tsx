@@ -11,16 +11,18 @@ import {
   Building2,
   Mail,
   Lock,
-  Loader2,
   Eye,
-  EyeOff
+  EyeOff,
+  Sparkles,
+  Gift
 } from 'lucide-react';
 import Confetti from 'react-confetti';
 
 interface PaymentSuccessState {
   paymentId: string;
-  amount: number | string;
+  amount: number;
   plan: string;
+  userExists: boolean;
 }
 
 interface RegistrationData {
@@ -33,8 +35,6 @@ const PaymentSuccessPage: React.FC = () => {
   const location = useLocation();
   const navigate = useNavigate();
   const [showConfetti, setShowConfetti] = useState(true);
-  const [isLoading, setIsLoading] = useState(true);
-  const [hasAccount, setHasAccount] = useState<boolean | null>(null);
   const [showPassword, setShowPassword] = useState(false);
   const [registrationData, setRegistrationData] = useState<RegistrationData>({
     email: '',
@@ -46,28 +46,31 @@ const PaymentSuccessPage: React.FC = () => {
     height: window.innerHeight,
   });
 
-  // Função para conversão segura de valores monetários
-  const safeParseAmount = (value: any): number => {
+  const safeParseAmount = (value: unknown): number => {
     try {
       if (typeof value === 'string') {
         const cleanedValue = value
           .replace(/[^0-9.,]/g, '')
           .replace(',', '.');
-        const parsedValue = parseFloat(cleanedValue);
-        return Number(parsedValue.toFixed(2));
+        return parseFloat(cleanedValue);
       }
-      return Number(Number(value).toFixed(2));
+      if (typeof value === 'number') {
+        return value;
+      }
+      return 0;
     } catch (error) {
       console.error('[PaymentSuccessPage] Erro na conversão do valor:', error);
       return 0;
     }
   };
 
-  // Processamento dos dados recebidos
-  const paymentData = {
-    paymentId: location.state?.paymentId || '',
-    amount: safeParseAmount(location.state?.amount),
-    plan: location.state?.plan || ''
+  const state = location.state as PaymentSuccessState | null;
+  
+  const paymentData: PaymentSuccessState = {
+    paymentId: state?.paymentId || '',
+    amount: safeParseAmount(state?.amount),
+    plan: state?.plan || '',
+    userExists: state?.userExists || false
   };
 
   useEffect(() => {
@@ -80,19 +83,12 @@ const PaymentSuccessPage: React.FC = () => {
 
     window.addEventListener('resize', handleResize);
     
-    // Simula verificação da API para conta existente
-    const checkAccount = setTimeout(() => {
-      setIsLoading(false);
-      setHasAccount(false); // Será substituído pela chamada real da API
-    }, 2000);
-
     const confettiTimer = setTimeout(() => {
       setShowConfetti(false);
     }, 5000);
 
     return () => {
       window.removeEventListener('resize', handleResize);
-      clearTimeout(checkAccount);
       clearTimeout(confettiTimer);
     };
   }, []);
@@ -113,18 +109,10 @@ const PaymentSuccessPage: React.FC = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setIsLoading(true);
-    
     try {
-      // Simula chamada à API
-      await new Promise(resolve => setTimeout(resolve, 1500));
-      
-      // Será substituído pela integração real com a API
-      console.log('Dados de registro:', registrationData);
       navigate('/dashboard');
     } catch (error) {
       console.error('Erro no registro:', error);
-      setIsLoading(false);
     }
   };
 
@@ -137,73 +125,20 @@ const PaymentSuccessPage: React.FC = () => {
     return planNames[type.toLowerCase()] || type;
   };
 
-  const formVariants = {
-    hidden: { opacity: 0, y: 20 },
-    visible: {
-      opacity: 1,
-      y: 0,
-      transition: {
-        duration: 0.6,
-        staggerChildren: 0.1
-      }
-    },
-    exit: {
-      opacity: 0,
-      y: -20,
-      transition: {
-        duration: 0.3
-      }
-    }
-  };
-
-  const inputVariants = {
-    hidden: { opacity: 0, x: -20 },
-    visible: { opacity: 1, x: 0 }
-  };
-
-  const features = [
-    {
-      icon: Calendar,
-      title: 'Acesso Imediato',
-      description: 'Comece a usar agora mesmo todos os recursos premium'
-    },
-    {
-      icon: Shield,
-      title: 'Garantia de 7 dias',
-      description: 'Não ficou satisfeito? Devolvemos seu dinheiro'
-    },
-    {
-      icon: Download,
-      title: 'Suporte Premium',
-      description: 'Atendimento prioritário 24/7 para você'
-    }
-  ];
-
-  // Validação completa dos dados
   if (!paymentData.paymentId || isNaN(paymentData.amount) || paymentData.amount <= 0) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-blue-50 to-white flex items-center justify-center p-4">
+      <div className="min-h-screen bg-gradient-to-br from-indigo-50 via-purple-50 to-pink-50 flex items-center justify-center p-4">
         <div className="text-center max-w-2xl bg-white rounded-xl shadow-lg p-8">
           <CheckCircle className="w-16 h-16 text-red-500 mx-auto mb-4" />
           <h1 className="text-2xl font-bold text-gray-900 mb-2">
-            Erro no processamento do pagamento
+            Ops! Algo deu errado
           </h1>
-          
-          <div className="text-left mb-4">
-            <p className="text-gray-600">
-              <strong>ID da Transação:</strong> {paymentData.paymentId || 'Não informado'}
-            </p>
-            <p className="text-gray-600">
-              <strong>Valor Recebido:</strong> {location.state?.amount?.toString() || 'Não informado'}
-            </p>
-            <p className="text-gray-600">
-              <strong>Valor Convertido:</strong> {paymentData.amount}
-            </p>
-          </div>
-
+          <p className="text-gray-600 mb-6">
+            Não foi possível processar as informações do pagamento
+          </p>
           <button
             onClick={() => navigate('/')}
-            className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+            className="px-6 py-2 bg-gradient-to-r from-purple-600 to-indigo-600 text-white rounded-lg hover:from-purple-700 hover:to-indigo-700 transition-all transform hover:scale-105"
           >
             Voltar para a página inicial
           </button>
@@ -212,48 +147,46 @@ const PaymentSuccessPage: React.FC = () => {
     );
   }
 
-  if (isLoading) {
+  if (paymentData.userExists) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-blue-50 to-white flex items-center justify-center">
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          className="text-center"
-        >
-          <Loader2 className="w-12 h-12 text-blue-600 animate-spin mx-auto mb-4" />
-          <p className="text-gray-600">Verificando sua conta...</p>
-        </motion.div>
-      </div>
-    );
-  }
-
-  if (hasAccount === true) {
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-blue-50 to-white flex items-center justify-center p-4">
+      <div className="min-h-screen bg-gradient-to-br from-indigo-50 via-purple-50 to-pink-50 flex items-center justify-center p-4">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           className="max-w-md w-full bg-white rounded-2xl shadow-xl p-8 text-center"
         >
-          <CheckCircle className="w-16 h-16 text-green-500 mx-auto mb-6" />
-          <h2 className="text-2xl font-bold text-gray-900 mb-4">
-            Conta Encontrada!
+          <div className="relative mb-6">
+            <CheckCircle className="w-16 h-16 text-green-500 mx-auto" />
+            <motion.div
+              initial={{ scale: 0 }}
+              animate={{ scale: 1 }}
+              transition={{ delay: 0.3 }}
+              className="absolute top-0 right-1/2 translate-x-12 -translate-y-2"
+            >
+              <Sparkles className="w-6 h-6 text-yellow-400" />
+            </motion.div>
+          </div>
+          <h2 className="text-2xl font-bold bg-gradient-to-r from-purple-600 to-indigo-600 bg-clip-text text-transparent mb-4">
+            Pagamento Confirmado!
           </h2>
+          <p className="text-gray-600 mb-2">
+            Sua conta já está ativa! Use suas credenciais para fazer login.
+          </p>
           <p className="text-gray-600 mb-8">
-            Detectamos que você já possui uma conta. Por favor, faça login para continuar.
+            Aproveite todos os recursos da plataforma.
           </p>
           <button
             onClick={() => navigate('/login')}
-            className="w-full px-6 py-3 bg-blue-600 text-white rounded-xl font-medium hover:bg-blue-700 transition-all transform hover:scale-105"
+            className="w-full px-6 py-3 bg-gradient-to-r from-purple-600 to-indigo-600 text-white rounded-xl font-medium hover:from-purple-700 hover:to-indigo-700 transition-all transform hover:scale-105 flex items-center justify-center"
           >
-            Fazer Login
+            <Gift className="w-5 h-5 mr-2" />
+            Acessar minha conta
           </button>
         </motion.div>
       </div>
     );
   }
 
-  // Formatação monetária profissional
   const formattedAmount = new Intl.NumberFormat('pt-BR', {
     style: 'currency',
     currency: 'BRL',
@@ -261,9 +194,29 @@ const PaymentSuccessPage: React.FC = () => {
     maximumFractionDigits: 2
   }).format(paymentData.amount);
 
-  // Formulário de registro para novos usuários
+  const features = [
+    {
+      icon: Calendar,
+      title: 'Acesso Imediato',
+      description: 'Comece a usar agora mesmo todos os recursos premium',
+      gradient: 'from-purple-500 to-indigo-500'
+    },
+    {
+      icon: Shield,
+      title: 'Garantia de 7 dias',
+      description: 'Não ficou satisfeito? Devolvemos seu dinheiro',
+      gradient: 'from-indigo-500 to-blue-500'
+    },
+    {
+      icon: Download,
+      title: 'Suporte Premium',
+      description: 'Atendimento prioritário 24/7 para você',
+      gradient: 'from-blue-500 to-purple-500'
+    }
+  ];
+
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-white py-12 px-4 sm:px-6 lg:px-8">
+    <div className="min-h-screen bg-gradient-to-br from-indigo-50 via-purple-50 to-pink-50 py-12 px-4 sm:px-6 lg:px-8">
       {showConfetti && (
         <Confetti
           width={windowSize.width}
@@ -276,9 +229,9 @@ const PaymentSuccessPage: React.FC = () => {
       
       <motion.div
         className="max-w-xl mx-auto"
-        variants={formVariants}
-        initial="hidden"
-        animate="visible"
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.6 }}
       >
         <div className="text-center mb-12">
           <motion.div
@@ -289,30 +242,41 @@ const PaymentSuccessPage: React.FC = () => {
               stiffness: 260,
               damping: 20
             }}
+            className="relative inline-block"
           >
-            <CheckCircle className="w-20 h-20 text-green-500 mx-auto mb-6" />
+            <CheckCircle className="w-20 h-20 text-green-500" />
+            <motion.div
+              initial={{ scale: 0 }}
+              animate={{ scale: 1 }}
+              transition={{ delay: 0.3 }}
+              className="absolute -top-2 -right-2"
+            >
+              <Sparkles className="w-8 h-8 text-yellow-400" />
+            </motion.div>
           </motion.div>
-          <h1 className="text-3xl font-bold text-gray-900 mb-3">
-            Pagamento Confirmado!
+          <h1 className="text-4xl font-bold bg-gradient-to-r from-purple-600 to-indigo-600 bg-clip-text text-transparent mt-6 mb-3">
+            Sucesso! 🎉
           </h1>
           <p className="text-xl text-gray-600 mb-2">
             Plano {formatPlanType(paymentData.plan)}
           </p>
-          <p className="text-2xl font-bold text-green-600 mb-8">
+          <p className="text-3xl font-bold text-green-600 mb-8">
             {formattedAmount}
           </p>
           <p className="text-gray-600">
-            Para começar a usar sua conta, precisamos de algumas informações
+            Vamos configurar sua conta para começar
           </p>
         </div>
 
         <motion.form
           onSubmit={handleSubmit}
-          className="bg-white rounded-2xl shadow-xl p-8"
-          variants={formVariants}
+          className="bg-white rounded-2xl shadow-xl p-8 backdrop-blur-lg bg-opacity-90"
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.2 }}
         >
           <div className="space-y-6">
-            <motion.div variants={inputVariants}>
+            <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
                 E-mail
               </label>
@@ -324,13 +288,13 @@ const PaymentSuccessPage: React.FC = () => {
                   required
                   value={registrationData.email}
                   onChange={handleInputChange}
-                  className="pl-10 w-full px-4 py-3 rounded-xl border border-gray-200 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 outline-none transition-all"
+                  className="pl-10 w-full px-4 py-3 rounded-xl border border-gray-200 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 outline-none transition-all"
                   placeholder="seu@email.com"
                 />
               </div>
-            </motion.div>
+            </div>
 
-            <motion.div variants={inputVariants}>
+            <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
                 Nome da Empresa
               </label>
@@ -342,13 +306,13 @@ const PaymentSuccessPage: React.FC = () => {
                   required
                   value={registrationData.companyName}
                   onChange={handleInputChange}
-                  className="pl-10 w-full px-4 py-3 rounded-xl border border-gray-200 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 outline-none transition-all"
+                  className="pl-10 w-full px-4 py-3 rounded-xl border border-gray-200 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 outline-none transition-all"
                   placeholder="Nome da sua empresa"
                 />
               </div>
-            </motion.div>
+            </div>
 
-            <motion.div variants={inputVariants}>
+            <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
                 Senha
               </label>
@@ -360,7 +324,7 @@ const PaymentSuccessPage: React.FC = () => {
                   required
                   value={registrationData.password}
                   onChange={handleInputChange}
-                  className="pl-10 pr-12 w-full px-4 py-3 rounded-xl border border-gray-200 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 outline-none transition-all"
+                  className="pl-10 pr-12 w-full px-4 py-3 rounded-xl border border-gray-200 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 outline-none transition-all"
                   placeholder="Escolha uma senha segura"
                 />
                 <button
@@ -375,36 +339,34 @@ const PaymentSuccessPage: React.FC = () => {
                   )}
                 </button>
               </div>
-            </motion.div>
+            </div>
           </div>
 
           <motion.button
             type="submit"
-            className="mt-8 w-full flex items-center justify-center px-6 py-3 bg-blue-600 text-white rounded-xl font-medium hover:bg-blue-700 transition-all transform hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed"
+            className="mt-8 w-full flex items-center justify-center px-6 py-3 bg-gradient-to-r from-purple-600 to-indigo-600 text-white rounded-xl font-medium hover:from-purple-700 hover:to-indigo-700 transition-all transform hover:scale-105"
             whileHover={{ scale: 1.02 }}
             whileTap={{ scale: 0.98 }}
-            disabled={isLoading}
           >
-            {isLoading ? (
-              <Loader2 className="w-5 h-5 animate-spin" />
-            ) : (
-              <>
-                Criar minha conta
-                <ArrowRight className="ml-2 h-5 w-5" />
-              </>
-            )}
+            <>
+              Criar minha conta
+              <ArrowRight className="ml-2 h-5 w-5" />
+            </>
           </motion.button>
 
-          <div className="mt-6 grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div className="mt-8 grid grid-cols-1 md:grid-cols-3 gap-4">
             {features.map((feature, index) => (
               <motion.div
                 key={index}
-                className="flex flex-col items-center text-center p-4 rounded-xl bg-blue-50"
-                variants={inputVariants}
+                className="flex flex-col items-center text-center p-4 rounded-xl bg-white shadow-md hover:shadow-lg transition-all"
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: index * 0.1 }}
                 whileHover={{ scale: 1.05 }}
-                transition={{ type: "spring", stiffness: 300 }}
               >
-                <feature.icon className="w-6 h-6 text-blue-600 mb-2" />
+                <div className={`p-2 rounded-full bg-gradient-to-r ${feature.gradient} mb-3`}>
+                  <feature.icon className="w-6 h-6 text-white" />
+                </div>
                 <h3 className="text-sm font-semibold text-gray-900 mb-1">
                   {feature.title}
                 </h3>
@@ -418,15 +380,17 @@ const PaymentSuccessPage: React.FC = () => {
 
         <motion.div
           className="mt-8 text-center text-sm text-gray-500"
-          variants={formVariants}
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 0.4 }}
         >
           <p>
             Ao criar sua conta, você concorda com nossos{' '}
-            <a href="/terms" className="text-blue-600 hover:underline">
+            <a href="/terms" className="text-indigo-600 hover:text-indigo-500 hover:underline">
               Termos de Uso
             </a>{' '}
             e{' '}
-            <a href="/privacy" className="text-blue-600 hover:underline">
+            <a href="/privacy" className="text-indigo-600 hover:text-indigo-500 hover:underline">
               Política de Privacidade
             </a>
           </p>
