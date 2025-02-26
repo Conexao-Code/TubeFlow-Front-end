@@ -3,6 +3,15 @@ import { Eye, EyeOff, Play, Triangle } from 'lucide-react';
 import { ToastContainer, toast } from 'react-toastify';
 import { useNavigate } from 'react-router-dom';
 import 'react-toastify/dist/ReactToastify.css';
+import VerificationModal from '../components/VerificationModal';
+
+type VerificationType = 'userExists' | 'passwordValid' | 'companyLink' | 'companyActive' | 'subscriptionValid';
+
+interface VerificationState {
+  type: VerificationType;
+  status: 'loading' | 'success' | 'error';
+  message: string;
+}
 
 function App() {
   const [showPassword, setShowPassword] = useState(false);
@@ -10,13 +19,20 @@ function App() {
     email: '',
     password: '',
   });
+  const [currentVerification, setCurrentVerification] = useState<VerificationState | null>(null);
   const navigate = useNavigate();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
+    setCurrentVerification({
+      type: 'userExists',
+      status: 'loading',
+      message: 'Verificando existência do usuário...'
+    });
+
     try {
-      const response = await fetch('apitubeflow.conexaocode.com/api/login', {
+      const response = await fetch('https://apitubeflow.conexaocode.com/api/login', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -26,26 +42,154 @@ function App() {
 
       const data = await response.json();
 
-      if (response.ok) {
-        toast.success('Login bem-sucedido!', { position: 'top-right' });
-
-        localStorage.setItem('token', data.token);
-        localStorage.setItem('role', data.role);
-        localStorage.setItem('isFreelancer', data.isFreelancer.toString());
-
-        if (data.isFreelancer) {
-          localStorage.setItem('userId', data.id);
+      if (!response.ok) {
+        if (data.message === 'Empresa inativa.') {
+          setCurrentVerification({
+            type: 'companyActive',
+            status: 'error',
+            message: data.message
+          });
+        } else if (data.message === 'Assinatura da empresa expirada.') {
+          setCurrentVerification({
+            type: 'subscriptionValid',
+            status: 'error',
+            message: data.message
+          });
+        } else if (data.message === 'Usuário não vinculado a uma empresa válida.') {
+          setCurrentVerification({
+            type: 'companyLink',
+            status: 'error',
+            message: data.message
+          });
         } else {
-          localStorage.setItem('userIdA', data.id);
+          setCurrentVerification({
+            type: 'userExists',
+            status: 'error',
+            message: data.message || 'Erro no login'
+          });
+        }
+        return;
+      }
+
+      setCurrentVerification({
+        type: 'userExists',
+        status: 'success',
+        message: 'Usuário encontrado!'
+      });
+
+      setTimeout(() => {
+        setCurrentVerification({
+          type: 'passwordValid',
+          status: 'loading',
+          message: 'Validando senha...'
+        });
+      }, 1000);
+
+      if (!data.token) {
+        setCurrentVerification({
+          type: 'passwordValid',
+          status: 'error',
+          message: 'Senha incorreta.'
+        });
+        return;
+      }
+
+      setCurrentVerification({
+        type: 'passwordValid',
+        status: 'success',
+        message: 'Senha válida!'
+      });
+
+      if (!data.isFreelancer) {
+        setTimeout(() => {
+          setCurrentVerification({
+            type: 'companyLink',
+            status: 'loading',
+            message: 'Verificando vínculo empresarial...'
+          });
+        }, 1000);
+
+        if (!data.companyId) {
+          setCurrentVerification({
+            type: 'companyLink',
+            status: 'error',
+            message: 'Usuário não vinculado a uma empresa.'
+          });
+          return;
         }
 
-        navigate('/');
-      } else {
-        toast.error(data.message || 'Erro ao realizar login.', { position: 'top-right' });
+        setCurrentVerification({
+          type: 'companyLink',
+          status: 'success',
+          message: 'Empresa vinculada!'
+        });
+
+        setTimeout(() => {
+          setCurrentVerification({
+            type: 'companyActive',
+            status: 'loading',
+            message: 'Verificando status da empresa...'
+          });
+        }, 1000);
+
+        if (!data.companyActive) {
+          setCurrentVerification({
+            type: 'companyActive',
+            status: 'error',
+            message: 'Empresa inativa.'
+          });
+          return;
+        }
+
+        setCurrentVerification({
+          type: 'companyActive',
+          status: 'success',
+          message: 'Empresa ativa!'
+        });
+
+        setTimeout(() => {
+          setCurrentVerification({
+            type: 'subscriptionValid',
+            status: 'loading',
+            message: 'Verificando assinatura...'
+          });
+        }, 1000);
+
+        if (!data.subscriptionValid) {
+          setCurrentVerification({
+            type: 'subscriptionValid',
+            status: 'error',
+            message: 'Assinatura expirada.'
+          });
+          return;
+        }
+
+        setCurrentVerification({
+          type: 'subscriptionValid',
+          status: 'success',
+          message: 'Assinatura válida!'
+        });
       }
+
+      localStorage.setItem('token', data.token);
+      localStorage.setItem('role', data.role);
+      localStorage.setItem('isFreelancer', data.isFreelancer.toString());
+      localStorage.setItem('companyId', data.companyId);
+
+      if (data.isFreelancer) {
+        localStorage.setItem('userId', data.id);
+      } else {
+        localStorage.setItem('userIdA', data.id);
+      }
+
+      setTimeout(() => {
+        navigate('/');
+      }, 1000);
+
     } catch (error) {
       console.error('Erro na solicitação de login:', error);
       toast.error('Erro na conexão com o servidor.', { position: 'top-right' });
+      setCurrentVerification(null);
     }
   };
 
@@ -128,6 +272,14 @@ function App() {
           </form>
         </div>
       </div>
+
+      <VerificationModal
+        isOpen={currentVerification !== null}
+        onClose={() => setCurrentVerification(null)}
+        type={currentVerification?.type || 'userExists'}
+        status={currentVerification?.status || 'loading'}
+        message={currentVerification?.message}
+      />
     </div>
   );
 }
