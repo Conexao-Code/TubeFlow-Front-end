@@ -1,6 +1,7 @@
 import React from 'react';
-import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import Header from './components/Header';
+import { jwtDecode } from 'jwt-decode';
 import Dashboard from './pages/Dashboard';
 import Login from './pages/Login';
 import Freelancer from './pages/Freelancers';
@@ -18,31 +19,139 @@ import PaymentPage from './pages/Paymentpage';
 import PaymentSuccessPage from './pages/PaymentSuccessPage';
 import PaymentError from './pages/PaymentError';
 
-const isAuthenticated = () => {
-  return !!localStorage.getItem('token');
+interface JwtPayload {
+  id: string;
+  role: string;
+  isFreelancer: boolean;
+  companyId?: string;
+  exp: number;
+}
+
+const validateSession = () => {
+  const token = localStorage.getItem('token');
+  if (!token) return false;
+
+  try {
+    const decoded = jwtDecode<JwtPayload>(token);
+    const isExpired = Date.now() >= decoded.exp * 1000;
+    
+    if (isExpired) {
+      localStorage.clear();
+      return false;
+    }
+
+    // Verificar se usuários não freelancers têm companyId
+    if (!decoded.isFreelancer && !localStorage.getItem('companyId')) {
+      localStorage.clear();
+      return false;
+    }
+
+    return true;
+  } catch (error) {
+    localStorage.clear();
+    return false;
+  }
 };
 
-const isFreelancer = () => {
-  return localStorage.getItem('isFreelancer') === 'true';
+const checkSubscription = () => {
+  const subscriptionValid = localStorage.getItem('subscriptionValid') === 'true';
+  const companyActive = localStorage.getItem('companyActive') === 'true';
+  
+  return subscriptionValid && companyActive;
+};
+
+const getRole = () => {
+  return localStorage.getItem('role') || 'user';
 };
 
 const ProtectedRoute = ({
   element,
-  allowedForFreelancers,
+  allowedRoles = [],
+  needsSubscription = true,
+  allowedForFreelancers = false
 }: {
   element: JSX.Element;
+  allowedRoles?: string[];
+  needsSubscription?: boolean;
   allowedForFreelancers?: boolean;
 }) => {
-  if (!isAuthenticated()) {
-    return <Navigate to="/login" replace />;
+  const location = useLocation();
+  
+  if (!validateSession()) {
+    return <Navigate to="/login" state={{ from: location }} replace />;
   }
 
-  if (isFreelancer() && !allowedForFreelancers) {
+  const userRole = getRole();
+  const isFreelancer = localStorage.getItem('isFreelancer') === 'true';
+  
+  if (isFreelancer && !allowedForFreelancers) {
     return <Navigate to="/" replace />;
+  }
+
+  if (!isFreelancer) {
+    if (!checkSubscription() && needsSubscription) {
+      return <Navigate to="/payment" replace />;
+    }
+
+    if (allowedRoles.length > 0 && !allowedRoles.includes(userRole)) {
+      return <Navigate to="/" replace />;
+    }
   }
 
   return element;
 };
+
+// Tipos para as rotas
+type RouteConfig = {
+  path: string;
+  element: JSX.Element;
+  allowedRoles?: string[];
+  needsSubscription?: boolean;
+  allowedForFreelancers?: boolean;
+};
+
+const protectedRoutes: RouteConfig[] = [
+  {
+    path: '/dashboard',
+    element: <Dashboard />,
+    allowedForFreelancers: true
+  },
+  {
+    path: '/freelancers',
+    element: <Freelancer />,
+    allowedRoles: ['admin']
+  },
+  {
+    path: '/administradores',
+    element: <Admin />,
+    allowedRoles: ['admin']
+  },
+  {
+    path: '/logs',
+    element: <LogsAndStats />,
+    allowedRoles: ['admin', 'editor']
+  },
+  {
+    path: '/videos',
+    element: <Videos />,
+    allowedForFreelancers: true
+  },
+  {
+    path: '/configuracoes',
+    element: <Settings />,
+    needsSubscription: false
+  },
+  {
+    path: '/reports',
+    element: <CustomReports />,
+    allowedRoles: ['admin', 'editor', 'roteirista']
+  },
+  {
+    path: '/canais',
+    element: <Channels />,
+    allowedRoles: ['admin', 'editor']
+  }
+];
 
 function App() {
   return (
@@ -56,34 +165,21 @@ function App() {
         <Route path="/payment-error" element={<PaymentError />} />
         <Route path="/" element={<Home />} />
         <Route path="/payment" element={<PaymentPage onBack={() => window.history.back()} />} />
-        <Route
-          path="/freelancers"
-          element={<ProtectedRoute element={<Freelancer />} allowedForFreelancers={false} />}
-        /> 
-        <Route
-          path="/administradores"
-          element={<ProtectedRoute element={<Admin />} allowedForFreelancers={false} />}
-        />       <Route
-          path="/logs"
-          element={<ProtectedRoute element={<LogsAndStats />} allowedForFreelancers={false} />}
-        />
-        <Route
-          path="/videos"
-          element={<ProtectedRoute element={<Videos />} allowedForFreelancers={true} />}
-        />
-        <Route
-          path="/configuracoes"
-          element={<ProtectedRoute element={<Settings />} allowedForFreelancers={true} />}
-        />
-        <Route
-          path="/reports"
-          element={<ProtectedRoute element={<CustomReports />} allowedForFreelancers={true} />}
-        />
-        <Route
-          path="/canais"
-          element={<ProtectedRoute element={<Channels />} allowedForFreelancers={false} />}
-        />
-        <Route path="/dashboard" element={<ProtectedRoute element={<Dashboard />} allowedForFreelancers={true} />} />
+
+        {protectedRoutes.map((route) => (
+          <Route
+            key={route.path}
+            path={route.path}
+            element={
+              <ProtectedRoute
+                element={route.element}
+                allowedRoles={route.allowedRoles}
+                needsSubscription={route.needsSubscription}
+                allowedForFreelancers={route.allowedForFreelancers}
+              />
+            }
+          />
+        ))}
       </Routes>
     </Router>
   );
