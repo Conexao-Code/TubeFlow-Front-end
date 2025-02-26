@@ -13,7 +13,7 @@ interface VerificationState {
   message: string;
 }
 
-function App() {
+function LoginPage() {
   const [showPassword, setShowPassword] = useState(false);
   const [formData, setFormData] = useState({
     email: '',
@@ -43,154 +43,60 @@ function App() {
       const data = await response.json();
 
       if (!response.ok) {
-        if (data.message === 'Empresa inativa.') {
-          setCurrentVerification({
-            type: 'companyActive',
-            status: 'error',
-            message: data.message
-          });
-        } else if (data.message === 'Assinatura da empresa expirada.') {
-          setCurrentVerification({
-            type: 'subscriptionValid',
-            status: 'error',
-            message: data.message
-          });
-        } else if (data.message === 'Usuário não vinculado a uma empresa válida.') {
-          setCurrentVerification({
-            type: 'companyLink',
-            status: 'error',
-            message: data.message
-          });
-        } else {
-          setCurrentVerification({
-            type: 'userExists',
-            status: 'error',
-            message: data.message || 'Erro no login'
-          });
-        }
+        handleLoginError(data);
         return;
       }
 
-      setCurrentVerification({
-        type: 'userExists',
-        status: 'success',
-        message: 'Usuário encontrado!'
-      });
-
-      setTimeout(() => {
-        setCurrentVerification({
-          type: 'passwordValid',
-          status: 'loading',
-          message: 'Validando senha...'
-        });
-      }, 1000);
-
-      if (!data.token) {
-        setCurrentVerification({
-          type: 'passwordValid',
-          status: 'error',
-          message: 'Senha incorreta.'
-        });
-        return;
-      }
-
-      setCurrentVerification({
-        type: 'passwordValid',
-        status: 'success',
-        message: 'Senha válida!'
-      });
-
-      if (!data.isFreelancer) {
-        setTimeout(() => {
-          setCurrentVerification({
-            type: 'companyLink',
-            status: 'loading',
-            message: 'Verificando vínculo empresarial...'
-          });
-        }, 1000);
-
-        if (!data.companyId) {
-          setCurrentVerification({
-            type: 'companyLink',
-            status: 'error',
-            message: 'Usuário não vinculado a uma empresa.'
-          });
-          return;
-        }
-
-        setCurrentVerification({
-          type: 'companyLink',
-          status: 'success',
-          message: 'Empresa vinculada!'
-        });
-
-        setTimeout(() => {
-          setCurrentVerification({
-            type: 'companyActive',
-            status: 'loading',
-            message: 'Verificando status da empresa...'
-          });
-        }, 1000);
-
-        if (!data.companyActive) {
-          setCurrentVerification({
-            type: 'companyActive',
-            status: 'error',
-            message: 'Empresa inativa.'
-          });
-          return;
-        }
-
-        setCurrentVerification({
-          type: 'companyActive',
-          status: 'success',
-          message: 'Empresa ativa!'
-        });
-
-        setTimeout(() => {
-          setCurrentVerification({
-            type: 'subscriptionValid',
-            status: 'loading',
-            message: 'Verificando assinatura...'
-          });
-        }, 1000);
-
-        if (!data.subscriptionValid) {
-          setCurrentVerification({
-            type: 'subscriptionValid',
-            status: 'error',
-            message: 'Assinatura expirada.'
-          });
-          return;
-        }
-
-        setCurrentVerification({
-          type: 'subscriptionValid',
-          status: 'success',
-          message: 'Assinatura válida!'
-        });
-      }
-
-      localStorage.setItem('token', data.token);
-      localStorage.setItem('role', data.role);
-      localStorage.setItem('isFreelancer', data.isFreelancer.toString());
-      localStorage.setItem('companyId', data.companyId);
-
-      if (data.isFreelancer) {
-        localStorage.setItem('userId', data.id);
-      } else {
-        localStorage.setItem('userIdA', data.id);
-      }
-
-      setTimeout(() => {
-        navigate('/');
-      }, 1000);
+      handleLoginSuccess(data);
+      navigate('/dashboard');
 
     } catch (error) {
-      console.error('Erro na solicitação de login:', error);
-      toast.error('Erro na conexão com o servidor.', { position: 'top-right' });
-      setCurrentVerification(null);
+      handleNetworkError(error);
     }
+  };
+
+  const handleLoginError = (data: any) => {
+    let type: VerificationType = 'userExists';
+    let message = data.message || 'Erro no login';
+
+    switch(data.message) {
+      case 'Empresa inativa.':
+        type = 'companyActive';
+        break;
+      case 'Assinatura da empresa expirada.':
+        type = 'subscriptionValid';
+        break;
+      case 'Usuário não vinculado a uma empresa válida.':
+        type = 'companyLink';
+        break;
+      default:
+        if (data.message.includes('senha')) type = 'passwordValid';
+    }
+
+    setCurrentVerification({
+      type,
+      status: 'error',
+      message
+    });
+  };
+
+  const handleLoginSuccess = (data: any) => {
+    localStorage.setItem('token', data.token);
+    localStorage.setItem('role', data.role);
+    localStorage.setItem('isFreelancer', data.isFreelancer.toString());
+    localStorage.setItem('companyId', data.companyId.toString());
+
+    if (data.isFreelancer) {
+      localStorage.setItem('userId', data.id);
+    } else {
+      localStorage.setItem('userIdA', data.id);
+    }
+  };
+
+  const handleNetworkError = (error: any) => {
+    console.error('Erro na solicitação de login:', error);
+    toast.error('Erro na conexão com o servidor.', { position: 'top-right' });
+    setCurrentVerification(null);
   };
 
   return (
@@ -200,6 +106,7 @@ function App() {
         <div className="absolute -top-1/2 -right-1/2 w-full h-full bg-blue-100/30 rounded-full blur-3xl" />
         <div className="absolute -bottom-1/2 -left-1/2 w-full h-full bg-blue-200/30 rounded-full blur-3xl" />
       </div>
+      
       <div className="relative min-h-screen flex flex-col items-center justify-center p-4">
         <div className="mb-8 flex items-center gap-2">
           <Play className="w-8 h-8 text-blue-600 fill-blue-600" />
@@ -211,18 +118,19 @@ function App() {
           <h2 className="text-2xl font-semibold text-center text-gray-800 mb-6">
             Bem-vindo à TubeFlow
           </h2>
+          
           <form onSubmit={handleSubmit} className="space-y-6">
             <div className="space-y-2">
               <label htmlFor="email" className="text-sm font-medium text-gray-700">
-                E-mail ou nome de usuário
+                E-mail
               </label>
               <input
-                type="text"
+                type="email"
                 id="email"
                 value={formData.email}
                 onChange={(e) => setFormData({ ...formData, email: e.target.value })}
                 className="w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors"
-                placeholder="Digite seu e-mail ou nome de usuário"
+                placeholder="Digite seu e-mail"
                 required
               />
             </div>
@@ -246,11 +154,7 @@ function App() {
                   onClick={() => setShowPassword(!showPassword)}
                   className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700"
                 >
-                  {showPassword ? (
-                    <EyeOff className="w-5 h-5" />
-                  ) : (
-                    <Eye className="w-5 h-5" />
-                  )}
+                  {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
                 </button>
               </div>
             </div>
@@ -261,6 +165,7 @@ function App() {
             >
               Entrar
             </button>
+
             <div className="mt-8 text-center">
               <a
                 href="/recuperacao"
@@ -284,4 +189,4 @@ function App() {
   );
 }
 
-export default App;
+export default LoginPage;
