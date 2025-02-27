@@ -27,7 +27,7 @@ const Sidebar: React.FC<SidebarProps> = ({
   const isFreelancer = localStorage.getItem('isFreelancer') === 'true';
 
   const menuItems: MenuItem[] = [
-    { id: 'dashboard', label: 'Dashboard', icon: <Home className="w-5 h-5" />, path: '/' },
+    { id: 'dashboard', label: 'Dashboard', icon: <Home className="w-5 h-5" />, path: '/dashboard' },
     { id: 'freelancers', label: 'Freelancers', icon: <Users className="w-5 h-5" />, path: '/freelancers' },
     { id: 'Administradores', label: 'Administradores', icon: <Shield className="w-5 h-5" />, path: '/administradores' },
     { id: 'videos', label: 'Vídeos', icon: <Video className="w-5 h-5" />, path: '/videos' },
