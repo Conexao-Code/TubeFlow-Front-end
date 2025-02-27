@@ -1,13 +1,13 @@
-import React, { useState, ReactNode  } from 'react';
-import { Bell, ChevronDown, LogOut } from 'lucide-react';
+import React, { useState } from 'react';
+import { Bell, ChevronDown, LogOut, Menu } from 'lucide-react';
 import DefaultUserImage from '../imagens/dark.png';
 
 interface HeaderProps {
-    activeSection: string;
-    children?: ReactNode; // Adicione esta linha
-  }
-  
-  const HeaderAdmin: React.FC<HeaderProps> = ({ activeSection, children }) => {
+  activeSection: string;
+  onToggleSidebar: () => void;
+}
+
+const HeaderAdmin: React.FC<HeaderProps> = ({ activeSection, onToggleSidebar }) => {
   const [isProfileDropdownOpen, setIsProfileDropdownOpen] = useState(false);
 
   const handleLogout = () => {
@@ -18,9 +18,22 @@ interface HeaderProps {
   return (
     <header className="bg-white border-b border-gray-200 sticky top-0 z-30">
       <div className="px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
-        <h1 className="text-2xl font-semibold text-gray-800 capitalize">
-          {activeSection}
-        </h1>
+        <div className="flex items-center">
+          {/* Mobile menu button */}
+          <button
+            type="button"
+            className="lg:hidden inline-flex items-center justify-center p-2 rounded-md text-gray-500 hover:text-gray-900 hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-blue-500 mr-2"
+            onClick={onToggleSidebar}
+            aria-expanded="false"
+          >
+            <span className="sr-only">Open sidebar</span>
+            <Menu className="h-6 w-6" aria-hidden="true" />
+          </button>
+          
+          <h1 className="text-2xl font-semibold text-gray-800 capitalize">
+            {activeSection}
+          </h1>
+        </div>
 
         <div className="flex items-center gap-4">
           <div className="relative">
