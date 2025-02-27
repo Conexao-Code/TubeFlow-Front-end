@@ -26,7 +26,7 @@ function Settings() {
 
             try {
                 const response = await fetch(
-                    `https://tubeflow.conexaocode.com/api/settings?companyId=${companyId}`
+                    `https://apitubeflow.conexaocode.com/api/settings?companyId=${companyId}`
                 );
                 
                 if (!response.ok) throw new Error('Erro ao carregar configurações.');
@@ -52,7 +52,7 @@ function Settings() {
         e.preventDefault();
 
         try {
-            const response = await fetch('https://tubeflow.conexaocode.com/api/settings', {
+            const response = await fetch('https://apitubeflow.conexaocode.com/api/settings', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
