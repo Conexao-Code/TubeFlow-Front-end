@@ -186,7 +186,9 @@ function LogsAndStats() {
         ? validStats.reduce((acc, curr) => acc + curr.averageTime, 0) / validStats.length
         : 0;
     const overallAverageFormatted = formatTime(overallAverage);
-
+    const handleToggleSidebar = () => {
+        setIsSidebarOpen(!isSidebarOpen);
+    };
     return (
         <div className="min-h-screen bg-gray-50 flex">
             <ToastContainer />
@@ -197,14 +199,10 @@ function LogsAndStats() {
                 onCloseSidebar={() => setIsSidebarOpen(false)}
             />
             <main className="flex-1 min-h-screen flex flex-col">
-                <HeaderAdmin activeSection={activeSection}>
-                    <button
-                        onClick={() => setIsSidebarOpen(prevState => !prevState)}
-                        className="lg:hidden p-2 -ml-2 text-gray-600 hover:text-gray-900"
-                    >
-                        <Menu className="w-6 h-6" />
-                    </button>
-                </HeaderAdmin>
+                <HeaderAdmin
+                    activeSection="Configurações"
+                    onToggleSidebar={handleToggleSidebar}
+                />
                 <div className="flex-1 p-4 sm:p-6 lg:p-8">
                     <div className="bg-white rounded-lg shadow-sm border border-gray-100 p-4 mb-6">
                         <div className="grid grid-cols-1 lg:grid-cols-5 gap-4 items-end">

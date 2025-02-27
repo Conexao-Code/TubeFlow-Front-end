@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from 'react';
-import { Settings as SettingsIcon, Menu, Info, Bell } from 'lucide-react';
+import { Settings as SettingsIcon, Info, Bell } from 'lucide-react';
 import HeaderAdmin from '../components/HeaderAdmin';
 import Sidebar from '../components/Sidebar';
 import { ToastContainer, toast } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 
 function Settings() {
     const [isSidebarOpen, setIsSidebarOpen] = useState(false);
@@ -74,26 +75,26 @@ function Settings() {
         }
     };
 
+    const handleToggleSidebar = () => {
+        setIsSidebarOpen(!isSidebarOpen);
+    };
+
     return (
         <div className="min-h-screen bg-gray-50 flex">
             <ToastContainer />
 
             <Sidebar
-                activeSection="settings"
+                activeSection="configuracao"
                 setActiveSection={() => { }}
                 isSidebarOpen={isSidebarOpen}
                 onCloseSidebar={() => setIsSidebarOpen(false)}
             />
 
             <main className="flex-1 min-h-screen flex flex-col">
-                <HeaderAdmin activeSection="settings">
-                    <button
-                        onClick={() => setIsSidebarOpen((prevState) => !prevState)}
-                        className="lg:hidden p-2 -ml-2 text-gray-600 hover:text-gray-900"
-                    >
-                        <Menu className="w-6 h-6" />
-                    </button>
-                </HeaderAdmin>
+                <HeaderAdmin 
+                    activeSection="Configurações" 
+                    onToggleSidebar={handleToggleSidebar}
+                />
 
                 <div className="flex-1 p-4 sm:p-6 lg:p-8">
                     <div className="mb-6">

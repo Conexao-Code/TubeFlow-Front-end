@@ -247,6 +247,10 @@ function App() {
         return new Date(dateString).toLocaleDateString('pt-BR');
     };
 
+    const handleToggleSidebar = () => {
+        setIsSidebarOpen(!isSidebarOpen);
+    };
+
     return (
         <div className="min-h-screen bg-gray-50 flex">
             <ToastContainer />
@@ -259,14 +263,10 @@ function App() {
             />
 
             <main className="flex-1 min-h-screen flex flex-col">
-                <HeaderAdmin activeSection={activeSection}>
-                    <button
-                        onClick={() => setIsSidebarOpen((prevState) => !prevState)}
-                        className="lg:hidden p-2 -ml-2 text-gray-600 hover:text-gray-900"
-                    >
-                        <Menu className="w-6 h-6" />
-                    </button>
-                </HeaderAdmin>
+                <HeaderAdmin
+                    activeSection="Configurações"
+                    onToggleSidebar={handleToggleSidebar}
+                />
 
                 <div className="flex-1 p-4 sm:p-6 lg:p-8">
                     <div className="mb-6 flex justify-between items-center">

@@ -158,6 +158,9 @@ function Channels() {
     await handleCreateChannel(createFormData);
   };
 
+  const handleToggleSidebar = () => {
+    setIsSidebarOpen(!isSidebarOpen);
+  };
   return (
     <div className="min-h-screen bg-gray-50 flex">
       <Sidebar
@@ -167,14 +170,10 @@ function Channels() {
         onCloseSidebar={() => setIsSidebarOpen(false)}
       />
       <div className="flex-1 flex flex-col min-h-screen">
-        <HeaderAdmin activeSection={activeSection}>
-          <button
-            onClick={() => setIsSidebarOpen((prevState) => !prevState)}
-            className="lg:hidden p-2 -ml-2 text-gray-600 hover:text-gray-900"
-          >
-            <Menu className="w-6 h-6" />
-          </button>
-        </HeaderAdmin>
+        <HeaderAdmin
+          activeSection="Configurações"
+          onToggleSidebar={handleToggleSidebar}
+        />
         <main className="flex-1 p-4 sm:p-6 lg:p-8">
           <div className="flex items-center justify-between mb-6">
             <h1 className="text-2xl font-semibold text-gray-900">Gerenciamento de Canais</h1>
@@ -242,9 +241,8 @@ function Channels() {
                     id="create-name"
                     value={createFormData.name}
                     onChange={(e) => setCreateFormData({ ...createFormData, name: e.target.value })}
-                    className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${
-                      createFormErrors.name ? 'border-red-500' : 'border-gray-300'
-                    }`}
+                    className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${createFormErrors.name ? 'border-red-500' : 'border-gray-300'
+                      }`}
                     placeholder="Digite o nome do canal"
                   />
                   {createFormErrors.name && <p className="mt-1 text-sm text-red-500">{createFormErrors.name}</p>}
@@ -257,9 +255,8 @@ function Channels() {
                     id="create-description"
                     value={createFormData.description}
                     onChange={(e) => setCreateFormData({ ...createFormData, description: e.target.value })}
-                    className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${
-                      createFormErrors.description ? 'border-red-500' : 'border-gray-300'
-                    }`}
+                    className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${createFormErrors.description ? 'border-red-500' : 'border-gray-300'
+                      }`}
                     placeholder="Digite a descrição do canal"
                   />
                   {createFormErrors.description && <p className="mt-1 text-sm text-red-500">{createFormErrors.description}</p>}
@@ -273,9 +270,8 @@ function Channels() {
                     id="create-youtubeUrl"
                     value={createFormData.youtubeUrl}
                     onChange={(e) => setCreateFormData({ ...createFormData, youtubeUrl: e.target.value })}
-                    className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${
-                      createFormErrors.youtubeUrl ? 'border-red-500' : 'border-gray-300'
-                    }`}
+                    className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${createFormErrors.youtubeUrl ? 'border-red-500' : 'border-gray-300'
+                      }`}
                     placeholder="Digite a URL do canal no YouTube"
                   />
                   {createFormErrors.youtubeUrl && <p className="mt-1 text-sm text-red-500">{createFormErrors.youtubeUrl}</p>}
@@ -326,9 +322,8 @@ function Channels() {
                     id="edit-name"
                     value={editFormData.name}
                     onChange={(e) => setEditFormData({ ...editFormData, name: e.target.value })}
-                    className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${
-                      formErrors.name ? 'border-red-500' : 'border-gray-300'
-                    }`}
+                    className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${formErrors.name ? 'border-red-500' : 'border-gray-300'
+                      }`}
                     placeholder="Digite o nome do canal"
                   />
                   {formErrors.name && <p className="mt-1 text-sm text-red-500">{formErrors.name}</p>}
@@ -341,9 +336,8 @@ function Channels() {
                     id="edit-description"
                     value={editFormData.description}
                     onChange={(e) => setEditFormData({ ...editFormData, description: e.target.value })}
-                    className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${
-                      formErrors.description ? 'border-red-500' : 'border-gray-300'
-                    }`}
+                    className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${formErrors.description ? 'border-red-500' : 'border-gray-300'
+                      }`}
                     placeholder="Digite a descrição do canal"
                   />
                   {formErrors.description && <p className="mt-1 text-sm text-red-500">{formErrors.description}</p>}
@@ -357,9 +351,8 @@ function Channels() {
                     id="edit-youtubeUrl"
                     value={editFormData.youtubeUrl}
                     onChange={(e) => setEditFormData({ ...editFormData, youtubeUrl: e.target.value })}
-                    className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${
-                      formErrors.youtubeUrl ? 'border-red-500' : 'border-gray-300'
-                    }`}
+                    className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${formErrors.youtubeUrl ? 'border-red-500' : 'border-gray-300'
+                      }`}
                     placeholder="Digite a URL do canal no YouTube"
                   />
                   {formErrors.youtubeUrl && <p className="mt-1 text-sm text-red-500">{formErrors.youtubeUrl}</p>}

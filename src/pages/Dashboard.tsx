@@ -1,19 +1,19 @@
 import React, { useState, useEffect } from 'react';
-import { 
-  Menu,
-  Video,
-  CheckCircle,
-  Users,
-  Youtube,
-  Clock,
-  Bell
+import {
+    Menu,
+    Video,
+    CheckCircle,
+    Users,
+    Youtube,
+    Clock,
+    Bell
 } from 'lucide-react';
 import Sidebar from '../components/Sidebar';
 import HeaderAdmin from '../components/HeaderAdmin';
 
 interface RecentActivity {
     id: number;
-    message: string; 
+    message: string;
     time: string;
 }
 
@@ -49,7 +49,7 @@ function Dashboard() {
                 const isAdmin = !isFreelancer;
                 const companyId = localStorage.getItem('companyId');
                 setIsUser(isAdmin);
-    
+
                 const response = await fetch(
                     `https://apitubeflow.conexaocode.com/api/dashboard?userId=${userId}&isUser=${isAdmin ? 1 : 0}&companyId=${companyId}`
                 );
@@ -97,6 +97,10 @@ function Dashboard() {
         );
     }
 
+    const handleToggleSidebar = () => {
+        setIsSidebarOpen(!isSidebarOpen);
+    };
+
     // Dynamic grid classes based on user type
     const gridClasses = isUser
         ? "grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8"
@@ -104,31 +108,26 @@ function Dashboard() {
 
     return (
         <div className="min-h-screen bg-gray-50 flex">
-            <Sidebar 
-                activeSection={activeSection} 
+            <Sidebar
+                activeSection={activeSection}
                 setActiveSection={setActiveSection}
                 isSidebarOpen={isSidebarOpen}
                 onCloseSidebar={() => setIsSidebarOpen(false)}
             />
 
             <div className="flex-1 flex flex-col min-h-screen">
-                <HeaderAdmin activeSection={activeSection}>
-                    <button
-                        onClick={() => setIsSidebarOpen((prevState) => !prevState)}
-                        className="lg:hidden p-2 -ml-2 text-gray-600 hover:text-gray-900"
-                    >
-                        <Menu className="w-6 h-6" />
-                    </button>
-                </HeaderAdmin>
+                <HeaderAdmin
+                    activeSection="Configurações"
+                    onToggleSidebar={handleToggleSidebar}
+                />
 
                 <main className="flex-1 p-4 sm:p-6 lg:p-8">
                     <div className={gridClasses}>
                         {statCards.map((card, index) => (
-                            <div 
-                                key={index} 
-                                className={`bg-white rounded-xl shadow-sm p-6 border border-gray-100 transition-all duration-200 hover:shadow-md ${
-                                    !isUser ? 'md:col-span-1' : ''
-                                }`}
+                            <div
+                                key={index}
+                                className={`bg-white rounded-xl shadow-sm p-6 border border-gray-100 transition-all duration-200 hover:shadow-md ${!isUser ? 'md:col-span-1' : ''
+                                    }`}
                             >
                                 <div className="flex items-center justify-between mb-4">
                                     <div className={`p-2 rounded-lg ${card.color}`}>

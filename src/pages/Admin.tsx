@@ -214,26 +214,26 @@ function App() {
         return new Date(dateString).toLocaleDateString('pt-BR');
     };
 
+    const handleToggleSidebar = () => {
+        setIsSidebarOpen(!isSidebarOpen);
+    };
+
     return (
         <div className="min-h-screen bg-gray-50 flex">
             <ToastContainer />
-            
-            <Sidebar 
-                activeSection={activeSection} 
+
+            <Sidebar
+                activeSection={activeSection}
                 setActiveSection={setActiveSection}
                 isSidebarOpen={isSidebarOpen}
                 onCloseSidebar={() => setIsSidebarOpen(false)}
             />
 
             <main className="flex-1 min-h-screen flex flex-col">
-                <HeaderAdmin activeSection={activeSection}>
-                    <button
-                        onClick={() => setIsSidebarOpen((prevState) => !prevState)}
-                        className="lg:hidden p-2 -ml-2 text-gray-600 hover:text-gray-900"
-                    >
-                        <Menu className="w-6 h-6" />
-                    </button>
-                </HeaderAdmin>
+                <HeaderAdmin
+                    activeSection="Configurações"
+                    onToggleSidebar={handleToggleSidebar}
+                />
 
                 <div className="flex-1 p-4 sm:p-6 lg:p-8">
                     <div className="mb-6 flex justify-between items-center">
@@ -387,9 +387,8 @@ function App() {
                                             id="name"
                                             value={formData.name}
                                             onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                                            className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${
-                                                formErrors.name ? 'border-red-500' : 'border-gray-300'
-                                            }`}
+                                            className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${formErrors.name ? 'border-red-500' : 'border-gray-300'
+                                                }`}
                                             placeholder="Digite o nome completo"
                                         />
                                         {formErrors.name && <p className="mt-1 text-sm text-red-500">{formErrors.name}</p>}
@@ -404,9 +403,8 @@ function App() {
                                             id="email"
                                             value={formData.email}
                                             onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                                            className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${
-                                                formErrors.email ? 'border-red-500' : 'border-gray-300'
-                                            }`}
+                                            className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${formErrors.email ? 'border-red-500' : 'border-gray-300'
+                                                }`}
                                             placeholder="Digite o e-mail"
                                         />
                                         {formErrors.email && <p className="mt-1 text-sm text-red-500">{formErrors.email}</p>}
@@ -460,9 +458,8 @@ function App() {
                                             id="edit-name"
                                             value={formData.name}
                                             onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                                            className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${
-                                                formErrors.name ? 'border-red-500' : 'border-gray-300'
-                                            }`}
+                                            className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${formErrors.name ? 'border-red-500' : 'border-gray-300'
+                                                }`}
                                             placeholder="Digite o nome completo"
                                         />
                                         {formErrors.name && <p className="mt-1 text-sm text-red-500">{formErrors.name}</p>}
@@ -477,9 +474,8 @@ function App() {
                                             id="edit-email"
                                             value={formData.email}
                                             onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                                            className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${
-                                                formErrors.email ? 'border-red-500' : 'border-gray-300'
-                                            }`}
+                                            className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${formErrors.email ? 'border-red-500' : 'border-gray-300'
+                                                }`}
                                             placeholder="Digite o e-mail"
                                         />
                                         {formErrors.email && <p className="mt-1 text-sm text-red-500">{formErrors.email}</p>}
