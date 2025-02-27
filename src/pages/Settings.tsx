@@ -10,20 +10,35 @@ function Settings() {
     const [senderPhone, setSenderPhone] = useState('');
     const [messageTemplate, setMessageTemplate] = useState('');
     const [autoNotify, setAutoNotify] = useState(false);
+    const [companyId, setCompanyId] = useState('');
+
+    useEffect(() => {
+        // Carregar companyId do localStorage
+        const storedCompanyId = localStorage.getItem('companyId');
+        if (storedCompanyId) {
+            setCompanyId(storedCompanyId);
+        }
+    }, []);
 
     useEffect(() => {
         const fetchSettings = async () => {
-            try {
-                const response = await fetch(`apitubeflow.conexaocode.com/api/settings`);
-                if (!response.ok) {
-                    throw new Error('Erro ao carregar configurações.');
-                }
-                const data = await response.json();
+            if (!companyId) return;
 
+            try {
+                const response = await fetch(
+                    `https://tubeflow.conexaocode.com/api/settings?companyId=${companyId}`
+                );
+                
+                if (!response.ok) throw new Error('Erro ao carregar configurações.');
+                
+                const data = await response.json();
+                
                 setApiKey(data.api_key || '');
                 setSenderPhone(data.sender_phone || '');
-                // Converter \n armazenado no banco para quebra de linha real
-                setMessageTemplate(data.message_template?.replace(/\\n/g, '\n') || 'Olá, {name}! Um novo vídeo foi atribuído a você: {titulo}');
+                setMessageTemplate(
+                    data.message_template?.replace(/\\n/g, '\n') || 
+                    'Olá, {name}! Um novo vídeo foi atribuído a você: {titulo}'
+                );
                 setAutoNotify(data.auto_notify || false);
             } catch (error) {
                 toast.error('Erro ao carregar configurações.', { position: 'top-right' });
@@ -31,18 +46,19 @@ function Settings() {
         };
 
         fetchSettings();
-    }, []);
+    }, [companyId]);
 
     const handleSaveSettings = async (e: React.FormEvent) => {
         e.preventDefault();
 
         try {
-            const response = await fetch('apitubeflow.conexaocode.com/api/settings', {
+            const response = await fetch('https://tubeflow.conexaocode.com/api/settings', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
                 },
                 body: JSON.stringify({
+                    companyId,
                     apiKey,
                     senderPhone,
                     messageTemplate: messageTemplate.replace(/\n/g, '\\n'),
@@ -50,10 +66,8 @@ function Settings() {
                 }),
             });
 
-            if (!response.ok) {
-                throw new Error('Erro ao salvar configurações.');
-            }
-
+            if (!response.ok) throw new Error('Erro ao salvar configurações.');
+            
             toast.success('Configurações salvas com sucesso!', { position: 'top-right' });
         } catch (error) {
             toast.error('Erro ao salvar configurações.', { position: 'top-right' });

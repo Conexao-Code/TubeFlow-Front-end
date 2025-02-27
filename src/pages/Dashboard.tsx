@@ -51,7 +51,7 @@ function Dashboard() {
                 setIsUser(isAdmin);
     
                 const response = await fetch(
-                    `apitubeflow.conexaocode.com/api/dashboard?userId=${userId}&isUser=${isAdmin ? 1 : 0}&companyId=${companyId}` // Adicionar companyId
+                    `https://tubeflow.conexaocode.com/api/dashboard?userId=${userId}&isUser=${isAdmin ? 1 : 0}&companyId=${companyId}` // Adicionar companyId
                 );
                 const data = await response.json();
 
