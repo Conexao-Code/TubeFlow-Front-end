@@ -47,11 +47,11 @@ function Dashboard() {
                 const isFreelancer = localStorage.getItem('isFreelancer') === 'true';
                 const userId = localStorage.getItem(isFreelancer ? 'userId' : 'userIdA');
                 const isAdmin = !isFreelancer;
-                const companyId = localStorage.getItem('companyId'); // Novo
+                const companyId = localStorage.getItem('companyId');
                 setIsUser(isAdmin);
     
                 const response = await fetch(
-                    `https://apitubeflow.conexaocode.com/api/dashboard?userId=${userId}&isUser=${isAdmin ? 1 : 0}&companyId=${companyId}` // Adicionar companyId
+                    `https://apitubeflow.conexaocode.com/api/dashboard?userId=${userId}&isUser=${isAdmin ? 1 : 0}&companyId=${companyId}`
                 );
                 const data = await response.json();
 
