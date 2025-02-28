@@ -69,8 +69,15 @@ function App() {
     });
     const [formErrors, setFormErrors] = useState<Partial<AdministratorFormData>>({});
     const [administrators, setAdministrators] = useState<Administrator[]>([]);
+    const [companyId, setCompanyId] = useState<string | null>(null);
 
-    // Set sidebar open by default on desktop
+    useEffect(() => {
+        const storedCompanyId = localStorage.getItem('companyId');
+        if (storedCompanyId) {
+            setCompanyId(storedCompanyId);
+        }
+    }, []);
+
     useEffect(() => {
         const handleResize = () => {
             if (window.innerWidth >= 1024) {
@@ -80,13 +87,8 @@ function App() {
             }
         };
 
-        // Set initial state
         handleResize();
-
-        // Add event listener
         window.addEventListener('resize', handleResize);
-
-        // Cleanup
         return () => window.removeEventListener('resize', handleResize);
     }, []);
 
@@ -96,11 +98,14 @@ function App() {
     };
 
     const fetchAdministrators = async () => {
+        if (!companyId) return;
+
         try {
-            const response = await fetch('apitubeflow.conexaocode.com/api/administrators', {
+            const response = await fetch('https://apitubeflow.conexaocode.com/api/administrators', {
                 method: 'GET',
                 headers: {
                     'Content-Type': 'application/json',
+                    'Company-Id': companyId
                 },
             });
 
@@ -119,7 +124,7 @@ function App() {
 
     useEffect(() => {
         fetchAdministrators();
-    }, []);
+    }, [companyId]);
 
     const validateForm = () => {
         const errors: Partial<AdministratorFormData> = {};
@@ -141,12 +146,13 @@ function App() {
     const handleEdit = async (e: React.FormEvent) => {
         e.preventDefault();
 
-        if (validateForm() && selectedAdmin) {
+        if (validateForm() && selectedAdmin && companyId) {
             try {
-                const response = await fetch(`apitubeflow.conexaocode.com/api/administrators/${selectedAdmin.id}`, {
+                const response = await fetch(`https://apitubeflow.conexaocode.com/api/administrators/${selectedAdmin.id}`, {
                     method: 'PUT',
                     headers: {
                         'Content-Type': 'application/json',
+                        'Company-Id': companyId
                     },
                     body: JSON.stringify({
                         name: formData.name,
@@ -171,12 +177,13 @@ function App() {
     };
 
     const handleDelete = async () => {
-        if (selectedAdmin) {
+        if (selectedAdmin && companyId) {
             try {
-                const response = await fetch(`apitubeflow.conexaocode.com/api/administrators/${selectedAdmin.id}`, {
+                const response = await fetch(`https://apitubeflow.conexaocode.com/api/administrators/${selectedAdmin.id}`, {
                     method: 'DELETE',
                     headers: {
                         'Content-Type': 'application/json',
+                        'Company-Id': companyId
                     },
                 });
 
@@ -216,6 +223,36 @@ function App() {
 
     const handleToggleSidebar = () => {
         setIsSidebarOpen(!isSidebarOpen);
+    };
+
+    const handleCreate = async (e: React.FormEvent<HTMLFormElement>) => {
+        e.preventDefault();
+        if (!companyId) return;
+
+        try {
+            const response = await fetch('https://apitubeflow.conexaocode.com/api/register-administrator', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Company-Id': companyId
+                },
+                body: JSON.stringify(formData),
+            });
+
+            if (response.ok) {
+                const data = await response.json();
+                toast.success(data.message, { position: 'top-right' });
+                setIsCreateModalOpen(false);
+                setFormData({ name: '', email: '' });
+                fetchAdministrators();
+            } else {
+                const errorData = await response.json();
+                toast.error(errorData.message || 'Erro ao cadastrar administrador.', { position: 'top-right' });
+            }
+        } catch (error) {
+            console.error('Erro na solicitação de cadastro:', error);
+            toast.error('Erro na conexão com o servidor.', { position: 'top-right' });
+        }
     };
 
     return (
@@ -345,38 +382,7 @@ function App() {
                                 </div>
                             </div>
 
-                            <form
-                                onSubmit={async (e) => {
-                                    e.preventDefault();
-                                    try {
-                                        const response = await fetch('apitubeflow.conexaocode.com/api/register-administrator', {
-                                            method: 'POST',
-                                            headers: {
-                                                'Content-Type': 'application/json',
-                                            },
-                                            body: JSON.stringify({
-                                                name: formData.name,
-                                                email: formData.email,
-                                            }),
-                                        });
-
-                                        if (response.ok) {
-                                            const data = await response.json();
-                                            toast.success(data.message, { position: 'top-right' });
-                                            setIsCreateModalOpen(false);
-                                            setFormData({ name: '', email: '' });
-                                            fetchAdministrators();
-                                        } else {
-                                            const errorData = await response.json();
-                                            toast.error(errorData.message || 'Erro ao cadastrar administrador.', { position: 'top-right' });
-                                        }
-                                    } catch (error) {
-                                        console.error('Erro na solicitação de cadastro:', error);
-                                        toast.error('Erro na conexão com o servidor.', { position: 'top-right' });
-                                    }
-                                }}
-                                className="p-6"
-                            >
+                            <form onSubmit={handleCreate} className="p-6">
                                 <div className="space-y-4">
                                     <div>
                                         <label htmlFor="name" className="block text-sm font-medium text-gray-700 mb-1">
