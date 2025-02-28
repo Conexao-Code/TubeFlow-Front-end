@@ -15,6 +15,8 @@ import {
     Pie,
     Cell
 } from 'recharts';
+import HeaderAdmin from '../components/HeaderAdmin';
+import Sidebar from '../components/Sidebar';
 
 interface LogEntry {
     id: string;
@@ -35,40 +37,14 @@ interface FreelancerStats {
     delays: number;
     averageTimeFormatted?: string;
 }
-
 interface Channel {
     id: string;
     name: string;
 }
-
 interface Freelancer {
     id: string;
     name: string;
 }
-
-// Mock components for the example
-const Sidebar = ({ activeSection, setActiveSection, isSidebarOpen, onCloseSidebar }: any) => (
-  <div className={`${isSidebarOpen ? 'block' : 'hidden'} fixed inset-y-0 left-0 z-40 w-64 bg-white shadow-lg transition-transform duration-300 md:relative md:block`}>
-    <div className="p-4">
-      <button onClick={onCloseSidebar} className="md:hidden absolute top-4 right-4">
-        <X className="h-6 w-6" />
-      </button>
-      <div className="mt-8">Sidebar Content</div>
-    </div>
-  </div>
-);
-
-const HeaderAdmin = ({ activeSection, onToggleSidebar }: any) => (
-  <header className="bg-white border-b border-gray-200 p-4">
-    <div className="flex items-center justify-between">
-      <button onClick={onToggleSidebar} className="md:hidden">
-        <Menu className="h-6 w-6" />
-      </button>
-      <h1 className="text-xl font-semibold">{activeSection}</h1>
-      <div>User Profile</div>
-    </div>
-  </header>
-);
 
 function LogsAndStats() {
     const [activeSection, setActiveSection] = useState('Logs e Estatísticas');
@@ -266,8 +242,8 @@ function LogsAndStats() {
                 onCloseSidebar={() => setIsSidebarOpen(false)}
             />
             <main className="flex-1 min-h-screen flex flex-col">
-                <HeaderAdmin
-                    activeSection="Configurações"
+            <HeaderAdmin 
+                    activeSection="Configurações" 
                     onToggleSidebar={handleToggleSidebar}
                 />
                 <div className="flex-1 p-3 sm:p-4 md:p-6 lg:p-8">
