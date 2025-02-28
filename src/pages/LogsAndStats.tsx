@@ -87,7 +87,7 @@ function LogsAndStats() {
     const fetchChannels = async () => {
         try {
             const response = await fetch(
-                `https://apitubeflow.conexaocode.com/api/channels?companyId=${encodeURIComponent(companyId)}`
+                `https://apitubeflow.conexaocode.com/api/channels2?companyId=${encodeURIComponent(companyId)}`
             );
             const json = await response.json();
             setChannels(json.channels);
