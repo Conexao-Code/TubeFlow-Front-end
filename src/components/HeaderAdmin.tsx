@@ -29,10 +29,7 @@ const HeaderAdmin: React.FC<HeaderProps> = ({ activeSection, onToggleSidebar }) 
             <span className="sr-only">Open sidebar</span>
             <Menu className="h-6 w-6" aria-hidden="true" />
           </button>
-          
-          <h1 className="text-2xl font-semibold text-gray-800 capitalize">
-            {activeSection}
-          </h1>
+        
         </div>
 
         <div className="flex items-center gap-4">
