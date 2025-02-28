@@ -124,7 +124,7 @@ function CustomReports() {
         try {
             const companyId = localStorage.getItem('companyId');
             const response = await fetch(
-                `https://apitubeflow.conexaocode.com/api/channels?companyId=${companyId}`
+                `https://apitubeflow.conexaocode.com/api/channels3?companyId=${companyId}`
             );
             const json = await response.json();
             setChannels(json.channels);
