@@ -476,7 +476,7 @@ function App() {
                                         <select
                                             id="role"
                                             value={formData.role}
-                                            onChange={(e) => setFormData({ ...formData, role: e.target.value })}
+                                            onChange={(e) => setFormData({ ...formData, role: e.target.value.toLowerCase() })}
                                             className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${formErrors.role ? 'border-red-500' : 'border-gray-300'
                                                 }`}
                                         >
