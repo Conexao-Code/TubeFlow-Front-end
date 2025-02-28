@@ -29,8 +29,16 @@ function Channels() {
 
   const [createFormData, setCreateFormData] = useState({ name: '', description: '', youtubeUrl: '' });
   const [createFormErrors, setCreateFormErrors] = useState<{ name?: string; description?: string; youtubeUrl?: string }>({});
+  const [companyId, setCompanyId] = useState<string | null>(null);
 
   const totalChannels = channels.length;
+
+  useEffect(() => {
+    const storedCompanyId = localStorage.getItem('companyId');
+    if (storedCompanyId) {
+      setCompanyId(storedCompanyId);
+    }
+  }, []);
 
   useEffect(() => {
     const handleResize = () => {
@@ -43,8 +51,14 @@ function Channels() {
 
   useEffect(() => {
     const fetchChannels = async () => {
+      if (!companyId) return;
+
       try {
-        const response = await fetch('apitubeflow.conexaocode.com/api/channels');
+        const response = await fetch('https://apitubeflow.conexaocode.com/api/channels', {
+          headers: {
+            'Company-Id': companyId
+          }
+        });
         const data = await response.json();
         setChannels(data.channels);
         setTotalMonthlyVideos(data.totalMonthlyVideos);
@@ -54,7 +68,7 @@ function Channels() {
       }
     };
     fetchChannels();
-  }, []);
+  }, [companyId]);
 
   useEffect(() => {
     if (selectedChannel) {
@@ -67,12 +81,18 @@ function Channels() {
   }, [selectedChannel]);
 
   const handleCreateChannel = async (data: any) => {
+    if (!companyId) return;
+
     try {
-      const response = await fetch('apitubeflow.conexaocode.com/api/channels', {
+      const response = await fetch('https://apitubeflow.conexaocode.com/api/channels', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 
+          'Content-Type': 'application/json',
+          'Company-Id': companyId
+        },
         body: JSON.stringify(data),
       });
+      
       if (response.ok) {
         const newChannel = await response.json();
         setChannels([...channels, { ...data, id: newChannel.id, totalVideos: 0, monthlyVideos: 0 }]);
@@ -90,13 +110,18 @@ function Channels() {
   };
 
   const handleEditChannel = async (data: any) => {
-    if (!selectedChannel) return;
+    if (!selectedChannel || !companyId) return;
+
     try {
-      const response = await fetch(`apitubeflow.conexaocode.com/api/channels/${selectedChannel.id}`, {
+      const response = await fetch(`https://apitubeflow.conexaocode.com/api/channels/${selectedChannel.id}`, {
         method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 
+          'Content-Type': 'application/json',
+          'Company-Id': companyId
+        },
         body: JSON.stringify(data),
       });
+      
       if (response.ok) {
         const updatedChannels = channels.map((channel) =>
           channel.id === selectedChannel.id ? { ...channel, ...data } : channel
@@ -116,11 +141,16 @@ function Channels() {
   };
 
   const handleDeleteChannel = async () => {
-    if (!selectedChannel) return;
+    if (!selectedChannel || !companyId) return;
+
     try {
-      const response = await fetch(`apitubeflow.conexaocode.com/api/channels/${selectedChannel.id}`, {
+      const response = await fetch(`https://apitubeflow.conexaocode.com/api/channels/${selectedChannel.id}`, {
         method: 'DELETE',
+        headers: {
+          'Company-Id': companyId
+        }
       });
+      
       if (response.ok) {
         setChannels(channels.filter((channel) => channel.id !== selectedChannel.id));
         setIsDeleteModalOpen(false);
