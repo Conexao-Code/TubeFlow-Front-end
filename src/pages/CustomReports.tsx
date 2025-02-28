@@ -122,7 +122,10 @@ function CustomReports() {
 
     const fetchChannels = async () => {
         try {
-            const response = await fetch('apitubeflow.conexaocode.com/api/channels');
+            const companyId = localStorage.getItem('companyId');
+            const response = await fetch(
+                `https://apitubeflow.conexaocode.com/api/channels?companyId=${companyId}`
+            );
             const json = await response.json();
             setChannels(json.channels);
         } catch (error) {
@@ -133,7 +136,10 @@ function CustomReports() {
 
     const fetchFreelancers = async () => {
         try {
-            const response = await fetch('apitubeflow.conexaocode.com/api/freelancers2');
+            const companyId = localStorage.getItem('companyId');
+            const response = await fetch(
+                `https://apitubeflow.conexaocode.com/api/freelancers2?companyId=${companyId}`
+            );
             const json = await response.json();
             setFreelancers(json.data);
         } catch (error) {
@@ -144,42 +150,41 @@ function CustomReports() {
 
     const generateReport = async () => {
         setIsLoading(true);
-
+    
         try {
+            const companyId = localStorage.getItem('companyId');
             const params = new URLSearchParams({
+                companyId: companyId || '',
                 ...(startDate && { startDate }),
                 ...(endDate && { endDate }),
                 ...(selectedChannel && { channelId: selectedChannel }),
                 ...(selectedFreelancer && { freelancerId: selectedFreelancer }),
                 ...(selectedStatus && { status: selectedStatus }),
             });
-
+    
             const [reportResponse, statsResponse, statusResponse] = await Promise.all([
-                fetch(`apitubeflow.conexaocode.com/api/reports/data?${params}`),
-                fetch(`apitubeflow.conexaocode.com/api/reports/stats?${params}`),
-                fetch(`apitubeflow.conexaocode.com/api/reports/status?${params}`),
+                fetch(`https://apitubeflow.conexaocode.com/api/reports/data?${params}`),
+                fetch(`https://apitubeflow.conexaocode.com/api/reports/stats?${params}`),
+                fetch(`https://apitubeflow.conexaocode.com/api/reports/status?${params}`),
             ]);
-
+    
             const reportData = await reportResponse.json();
             const statsData = await statsResponse.json();
             const statusData = await statusResponse.json();
-
+    
             const formattedReportData = reportData.map((item: ReportData) => ({
                 ...item,
                 timeSpentInSeconds: Number(item.timeSpentInSeconds) || 0,
                 timeSpent: item.timeSpent || formatTimeSpent(Number(item.timeSpentInSeconds) || 0),
             }));
-
-
+    
             setReportData(formattedReportData);
             setGlobalStats({
                 ...statsData,
                 averageTime: statsData.averageTime ? Number(statsData.averageTime) : 0,
             });
-            console.log('Average Time Received:', statsData.averageTime);
-
             setStatusCounts(statusData);
-
+    
             toast.success('Relatório gerado com sucesso!');
         } catch (error) {
             console.error('Error generating report:', error);
@@ -200,16 +205,21 @@ function CustomReports() {
 
     const exportReport = async (format: 'excel' | 'pdf') => {
         try {
+            const companyId = localStorage.getItem('companyId');
             const params = new URLSearchParams({
                 format,
+                companyId: companyId || '',
                 ...(startDate && { startDate }),
                 ...(endDate && { endDate }),
                 ...(selectedChannel && { channelId: selectedChannel }),
                 ...(selectedFreelancer && { freelancerId: selectedFreelancer }),
                 ...(selectedStatus && { status: selectedStatus })
             });
-
-            const response = await fetch(`apitubeflow.conexaocode.com/api/reports/export?${params}`);
+    
+            const response = await fetch(
+                `https://apitubeflow.conexaocode.com/api/reports/export?${params}`
+            );
+            
             const blob = await response.blob();
             const url = window.URL.createObjectURL(blob);
             const a = document.createElement('a');
@@ -219,7 +229,7 @@ function CustomReports() {
             a.click();
             window.URL.revokeObjectURL(url);
             document.body.removeChild(a);
-
+    
             toast.success(`Relatório exportado com sucesso em ${format.toUpperCase()}!`);
         } catch (error) {
             console.error('Error exporting report:', error);
