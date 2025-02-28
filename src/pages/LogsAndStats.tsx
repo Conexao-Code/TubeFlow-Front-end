@@ -64,6 +64,7 @@ function LogsAndStats() {
 
     const ITEMS_PER_PAGE = 10;
     const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#8884D8'];
+    const companyId = localStorage.getItem('companyId') || '';
 
     useEffect(() => {
         fetchChannels();
@@ -85,7 +86,9 @@ function LogsAndStats() {
 
     const fetchChannels = async () => {
         try {
-            const response = await fetch('apitubeflow.conexaocode.com/api/channels');
+            const response = await fetch(
+                `https://apitubeflow.conexaocode.com/api/channels?companyId=${encodeURIComponent(companyId)}`
+            );
             const json = await response.json();
             setChannels(json.channels);
         } catch (error) {
@@ -96,7 +99,9 @@ function LogsAndStats() {
 
     const fetchFreelancers = async () => {
         try {
-            const response = await fetch('apitubeflow.conexaocode.com/api/freelancers');
+            const response = await fetch(
+                `https://apitubeflow.conexaocode.com/api/freelancers?companyId=${encodeURIComponent(companyId)}`
+            );
             const json = await response.json();
             setFreelancers(json.data);
         } catch (error) {
@@ -108,6 +113,7 @@ function LogsAndStats() {
     const fetchLogs = async () => {
         try {
             const params = new URLSearchParams({
+                companyId: encodeURIComponent(companyId),
                 page: currentPage.toString(),
                 limit: ITEMS_PER_PAGE.toString(),
                 ...(startDate && { startDate }),
@@ -115,7 +121,10 @@ function LogsAndStats() {
                 ...(selectedChannel && { channelId: selectedChannel }),
                 ...(selectedFreelancer && { freelancerId: selectedFreelancer })
             });
-            const response = await fetch(`apitubeflow.conexaocode.com/api/logs?${params}`);
+            
+            const response = await fetch(
+                `https://apitubeflow.conexaocode.com/api/logs?${params}`
+            );
             const data = await response.json();
             setLogs(data.logs);
             setTotalPages(Math.ceil(data.total / ITEMS_PER_PAGE));
@@ -128,12 +137,16 @@ function LogsAndStats() {
     const fetchStats = async () => {
         try {
             const params = new URLSearchParams({
+                companyId: encodeURIComponent(companyId),
                 ...(startDate && { startDate }),
                 ...(endDate && { endDate }),
                 ...(selectedChannel && { channelId: selectedChannel }),
                 ...(selectedFreelancer && { freelancerId: selectedFreelancer })
             });
-            const response = await fetch(`apitubeflow.conexaocode.com/api/stats?${params}`);
+            
+            const response = await fetch(
+                `https://apitubeflow.conexaocode.com/api/stats?${params}`
+            );
             const data = await response.json();
             const formattedStats = data.stats.map((stat: FreelancerStats) => ({
                 ...stat,
@@ -158,13 +171,17 @@ function LogsAndStats() {
     const exportData = async (type: 'logs' | 'stats' | 'all') => {
         try {
             const params = new URLSearchParams({
+                companyId: encodeURIComponent(companyId),
                 ...(startDate && { startDate }),
                 ...(endDate && { endDate }),
                 ...(selectedChannel && { channelId: selectedChannel }),
                 ...(selectedFreelancer && { freelancerId: selectedFreelancer }),
                 type
             });
-            const response = await fetch(`apitubeflow.conexaocode.com/api/export?${params}`);
+            
+            const response = await fetch(
+                `https://apitubeflow.conexaocode.com/api/export?${params}`
+            );
             const blob = await response.blob();
             const url = window.URL.createObjectURL(blob);
             const a = document.createElement('a');
@@ -189,6 +206,7 @@ function LogsAndStats() {
     const handleToggleSidebar = () => {
         setIsSidebarOpen(!isSidebarOpen);
     };
+
     return (
         <div className="min-h-screen bg-gray-50 flex">
             <ToastContainer />
@@ -273,7 +291,6 @@ function LogsAndStats() {
                             <p className="text-3xl font-bold">
                                 {("0" + stats.reduce((acc, curr) => acc + curr.tasksCompleted, 0)).slice(-2)}
                             </p>
-
                         </div>
                         <div className="bg-gradient-to-br from-green-500 to-green-600 rounded-lg p-6 text-white">
                             <h3 className="text-lg font-semibold mb-2">Média de Tempo</h3>
