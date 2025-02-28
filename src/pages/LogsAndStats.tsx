@@ -100,7 +100,7 @@ function LogsAndStats() {
     const fetchFreelancers = async () => {
         try {
             const response = await fetch(
-                `https://apitubeflow.conexaocode.com/api/freelancers?companyId=${encodeURIComponent(companyId)}`
+                `https://apitubeflow.conexaocode.com/api/freelancers3?companyId=${encodeURIComponent(companyId)}`
             );
             const json = await response.json();
             setFreelancers(json.data);
