@@ -108,12 +108,22 @@ function App() {
         setTimeout(() => setNotification(null), 3000);
     };
 
+    const [companyId, setCompanyId] = useState(localStorage.getItem('companyId') || '');
+
+    useEffect(() => {
+        const storedCompanyId = localStorage.getItem('companyId');
+        if (storedCompanyId) {
+            setCompanyId(storedCompanyId);
+        }
+    }, []);
+
     const fetchFreelancers = async () => {
         try {
-            const response = await fetch('apitubeflow.conexaocode.com/api/freelancers', {
+            const response = await fetch('https://apitubeflow.conexaocode.com/api/freelancers', {
                 method: 'GET',
                 headers: {
                     'Content-Type': 'application/json',
+                    'Company-Id': companyId
                 },
             });
 
@@ -166,10 +176,11 @@ function App() {
 
         if (validateForm(true) && selectedFreelancer) {
             try {
-                const response = await fetch(`apitubeflow.conexaocode.com/api/freelancers/${selectedFreelancer.id}`, {
+                const response = await fetch(`https://apitubeflow.conexaocode.com/api/freelancers/${selectedFreelancer.id}`, {
                     method: 'PUT',
                     headers: {
                         'Content-Type': 'application/json',
+                        'Company-Id': companyId
                     },
                     body: JSON.stringify({
                         name: formData.name,
@@ -198,10 +209,11 @@ function App() {
     const handleDelete = async () => {
         if (selectedFreelancer) {
             try {
-                const response = await fetch(`apitubeflow.conexaocode.com/api/freelancers/${selectedFreelancer.id}`, {
+                const response = await fetch(`https://apitubeflow.conexaocode.com/api/freelancers/${selectedFreelancer.id}`, {
                     method: 'DELETE',
                     headers: {
                         'Content-Type': 'application/json',
+                        'Company-Id': companyId
                     },
                 });
 
@@ -393,10 +405,11 @@ function App() {
                                 onSubmit={async (e) => {
                                     e.preventDefault();
                                     try {
-                                        const response = await fetch('apitubeflow.conexaocode.com/api/register-freelancer', {
+                                        const response = await fetch('https://apitubeflow.conexaocode.com/api/register-freelancer', {
                                             method: 'POST',
                                             headers: {
                                                 'Content-Type': 'application/json',
+                                                'Company-Id': companyId
                                             },
                                             body: JSON.stringify({
                                                 name: formData.name,
