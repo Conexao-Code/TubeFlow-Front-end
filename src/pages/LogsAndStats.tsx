@@ -123,7 +123,7 @@ function LogsAndStats() {
             });
             
             const response = await fetch(
-                `https://apitubeflow.conexaocode.com/api/logs?${params}`
+                `https://apitubeflow.conexaocode.com/api/logs2?${params}`
             );
             const data = await response.json();
             setLogs(data.logs);
