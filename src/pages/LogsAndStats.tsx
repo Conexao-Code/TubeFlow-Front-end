@@ -145,7 +145,7 @@ function LogsAndStats() {
             });
             
             const response = await fetch(
-                `https://apitubeflow.conexaocode.com/api/stats2?${params}`
+                `https://apitubeflow.conexaocode.com/api/stats?${params}`
             );
             const data = await response.json();
             const formattedStats = data.stats.map((stat: FreelancerStats) => ({
