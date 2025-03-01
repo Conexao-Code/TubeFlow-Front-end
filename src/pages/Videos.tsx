@@ -379,18 +379,22 @@ function Videos() {
         try {
             const companyId = localStorage.getItem('companyId');
             const response = await fetch(
-                `https://apitubeflow.conexaocode.com/api/channels4?companyId=${companyId}`
+                `https://apitubeflow.conexaocode.com/api/channels?companyId=${companyId}`
             );
-            const json = await response.json();
-
-            if (Array.isArray(json.channels)) {
-                setChannels(json.channels);
+            
+            if (!response.ok) throw new Error('Erro na resposta da API');
+            
+            const { channels } = await response.json(); // Nova estrutura de resposta
+            
+            if (Array.isArray(channels)) {
+                setChannels(channels);
             } else {
-                throw new Error('API response channels is not an array');
+                throw new Error('Resposta da API em formato inválido');
             }
         } catch (error) {
             console.error('Erro ao buscar canais:', error);
             toast.error('Erro ao buscar canais.', { position: 'top-right' });
+            setChannels([]); // Garante array vazio em caso de erro
         }
     };
 
@@ -398,18 +402,22 @@ function Videos() {
         try {
             const companyId = localStorage.getItem('companyId');
             const response = await fetch(
-                `https://apitubeflow.conexaocode.com/api/freelancers4?companyId=${companyId}`
+                `https://apitubeflow.conexaocode.com/api/freelancers?companyId=${companyId}`
             );
-            const json = await response.json();
-
-            if (Array.isArray(json.data)) {
-                setFreelancers(json.data);
+            
+            if (!response.ok) throw new Error('Erro na resposta da API');
+            
+            const { freelancers } = await response.json(); // Nova estrutura de resposta
+            
+            if (Array.isArray(freelancers)) {
+                setFreelancers(freelancers);
             } else {
-                throw new Error('API response data is not an array');
+                throw new Error('Resposta da API em formato inválido');
             }
         } catch (error) {
             console.error('Erro ao buscar freelancers:', error);
             toast.error('Erro ao buscar freelancers.', { position: 'top-right' });
+            setFreelancers([]); // Garante array vazio em caso de erro
         }
     };
 
