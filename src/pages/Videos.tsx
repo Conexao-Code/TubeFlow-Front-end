@@ -90,7 +90,10 @@ function Videos() {
 
     const fetchComments = async (videoId: string) => {
         try {
-            const response = await fetch(`apitubeflow.conexaocode.com/api/videos/${videoId}/comments`);
+            const companyId = localStorage.getItem('companyId');
+            const response = await fetch(
+                `https://apitubeflow.conexaocode.com/api/videos/${videoId}/comments?companyId=${companyId}`
+            );
             const data = await response.json();
 
             if (data.comments) {
@@ -112,7 +115,7 @@ function Videos() {
 
     const handleAddComment = async () => {
         if (!newComment || !selectedVideoForComments) return;
-
+        const companyId = localStorage.getItem('companyId');
         const isFreelancer = localStorage.getItem('isFreelancer') === 'true';
         const userId = isFreelancer
             ? localStorage.getItem('userId')
@@ -120,11 +123,19 @@ function Videos() {
         const userType = isFreelancer ? 'freelancer' : 'user';
 
         try {
-            const response = await fetch(`apitubeflow.conexaocode.com/api/videos/${selectedVideoForComments.id}/comments`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ text: newComment, userId, userType }),
-            });
+            const response = await fetch(
+                `https://apitubeflow.conexaocode.com/api/videos/${selectedVideoForComments.id}/comments`,
+                {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        text: newComment,
+                        userId,
+                        userType,
+                        companyId
+                    }),
+                }
+            );
 
             if (response.ok) {
                 fetchComments(selectedVideoForComments.id);
@@ -225,13 +236,18 @@ function Videos() {
 
     const fetchVideos = async () => {
         try {
-            const params = new URLSearchParams();
-            if (selectedChannel) params.append('channelId', selectedChannel);
-            if (selectedFreelancer) params.append('freelancerId', selectedFreelancer);
-            if (selectedStatus) params.append('status', selectedStatus);
-            if (searchTerm) params.append('searchTerm', searchTerm);
+            const companyId = localStorage.getItem('companyId');
+            const params = new URLSearchParams({
+                companyId: companyId || '',
+                ...(selectedChannel && { channelId: selectedChannel }),
+                ...(selectedFreelancer && { freelancerId: selectedFreelancer }),
+                ...(selectedStatus && { status: selectedStatus }),
+                ...(searchTerm && { searchTerm }),
+            });
 
-            const response = await fetch(`apitubeflow.conexaocode.com/api/videos?${params.toString()}`);
+            const response = await fetch(
+                `https://apitubeflow.conexaocode.com/api/videos?${params.toString()}`
+            );
             const data = await response.json();
 
             const mappedVideos = data.map((video: any) => ({
