@@ -379,7 +379,7 @@ function Videos() {
         try {
             const companyId = localStorage.getItem('companyId');
             const response = await fetch(
-                `https://apitubeflow.conexaocode.com/api/channels?companyId=${companyId}`
+                `https://apitubeflow.conexaocode.com/api/channels4?companyId=${companyId}`
             );
             
             if (!response.ok) throw new Error('Erro na resposta da API');
@@ -402,7 +402,7 @@ function Videos() {
         try {
             const companyId = localStorage.getItem('companyId');
             const response = await fetch(
-                `https://apitubeflow.conexaocode.com/api/freelancers?companyId=${companyId}`
+                `https://apitubeflow.conexaocode.com/api/freelancers4?companyId=${companyId}`
             );
             
             if (!response.ok) throw new Error('Erro na resposta da API');
