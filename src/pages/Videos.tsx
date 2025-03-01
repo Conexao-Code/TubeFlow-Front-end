@@ -577,22 +577,38 @@ function Videos() {
 
     const handleDeleteVideo = async () => {
         if (!selectedVideo) return;
+        
         try {
-            const response = await fetch(`https://apitubeflow.conexaocode.com/api/videos/${selectedVideo.id}`, {
-                method: 'DELETE',
-            });
+            const companyId = localStorage.getItem('companyId');
+            if (!companyId) {
+                toast.error('Company ID não encontrado', { position: 'top-right' });
+                return;
+            }
+    
+            const response = await fetch(
+                `https://apitubeflow.conexaocode.com/api/videos/${selectedVideo.id}?companyId=${companyId}`,
+                {
+                    method: 'DELETE',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${localStorage.getItem('token')}` // Adicione se usar autenticação
+                    }
+                }
+            );
+    
+            const data = await response.json();
+            
             if (response.ok) {
                 fetchVideos();
                 setIsDeleteModalOpen(false);
                 setSelectedVideo(null);
-                toast.success('Vídeo excluído com sucesso!', { position: 'top-right' });
+                toast.success(data.message || 'Vídeo excluído com sucesso!', { position: 'top-right' });
             } else {
-                const error = await response.json();
-                toast.error(error.message, { position: 'top-right' });
+                toast.error(data.message || 'Erro ao excluir vídeo', { position: 'top-right' });
             }
         } catch (error) {
             console.error('Erro ao excluir vídeo:', error);
-            toast.error('Erro ao excluir vídeo.', { position: 'top-right' });
+            toast.error('Erro de conexão ao excluir vídeo', { position: 'top-right' });
         }
     };
 
