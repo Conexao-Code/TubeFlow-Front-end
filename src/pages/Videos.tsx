@@ -381,20 +381,21 @@ function Videos() {
             const response = await fetch(
                 `https://apitubeflow.conexaocode.com/api/channels4?companyId=${companyId}`
             );
-            
+
             if (!response.ok) throw new Error('Erro na resposta da API');
-            
-            const { channels } = await response.json(); // Nova estrutura de resposta
-            
-            if (Array.isArray(channels)) {
-                setChannels(channels);
+
+            const data = await response.json();
+
+            // Verificação reforçada da estrutura
+            if (data.channels && Array.isArray(data.channels)) {
+                setChannels(data.channels);
             } else {
-                throw new Error('Resposta da API em formato inválido');
+                throw new Error('Estrutura de dados inválida para canais');
             }
         } catch (error) {
             console.error('Erro ao buscar canais:', error);
             toast.error('Erro ao buscar canais.', { position: 'top-right' });
-            setChannels([]); // Garante array vazio em caso de erro
+            setChannels([]);
         }
     };
 
@@ -404,20 +405,21 @@ function Videos() {
             const response = await fetch(
                 `https://apitubeflow.conexaocode.com/api/freelancers4?companyId=${companyId}`
             );
-            
+
             if (!response.ok) throw new Error('Erro na resposta da API');
-            
-            const { freelancers } = await response.json(); // Nova estrutura de resposta
-            
-            if (Array.isArray(freelancers)) {
-                setFreelancers(freelancers);
+
+            const data = await response.json();
+
+            // Verificação reforçada da estrutura
+            if (data.freelancers && Array.isArray(data.freelancers)) {
+                setFreelancers(data.freelancers);
             } else {
-                throw new Error('Resposta da API em formato inválido');
+                throw new Error('Estrutura de dados inválida para freelancers');
             }
         } catch (error) {
             console.error('Erro ao buscar freelancers:', error);
             toast.error('Erro ao buscar freelancers.', { position: 'top-right' });
-            setFreelancers([]); // Garante array vazio em caso de erro
+            setFreelancers([]);
         }
     };
 
@@ -549,7 +551,7 @@ function Videos() {
 
         try {
             const response = await fetch(
-                `https://apitubeflow.conexaocode.com/api/videos/${selectedVideo?.id}`, 
+                `https://apitubeflow.conexaocode.com/api/videos/${selectedVideo?.id}`,
                 {
                     method: 'PUT',
                     headers: { 'Content-Type': 'application/json' },
