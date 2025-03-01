@@ -200,40 +200,33 @@ const CommentsModal: React.FC<CommentsModalProps> = ({ isOpen, onClose, video })
     return (
         <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center p-4 z-50">
             <div className="bg-white rounded-2xl shadow-2xl w-full max-w-2xl transform transition-all overflow-hidden">
-                {/* Header */}
-                <div className="p-5 bg-gradient-to-r from-blue-600 to-blue-700 rounded-t-2xl">
+                {/* Header - Smaller and more compact */}
+                <div className="p-3 bg-blue-600 rounded-t-2xl">
                     <div className="flex items-center justify-between">
-                        <div className="flex items-center space-x-3">
-                            <div className="p-2 bg-white/20 backdrop-blur-sm rounded-lg">
-                                <MessageSquare className="w-5 h-5 text-white" />
-                            </div>
-                            <div>
-                                <h2 className="text-xl font-semibold text-white">
-                                    Comentários
-                                </h2>
-                                <p className="text-sm text-blue-100 mt-0.5 max-w-md truncate">
-                                    {video.title}
-                                </p>
-                            </div>
+                        <div className="flex items-center space-x-2">
+                            <MessageSquare className="w-4 h-4 text-white" />
+                            <h2 className="text-base font-medium text-white">
+                                Comentários: <span className="font-normal text-sm opacity-90">{video.title}</span>
+                            </h2>
                         </div>
                         <button
                             onClick={onClose}
-                            className="p-2 hover:bg-white/10 rounded-lg transition-colors"
+                            className="p-1 hover:bg-white/10 rounded-lg transition-colors"
                             aria-label="Fechar"
                         >
-                            <X className="w-5 h-5 text-white" />
+                            <X className="w-4 h-4 text-white" />
                         </button>
                     </div>
                 </div>
 
-                <div className="flex flex-col h-[600px]">
-                    {/* Comments area */}
+                <div className="flex flex-col h-[650px]">
+                    {/* Comments area - Larger to prioritize message visibility */}
                     <div 
                         ref={commentsContainerRef}
-                        className="flex-1 p-6 overflow-y-auto custom-scrollbar bg-gradient-to-b from-blue-50 to-white"
+                        className="flex-1 p-4 overflow-y-auto custom-scrollbar bg-gray-50"
                     >
                         {comments.length > 0 ? (
-                            <div className="space-y-4">
+                            <div className="space-y-3">
                                 {comments.map((comment) => {
                                     const isCurrentUser = comment.userId === currentUserId;
                                     
@@ -243,33 +236,28 @@ const CommentsModal: React.FC<CommentsModalProps> = ({ isOpen, onClose, video })
                                             className={`flex ${isCurrentUser ? 'justify-end' : 'justify-start'}`}
                                         >
                                             <div 
-                                                className={`max-w-[80%] ${
+                                                className={`max-w-[85%] ${
                                                     isCurrentUser 
                                                         ? 'bg-blue-600 text-white rounded-t-xl rounded-bl-xl' 
                                                         : 'bg-white border border-gray-200 rounded-t-xl rounded-br-xl shadow-sm'
-                                                } p-4 transition-all hover:shadow-md`}
+                                                } p-3 transition-all`}
                                             >
                                                 {!isCurrentUser && (
-                                                    <div className="flex items-center space-x-2 mb-2">
-                                                        <div className="w-8 h-8 rounded-full bg-gradient-to-br from-blue-600 to-blue-700 flex items-center justify-center text-white font-medium text-sm">
+                                                    <div className="flex items-center space-x-2 mb-1.5">
+                                                        <div className="w-6 h-6 rounded-full bg-blue-600 flex items-center justify-center text-white font-medium text-xs">
                                                             {comment.userName?.charAt(0)?.toUpperCase() || 'A'}
                                                         </div>
-                                                        <div>
-                                                            <h3 className="font-semibold text-gray-900 text-sm">
-                                                                {comment.userName}
-                                                            </h3>
-                                                            <span className="text-xs text-gray-500">
-                                                                {comment.userRole}
-                                                            </span>
-                                                        </div>
+                                                        <span className="font-medium text-sm text-gray-800">
+                                                            {comment.userName}
+                                                        </span>
                                                     </div>
                                                 )}
                                                 
-                                                <p className={`${isCurrentUser ? 'text-white' : 'text-gray-700'} whitespace-pre-wrap`}>
+                                                <p className={`${isCurrentUser ? 'text-white' : 'text-gray-700'} whitespace-pre-wrap text-base leading-relaxed`}>
                                                     {comment.text}
                                                 </p>
                                                 
-                                                <div className={`flex items-center mt-2 text-xs ${isCurrentUser ? 'text-blue-100' : 'text-gray-400'}`}>
+                                                <div className={`flex items-center mt-1 text-xs ${isCurrentUser ? 'text-blue-100' : 'text-gray-400'}`}>
                                                     <Clock className="w-3 h-3 mr-1" />
                                                     {formatTimeAgo(comment.createdAt)}
                                                 </div>
@@ -280,9 +268,9 @@ const CommentsModal: React.FC<CommentsModalProps> = ({ isOpen, onClose, video })
                                 <div ref={messagesEndRef} />
                             </div>
                         ) : (
-                            <div className="flex flex-col items-center justify-center h-full text-center py-12">
-                                <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mb-4">
-                                    <MessageSquare className="w-8 h-8 text-blue-500" />
+                            <div className="flex flex-col items-center justify-center h-full text-center py-8">
+                                <div className="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center mb-3">
+                                    <MessageSquare className="w-6 h-6 text-blue-500" />
                                 </div>
                                 <p className="text-gray-700 font-medium">Nenhum comentário encontrado</p>
                                 <p className="text-sm text-gray-500 mt-1">Seja o primeiro a comentar!</p>
@@ -290,15 +278,15 @@ const CommentsModal: React.FC<CommentsModalProps> = ({ isOpen, onClose, video })
                         )}
                     </div>
 
-                    {/* Comment input area */}
-                    <div className="p-4 bg-white border-t border-gray-100 rounded-b-2xl">
+                    {/* Comment input area - Compact but functional */}
+                    <div className="p-3 bg-white border-t border-gray-100 rounded-b-2xl">
                         <div className="flex items-end space-x-2">
                             <textarea
                                 value={newComment}
                                 onChange={(e) => setNewComment(e.target.value)}
                                 onKeyDown={handleKeyDown}
                                 placeholder="Escreva um comentário..."
-                                className="flex-1 px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl resize-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all placeholder:text-gray-400 min-h-[80px] max-h-[120px]"
+                                className="flex-1 px-3 py-2 bg-gray-50 border border-gray-200 rounded-xl resize-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all placeholder:text-gray-400 min-h-[60px] max-h-[100px]"
                             />
                             <button
                                 onClick={handleAddComment}
@@ -313,9 +301,6 @@ const CommentsModal: React.FC<CommentsModalProps> = ({ isOpen, onClose, video })
                                 <Send className="w-5 h-5" />
                             </button>
                         </div>
-                        <p className="text-xs text-gray-400 mt-2 text-right">
-                            Pressione Enter para enviar
-                        </p>
                     </div>
                 </div>
             </div>
