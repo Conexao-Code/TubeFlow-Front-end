@@ -261,11 +261,11 @@ const CommentsModal: React.FC<CommentsModalProps> = ({ isOpen, onClose, video })
                                             className={`flex ${isCurrentUser ? 'justify-end' : 'justify-start'}`}
                                         >
                                             <div 
-                                                className={`max-w-[80%] ${
+                                                className={`max-w-[90%] ${
                                                     isCurrentUser 
                                                         ? 'bg-blue-600 text-white rounded-t-xl rounded-bl-xl' 
                                                         : 'bg-white text-gray-800 border border-gray-200 rounded-t-xl rounded-br-xl'
-                                                } p-4 shadow-sm`}
+                                                } p-4 shadow-sm break-words`}
                                             >
                                                 {!isCurrentUser && (
                                                     <div className="flex items-center space-x-2 mb-2">
@@ -283,7 +283,7 @@ const CommentsModal: React.FC<CommentsModalProps> = ({ isOpen, onClose, video })
                                                     </div>
                                                 )}
                                                 
-                                                <p className={`text-sm whitespace-pre-wrap ${isCurrentUser ? 'text-white' : 'text-gray-700'}`}>
+                                                <p className={`text-sm whitespace-pre-wrap break-words ${isCurrentUser ? 'text-white' : 'text-gray-700'}`}>
                                                     {comment.text}
                                                 </p>
                                                 
