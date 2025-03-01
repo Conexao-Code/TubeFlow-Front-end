@@ -377,7 +377,10 @@ function Videos() {
 
     const fetchChannels = async () => {
         try {
-            const response = await fetch('apitubeflow.conexaocode.com/api/channels');
+            const companyId = localStorage.getItem('companyId');
+            const response = await fetch(
+                `https://apitubeflow.conexaocode.com/api/channels?companyId=${companyId}`
+            );
             const json = await response.json();
 
             if (Array.isArray(json.channels)) {
@@ -393,7 +396,10 @@ function Videos() {
 
     const fetchFreelancers = async () => {
         try {
-            const response = await fetch('apitubeflow.conexaocode.com/api/freelancers');
+            const companyId = localStorage.getItem('companyId');
+            const response = await fetch(
+                `https://apitubeflow.conexaocode.com/api/freelancers?companyId=${companyId}`
+            );
             const json = await response.json();
 
             if (Array.isArray(json.data)) {
@@ -461,6 +467,7 @@ function Videos() {
             return;
         }
 
+        const companyId = localStorage.getItem('companyId');
         const data = {
             title: newVideoTitle,
             channelId: newVideoChannel,
@@ -471,12 +478,13 @@ function Videos() {
             status: 'Pendente',
             observations: newVideoObservations || null,
             youtubeUrl: null,
+            companyId,
             userId: localStorage.getItem('userIdA')  // 🠔 Adicione esta linha
         };
 
 
         try {
-            const response = await fetch('apitubeflow.conexaocode.com/api/videos', {
+            const response = await fetch('https://apitubeflow.conexaocode.com/api/videos', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(data),
@@ -516,6 +524,7 @@ function Videos() {
             return;
         }
 
+        const companyId = localStorage.getItem('companyId');
         const updatedData = {
             title: newVideoTitle,
             channelId: newVideoChannel,
@@ -526,15 +535,19 @@ function Videos() {
             narratorId: newVideoNarrator,
             editorId: newVideoEditor,
             thumbMakerId: newVideoThumbMaker,
+            companyId,
             userId, // Envia o identificador do usuário
         };
 
         try {
-            const response = await fetch(`apitubeflow.conexaocode.com/api/videos/${selectedVideo.id}`, {
-                method: 'PUT',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(updatedData),
-            });
+            const response = await fetch(
+                `https://apitubeflow.conexaocode.com/api/videos/${selectedVideo?.id}`, 
+                {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(updatedData),
+                }
+            );
 
             if (response.ok) {
                 fetchVideos();
@@ -594,6 +607,7 @@ function Videos() {
     };
 
     const updateVideoStatus = async (videoId: string, newStatus: string, sendMessage: number) => {
+        const companyId = localStorage.getItem('companyId');
         const isFreelancer = localStorage.getItem('isFreelancer') === 'true';
         const userId = isFreelancer
             ? localStorage.getItem('userId')
@@ -605,16 +619,20 @@ function Videos() {
         }
 
         try {
-            const response = await fetch(`apitubeflow.conexaocode.com/api/videos/${videoId}/status`, {
-                method: 'PUT',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    status: newStatus,
-                    userId,
-                    isUser: !isFreelancer,
-                    sendMessage
-                }),
-            });
+            const response = await fetch(
+                `https://apitubeflow.conexaocode.com/api/videos/${videoId}/status`,
+                {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        companyId,
+                        status: newStatus,
+                        userId,
+                        isUser: !isFreelancer,
+                        sendMessage
+                    }),
+                }
+            );
 
             if (response.ok) {
                 fetchVideos();
