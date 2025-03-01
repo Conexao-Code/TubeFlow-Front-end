@@ -578,7 +578,7 @@ function Videos() {
     const handleDeleteVideo = async () => {
         if (!selectedVideo) return;
         try {
-            const response = await fetch(`apitubeflow.conexaocode.com/api/videos/${selectedVideo.id}`, {
+            const response = await fetch(`https://apitubeflow.conexaocode.com/api/videos/${selectedVideo.id}`, {
                 method: 'DELETE',
             });
             if (response.ok) {
