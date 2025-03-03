@@ -25,7 +25,10 @@ interface ReportData {
     freelancerName: string;
     channelName: string;
     videoTitle: string;
-    status: string;
+    statusTransition: {  // Substituir o campo status
+        from: string;
+        to: string;
+    };
     timeSpentInSeconds: string;
     timeSpent: string;
     createdAt: string;
@@ -150,7 +153,7 @@ function CustomReports() {
 
     const generateReport = async () => {
         setIsLoading(true);
-    
+
         try {
             const companyId = localStorage.getItem('companyId');
             const params = new URLSearchParams({
@@ -161,30 +164,33 @@ function CustomReports() {
                 ...(selectedFreelancer && { freelancerId: selectedFreelancer }),
                 ...(selectedStatus && { status: selectedStatus }),
             });
-    
+
             const [reportResponse, statsResponse, statusResponse] = await Promise.all([
                 fetch(`https://apitubeflow.conexaocode.com/api/reports/data?${params}`),
                 fetch(`https://apitubeflow.conexaocode.com/api/reports/stats?${params}`),
                 fetch(`https://apitubeflow.conexaocode.com/api/reports/status?${params}`),
             ]);
-    
+
             const reportData = await reportResponse.json();
             const statsData = await statsResponse.json();
             const statusData = await statusResponse.json();
-    
-            const formattedReportData = reportData.map((item: ReportData) => ({
+
+            const formattedReportData = reportData.map((item: any) => ({
                 ...item,
+                statusTransition: {  // Mapear corretamente os novos campos
+                    from: item.fromStatus,
+                    to: item.toStatus
+                },
                 timeSpentInSeconds: Number(item.timeSpentInSeconds) || 0,
                 timeSpent: item.timeSpent || formatTimeSpent(Number(item.timeSpentInSeconds) || 0),
             }));
-    
             setReportData(formattedReportData);
             setGlobalStats({
                 ...statsData,
                 averageTime: statsData.averageTime ? Number(statsData.averageTime) : 0,
             });
             setStatusCounts(statusData);
-    
+
             toast.success('Relatório gerado com sucesso!');
         } catch (error) {
             console.error('Error generating report:', error);
@@ -215,11 +221,11 @@ function CustomReports() {
                 ...(selectedFreelancer && { freelancerId: selectedFreelancer }),
                 ...(selectedStatus && { status: selectedStatus })
             });
-    
+
             const response = await fetch(
                 `https://apitubeflow.conexaocode.com/api/reports/export?${params}`
             );
-            
+
             const blob = await response.blob();
             const url = window.URL.createObjectURL(blob);
             const a = document.createElement('a');
@@ -229,7 +235,7 @@ function CustomReports() {
             a.click();
             window.URL.revokeObjectURL(url);
             document.body.removeChild(a);
-    
+
             toast.success(`Relatório exportado com sucesso em ${format.toUpperCase()}!`);
         } catch (error) {
             console.error('Error exporting report:', error);
@@ -463,16 +469,19 @@ function CustomReports() {
                                     <tr>
                                         <th className="px-6 py-3 text-left text-sm font-semibold text-blue-900">Canal</th>
                                         <th className="px-6 py-3 text-left text-sm font-semibold text-blue-900">Vídeo</th>
-                                        <th className="px-6 py-3 text-left text-sm font-semibold text-blue-900">Status Atual</th>
-                                        <th className="px-6 py-3 text-left text-sm font-semibold text-blue-900">Média de Tempo</th>
+                                        <th className="px-6 py-3 text-left text-sm font-semibold text-blue-900">Status Anterior</th>
+                                        <th className="px-6 py-3 text-left text-sm font-semibold text-blue-900">Novo Status</th>
+                                        <th className="px-6 py-3 text-left text-sm font-semibold text-blue-900">Tempo Médio</th>
                                     </tr>
                                 </thead>
                                 <tbody className="divide-y divide-gray-100">
                                     {reportData.map(item => (
-                                        <tr key={item.id} className="hover:bg-gray-50">
+                                        <tr key={`${item.id}-${item.statusTransition.from}-${item.statusTransition.to}`}
+                                            className="hover:bg-gray-50">
                                             <td className="px-6 py-4 text-sm text-gray-600">{item.channelName}</td>
                                             <td className="px-6 py-4 text-sm font-medium text-gray-900">{item.videoTitle}</td>
-                                            <td className="px-6 py-4 text-sm text-gray-600">{item.status.replace(/_/g, ' ')}</td>
+                                            <td className="px-6 py-4 text-sm text-gray-600">{item.statusTransition.from}</td>
+                                            <td className="px-6 py-4 text-sm text-gray-600">{item.statusTransition.to}</td>
                                             <td className="px-6 py-4 text-sm text-gray-600">{item.averageTime}</td>
                                         </tr>
                                     ))}
