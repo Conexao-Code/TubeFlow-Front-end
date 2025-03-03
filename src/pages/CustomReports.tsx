@@ -177,9 +177,9 @@ function CustomReports() {
 
             const formattedReportData = reportData.map((item: any) => ({
                 ...item,
-                statusTransition: {  // Mapear corretamente os novos campos
-                    from: item.fromStatus,
-                    to: item.toStatus
+                statusTransition: {
+                    from: item.from_status, 
+                    to: item.to_status      
                 },
                 timeSpentInSeconds: Number(item.timeSpentInSeconds) || 0,
                 timeSpent: item.timeSpent || formatTimeSpent(Number(item.timeSpentInSeconds) || 0),
