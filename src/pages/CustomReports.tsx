@@ -415,7 +415,6 @@ function CustomReports() {
                         <div className="bg-white rounded-lg shadow-sm border border-gray-100 p-4">
                             <h2 className="text-lg font-semibold text-gray-900 mb-4">Distribuição por Status</h2>
                             <div className="h-80">
-                                {statusCounts.length > 0 ? (
                                     <ResponsiveContainer width="100%" height="100%">
                                         <PieChart>
                                             <Pie
@@ -445,11 +444,6 @@ function CustomReports() {
                                             />
                                         </PieChart>
                                     </ResponsiveContainer>
-                                ) : (
-                                    <div className="h-full flex items-center justify-center text-gray-500">
-                                        Nenhum dado disponível para o período selecionado
-                                    </div>
-                                )}
                             </div>
                         </div>
 
