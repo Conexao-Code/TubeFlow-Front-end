@@ -268,8 +268,6 @@ function App() {
             <ToastContainer />
 
             <Sidebar
-                activeSection={activeSection}
-                setActiveSection={setActiveSection}
                 isSidebarOpen={isSidebarOpen}
                 onCloseSidebar={() => setIsSidebarOpen(false)}
             />

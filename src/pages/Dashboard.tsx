@@ -109,8 +109,6 @@ function Dashboard() {
     return (
         <div className="min-h-screen bg-gray-50 flex">
             <Sidebar
-                activeSection={activeSection}
-                setActiveSection={setActiveSection}
                 isSidebarOpen={isSidebarOpen}
                 onCloseSidebar={() => setIsSidebarOpen(false)}
             />

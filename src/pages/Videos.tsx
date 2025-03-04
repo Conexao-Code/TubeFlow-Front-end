@@ -621,8 +621,6 @@ function Videos() {
         <div className="min-h-screen flex overflow-x-hidden">
             <ToastContainer />
             <Sidebar
-                activeSection={activeSection}
-                setActiveSection={setActiveSection}
                 isSidebarOpen={isSidebarOpen}
                 onCloseSidebar={() => setIsSidebarOpen(false)}
             />

@@ -253,8 +253,6 @@ function CustomReports() {
         <div className="min-h-screen bg-gray-50 flex">
             <ToastContainer />
             <Sidebar
-                activeSection={activeSection}
-                setActiveSection={setActiveSection}
                 isSidebarOpen={isSidebarOpen}
                 onCloseSidebar={() => setIsSidebarOpen(false)}
             />
