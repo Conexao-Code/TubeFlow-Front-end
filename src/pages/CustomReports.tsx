@@ -22,14 +22,16 @@ import {
 
 interface ReportData {
     id: string;
-    freelancerName: string;
     channelName: string;
     videoTitle: string;
     status: string;
-    timeSpentInSeconds: string;
-    timeSpent: string;
-    createdAt: string;
     averageTime: string;
+    rawData: {
+        totalTasks: string;
+        averageSeconds: number;
+    };
+    freelancerName?: string;
+    createdAt?: string;
 }
 
 
@@ -180,8 +182,8 @@ function CustomReports() {
 
             const formattedReportData = reportData.map((item: ReportData) => ({
                 ...item,
-                timeSpentInSeconds: Number(item.timeSpentInSeconds) || 0,
-                timeSpent: item.timeSpent || formatTimeSpent(Number(item.timeSpentInSeconds) || 0),
+                timeSpentInSeconds: item.rawData.averageSeconds || 0,
+                timeSpent: item.averageTime || formatTimeSpent(item.rawData.averageSeconds || 0),
             }));
 
             setReportData(formattedReportData);
@@ -448,17 +450,28 @@ function CustomReports() {
                                 <ResponsiveContainer width="100%" height="100%">
                                     <LineChart data={reportData}>
                                         <CartesianGrid strokeDasharray="3 3" />
-                                        <XAxis dataKey="createdAt" />
-                                        <YAxis />
+                                        <XAxis
+                                            dataKey="createdAt"
+                                            tickFormatter={(str) => {
+                                                const date = new Date(str);
+                                                return date.toLocaleDateString('pt-BR');
+                                            }}
+                                        />
+                                        <YAxis
+                                            tickFormatter={(value) => formatTimeSpent(value).replace(/[^0-9hm]/g, '')}
+                                        />
                                         <Tooltip
                                             formatter={(value: number) => formatTimeSpent(Number(value))}
+                                            labelFormatter={(label) => new Date(label).toLocaleDateString('pt-BR')}
                                         />
                                         <Legend />
                                         <Line
                                             type="monotone"
                                             dataKey="timeSpentInSeconds"
                                             stroke="#3B82F6"
-                                            name="Tempo Gasto"
+                                            name="Tempo Médio por Tarefa"
+                                            dot={{ r: 4 }}
+                                            activeDot={{ r: 8 }}
                                         />
                                     </LineChart>
                                 </ResponsiveContainer>
