@@ -463,14 +463,6 @@ function CustomReports() {
                                             labelFormatter={(label) => new Date(label).toLocaleDateString('pt-BR')}
                                         />
                                         <Legend />
-                                        <Line
-                                            type="monotone"
-                                            dataKey="timeSpentInSeconds"
-                                            stroke="#3B82F6"
-                                            name="Tempo Médio por Tarefa"
-                                            dot={{ r: 4 }}
-                                            activeDot={{ r: 8 }}
-                                        />
                                     </LineChart>
                                 </ResponsiveContainer>
                             </div>
