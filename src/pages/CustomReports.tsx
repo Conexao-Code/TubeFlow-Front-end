@@ -180,9 +180,11 @@ function CustomReports() {
     
             setReportData(formattedReportData);
             setGlobalStats({
-                ...statsData,
-                averageTime: statsData.averageTime ? Number(statsData.averageTime) : 0,
-            });
+                totalTasks: Number(statsData.totaltasks) || 0,
+                averageTime: Number(statsData.averagetime) || 0,
+                topFreelancer: statsData.topfreelancer || '',
+                topChannel: statsData.topchannel || ''
+              });
             setStatusCounts(statusData);
     
             toast.success('Relatório gerado com sucesso!');
