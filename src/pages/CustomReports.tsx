@@ -150,7 +150,7 @@ function CustomReports() {
 
     const generateReport = async () => {
         setIsLoading(true);
-    
+
         try {
             const companyId = localStorage.getItem('companyId');
             const params = new URLSearchParams({
@@ -161,32 +161,37 @@ function CustomReports() {
                 ...(selectedFreelancer && { freelancerId: selectedFreelancer }),
                 ...(selectedStatus && { status: selectedStatus }),
             });
-    
+
             const [reportResponse, statsResponse, statusResponse] = await Promise.all([
                 fetch(`https://apitubeflow.conexaocode.com/api/reports/data?${params}`),
                 fetch(`https://apitubeflow.conexaocode.com/api/reports/stats?${params}`),
                 fetch(`https://apitubeflow.conexaocode.com/api/reports/status?${params}`),
             ]);
-    
+
             const reportData = await reportResponse.json();
             const statsData = await statsResponse.json();
             const statusData = await statusResponse.json();
-    
+
+            const formattedStatusData = statusData.map((item: { status: string; count: string }) => ({
+                status: item.status,
+                count: Number(item.count) || 0
+            }));
+            setStatusCounts(formattedStatusData);
+
             const formattedReportData = reportData.map((item: ReportData) => ({
                 ...item,
                 timeSpentInSeconds: Number(item.timeSpentInSeconds) || 0,
                 timeSpent: item.timeSpent || formatTimeSpent(Number(item.timeSpentInSeconds) || 0),
             }));
-    
+
             setReportData(formattedReportData);
             setGlobalStats({
                 totalTasks: Number(statsData.totaltasks) || 0,
                 averageTime: Number(statsData.averagetime) || 0,
                 topFreelancer: statsData.topfreelancer || '',
                 topChannel: statsData.topchannel || ''
-              });
-            setStatusCounts(statusData);
-    
+            });
+
             toast.success('Relatório gerado com sucesso!');
         } catch (error) {
             console.error('Error generating report:', error);
@@ -217,11 +222,11 @@ function CustomReports() {
                 ...(selectedFreelancer && { freelancerId: selectedFreelancer }),
                 ...(selectedStatus && { status: selectedStatus })
             });
-    
+
             const response = await fetch(
                 `https://apitubeflow.conexaocode.com/api/reports/export?${params}`
             );
-            
+
             const blob = await response.blob();
             const url = window.URL.createObjectURL(blob);
             const a = document.createElement('a');
@@ -231,7 +236,7 @@ function CustomReports() {
             a.click();
             window.URL.revokeObjectURL(url);
             document.body.removeChild(a);
-    
+
             toast.success(`Relatório exportado com sucesso em ${format.toUpperCase()}!`);
         } catch (error) {
             console.error('Error exporting report:', error);
@@ -410,25 +415,41 @@ function CustomReports() {
                         <div className="bg-white rounded-lg shadow-sm border border-gray-100 p-4">
                             <h2 className="text-lg font-semibold text-gray-900 mb-4">Distribuição por Status</h2>
                             <div className="h-80">
-                                <ResponsiveContainer width="100%" height="100%">
-                                    <PieChart>
-                                        <Pie
-                                            data={statusCounts}
-                                            dataKey="count"
-                                            nameKey="status"
-                                            cx="50%"
-                                            cy="50%"
-                                            outerRadius={100}
-                                            label
-                                        >
-                                            {statusCounts.map((entry, index) => (
-                                                <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-                                            ))}
-                                        </Pie>
-                                        <Tooltip />
-                                        <Legend />
-                                    </PieChart>
-                                </ResponsiveContainer>
+                                {statusCounts.length > 0 ? (
+                                    <ResponsiveContainer width="100%" height="100%">
+                                        <PieChart>
+                                            <Pie
+                                                data={statusCounts}
+                                                dataKey="count"
+                                                nameKey="status"
+                                                cx="50%"
+                                                cy="50%"
+                                                outerRadius={100}
+                                                label={({ status, percent }) =>
+                                                    `${status}: ${(percent * 100).toFixed(0)}%`
+                                                }
+                                            >
+                                                {statusCounts.map((entry, index) => (
+                                                    <Cell
+                                                        key={`cell-${index}`}
+                                                        fill={COLORS[index % COLORS.length]}
+                                                    />
+                                                ))}
+                                            </Pie>
+                                            <Tooltip
+                                                formatter={(value: number) => [`Quantidade: ${value}`]}
+                                            />
+                                            <Legend
+                                                wrapperStyle={{ paddingTop: '20px' }}
+                                                formatter={(value) => value.replace(/_/g, ' ')}
+                                            />
+                                        </PieChart>
+                                    </ResponsiveContainer>
+                                ) : (
+                                    <div className="h-full flex items-center justify-center text-gray-500">
+                                        Nenhum dado disponível para o período selecionado
+                                    </div>
+                                )}
                             </div>
                         </div>
 
