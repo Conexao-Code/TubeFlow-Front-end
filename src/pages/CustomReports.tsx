@@ -415,35 +415,30 @@ function CustomReports() {
                         <div className="bg-white rounded-lg shadow-sm border border-gray-100 p-4">
                             <h2 className="text-lg font-semibold text-gray-900 mb-4">Distribuição por Status</h2>
                             <div className="h-80">
-                                    <ResponsiveContainer width="100%" height="100%">
-                                        <PieChart>
-                                            <Pie
-                                                data={statusCounts}
-                                                dataKey="count"
-                                                nameKey="status"
-                                                cx="50%"
-                                                cy="50%"
-                                                outerRadius={100}
-                                                label={({ status, percent }) =>
-                                                    `${status}: ${(percent * 100).toFixed(0)}%`
-                                                }
-                                            >
-                                                {statusCounts.map((entry, index) => (
-                                                    <Cell
-                                                        key={`cell-${index}`}
-                                                        fill={COLORS[index % COLORS.length]}
-                                                    />
-                                                ))}
-                                            </Pie>
-                                            <Tooltip
-                                                formatter={(value: number) => [`Quantidade: ${value}`]}
-                                            />
-                                            <Legend
-                                                wrapperStyle={{ paddingTop: '20px' }}
-                                                formatter={(value) => value.replace(/_/g, ' ')}
-                                            />
-                                        </PieChart>
-                                    </ResponsiveContainer>
+                                <ResponsiveContainer width="100%" height="100%">
+                                    <PieChart>
+                                        <Pie
+                                            data={statusCounts}
+                                            dataKey="count"
+                                            nameKey="status"
+                                            cx="50%"
+                                            cy="50%"
+                                            outerRadius={100}
+                                            label={({ status, count }) => `${status.replace(/_/g, ' ')}: ${count}`}
+                                        >
+                                            {statusCounts.map((entry, index) => (
+                                                <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                                            ))}
+                                        </Pie>
+                                        <Tooltip
+                                            formatter={(value: number) => [`Quantidade: ${value}`]}
+                                        />
+                                        <Legend
+                                            wrapperStyle={{ paddingTop: '20px' }}
+                                            formatter={(value) => value.replace(/_/g, ' ')}
+                                        />
+                                    </PieChart>
+                                </ResponsiveContainer>
                             </div>
                         </div>
 
